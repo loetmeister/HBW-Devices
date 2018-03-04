@@ -24,7 +24,7 @@ class HBWMultiKeySD6v1Hw : public HBWMultiKeySD6BaseHw
 
 // functions
    public:
-      inline HBWMultiKeySD6v1Hw() : HBWMultiKeySD6BaseHw( PortPin( PortR, 0 ), PortPin( PortR, 1 ), true )
+      inline HBWMultiKeySD6v1Hw() : HBWMultiKeySD6BaseHw( PortPin( PortR, 0 ), PortPin( PortR, 1 ), false )
       {
          // set ledFeedback channels
          for ( uint8_t i = 0; i < 12; i++ )
