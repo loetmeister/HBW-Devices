@@ -10,6 +10,8 @@
 
 #include "HmwChannel.h"
 #include <Time/Timestamp.h>
+#include <xEeprom.h>
+
 
 class HmwAnalogIn : public HmwChannel
 {
@@ -34,7 +36,7 @@ class HmwAnalogIn : public HmwChannel
 
       ////    Constructors and destructors    ////
 
-      HmwAnalogIn( ADC_t* _adc, uint8_t _adcChannel, Config* _config );
+      HmwAnalogIn( ADC_t* _adc, uint8_t _adcInputPin, Config* _config );
 
       ////    Operations    ////
 
@@ -61,7 +63,7 @@ class HmwAnalogIn : public HmwChannel
 
       ADC_t* adc;
 
-      uint8_t adcChannel;
+      uint8_t adcInputPin;
 
       Config* config;
 

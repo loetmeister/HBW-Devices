@@ -36,7 +36,8 @@ class HmwChannel
          UNKNOWN,
          HMW_KEY,
          HMW_DIMMER,
-         HMW_DS18X20
+         HMW_DS18X20,
+         HMW_ANALOG_IN
       };
 
    protected:

@@ -78,6 +78,8 @@
       </framework-data>
     </AsfFrameworkConfig>
     <Name>HBW-Booter</Name>
+    <ResetRule>0</ResetRule>
+    <EraseKey />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'HBW-SD6-v0' ">
     <ToolchainSettings>
@@ -294,7 +296,7 @@
         </avrgcccpp.linker.memorysettings.Flash>
       </AvrGccCpp>
     </ToolchainSettings>
-    <PostBuildEvent>"$(ToolchainDir)\avr-objcopy" -j .text -j .BOOT -j .data -O ihex $(OutputFileName).elf  $(SolutionDir)Binaries\$(Configuration)_Booter.hex </PostBuildEvent>
+    <PostBuildEvent>"$(ToolchainDir)\avr-objcopy" -j .text -j .BOOT -j .data -O ihex $(OutputFileName).elf  $(SolutionDir)\..\Binaries\$(Configuration)_Booter.hex </PostBuildEvent>
     <OutputPath>bin\ReleaseRev0\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'HBW-IO12-1W-UP' ">

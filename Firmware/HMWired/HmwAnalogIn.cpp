@@ -7,12 +7,21 @@
 
 #include "HmwAnalogIn.h"
 #include "HmwDevice.h"
+#include "Peripherals/Adc.h"
 
-HmwAnalogIn::HmwAnalogIn( ADC_t* _adc, uint8_t _adcChannel, Config* _config ) :
-   adc( _adc ), adcChannel( _adcChannel ), config( _config ), state( START_MEASUREMENT )
+
+#define ADC_CH0      (1U << 0)                 /**< ADC channel 0. */
+#define ADC_CH1      (1U << 1)                 /**< ADC channel 1. */
+
+HmwAnalogIn::HmwAnalogIn( ADC_t* _adc, uint8_t _adcInputPin, Config* _config ) :
+   adc( _adc ),
+   adcInputPin( _adcInputPin ),
+   config( _config ),
+   state( INIT_ADC )
 {
-   nextActionDelay = 10;
+   nextActionDelay = 4600;	// some start delay
    lastActionTime = 0;
+   currentValue = 0;
 }
 
 
@@ -26,10 +35,6 @@ uint8_t HmwAnalogIn::get( uint8_t* data )
 
 void HmwAnalogIn::loop( uint8_t channel )
 {
-
-   // TODO debug
-   return;
-
    if ( !nextActionDelay )
    {
       return;
@@ -41,25 +46,47 @@ void HmwAnalogIn::loop( uint8_t channel )
    }
 
    lastActionTime = Timestamp();   // at least last time of trying
-
-   if ( state == START_MEASUREMENT )
+   
+   // select current ADC module and result channel
+   Adc& adc = Adc::instance( PortA );
+   Adc::Channel& AdcChannel = adc.getChannel( adcInputPin );
+   
+   uint8_t adcChannelMask = ADC_CH0;
+   if ( adcInputPin == 7)	// we store ADC pin6 and pin7 results in channel 0 and 1
    {
-      adc_enable( adc );
-      adc_start_conversion( adc, adcChannel );
-      nextActionDelay = 1;
+	   adcChannelMask = ADC_CH1;
+   }
+   
+   if ( state == INIT_ADC )
+   {
+	   // based on example from http://wa4bvy.com/xmega_doxy/adc_quickstart.html
+
+	   adc.setConversionParameter( false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc );
+	   adc.setConversionTrigger( ADC_SWEEP_01_gc, ADC_EVSEL_0123_gc, ADC_EVACT_NONE_gc );
+	   adc.setClockRate( 200000UL );
+
+	   AdcChannel.setupInput( ADC_CH_INPUTMODE_SINGLEENDED_gc, adcInputPin, false, ADC_CH_GAIN_1X_gc );
+
+	   state = START_MEASUREMENT;
+   }
+   else if ( state == START_MEASUREMENT )
+   {
+      adc.enable();
+      AdcChannel.startConversion();
+//      nextActionDelay = 1;
+      nextActionDelay = 21;
       state = SAMPLE_VALUES;
    }
    else if ( state == SAMPLE_VALUES )
    {
-
       static const uint8_t MAX_SAMPLES = 8;
       static uint16_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0, 0, 0, 0, 0 };
       static uint8_t nextIndex = 0;
 
-      if ( adc_get_interrupt_flag( adc, adcChannel ) )
+      if ( adc.getInterrupts( adcChannelMask ) )
       {
-         adc_clear_interrupt_flag( adc, adcChannel );
-         buffer[nextIndex++] = adc_get_unsigned_result( adc, adcChannel );
+		 adc.clearInterrupts( adcChannelMask );
+		 buffer[nextIndex++] =  AdcChannel.getResult();
          state = START_MEASUREMENT;
 
          if ( nextIndex >= MAX_SAMPLES )

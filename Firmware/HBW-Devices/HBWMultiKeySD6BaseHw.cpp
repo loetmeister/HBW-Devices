@@ -60,6 +60,9 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
    hbwTmp4( ow, &config.ds1820cfg[3] ),
    hbwTmp5( ow, &config.ds1820cfg[4] ),
    hbwTmp6( ow, &config.ds1820cfg[5] ),
+   
+   hbwAnIn1( &ADCA, 6, &config.analogInCfg[0] ),
+   hbwAnIn2( &ADCA, 7, &config.analogInCfg[1] ),
 
    linkSender( sizeof( config.keyLinks ) / sizeof( config.keyLinks[0] ), config.keyLinks ),
    linkReceiver( sizeof( config.ledLinks ) / sizeof( config.ledLinks[0] ), config.ledLinks ),

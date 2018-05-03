@@ -34,6 +34,8 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
       OneWire ow;
       HmwDS1820 hbwTmp1, hbwTmp2, hbwTmp3, hbwTmp4, hbwTmp5, hbwTmp6;
+      
+      HmwAnalogIn hbwAnIn1, hbwAnIn2;
 
       HmwLinkKey linkSender;
 

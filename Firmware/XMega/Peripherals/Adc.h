@@ -194,9 +194,10 @@ class Adc
       // *
       // * \note The ADC must be enabled for this function to have any effect.
       // */
-      inline void clearInterrupts( uint8_t channels )
+      inline void clearInterrupts( uint8_t ch_mask )
       {
-         reg.INTFLAGS = channels;
+         //reg.INTFLAGS = channels;
+		 reg.INTFLAGS = ch_mask << ADC_CH0IF_bp;
       }
 
       ///**
@@ -329,19 +330,21 @@ class Adc
       // *
       // * \return Mask with interrupt flags.
       // */
-      inline uint8_t getInterrupts( uint8_t channels = 0xFF )
+      //inline uint8_t getInterrupts( uint8_t channels = 0xFF )
+	  inline uint8_t getInterrupts( uint8_t ch_mask )
       {
-         return reg.INTFLAGS & channels;
+         //return reg.INTFLAGS & channels;
+		 return (reg.INTFLAGS >> ADC_CH0IF_bp) & ch_mask;
       }
 
       inline Channel& getChannel( uint8_t channel = 0 )
       {
          switch ( channel )
          {
-            case 0:
+            case 6:
                return *reinterpret_cast<Adc::Channel*>( &reg.CH0 );
 
-            case 1:
+            case 7:
                return *reinterpret_cast<Adc::Channel*>( &reg.CH1 );
 
             case 2:
@@ -372,8 +375,8 @@ class Adc
 
       static Adc& instance( uint8_t portNumber );
 
-      template<uint32_t rate>
-      inline void setClockRate()
+      //template<uint32_t rate>
+      inline void setClockRate(uint32_t rate)
       {
          assert( rate );
          assert( rate <= F_CPU );
@@ -437,8 +440,8 @@ class Adc
       // * \param resolution Resolution of conversions.
       // * \param reference Voltage reference to use.
       // */
-      template<bool sign, ADC_RESOLUTION_t resolution, ADC_REFSEL_t reference>
-      inline void setConversionParameter()
+      //template<bool sign, ADC_RESOLUTION_t resolution, ADC_REFSEL_t reference>
+      inline void setConversionParameter(bool sign, ADC_RESOLUTION_t resolution, ADC_REFSEL_t reference)
       {
          // Preserve all but conversion and resolution config.
          reg.CTRLB &= ~( ADC_CONMODE_bm | ADC_RESOLUTION_gm );
@@ -467,8 +470,8 @@ class Adc
       // * \param evSel Base event channel, if used.
       // * \param evAct Conversion trigger to set.
       // */
-      template<ADC_SWEEP_t sweep, ADC_EVSEL_t evSel, ADC_EVACT_t evAct>
-      inline void setConversionTrigger()
+      //template<ADC_SWEEP_t sweep, ADC_EVSEL_t evSel, ADC_EVACT_t evAct>
+      inline void setConversionTrigger(ADC_SWEEP_t sweep, ADC_EVSEL_t evSel, ADC_EVACT_t evAct)
       {
          reg.EVCTRL = sweep | evSel | evAct;
       }
