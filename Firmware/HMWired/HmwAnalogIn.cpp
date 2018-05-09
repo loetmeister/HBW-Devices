@@ -19,7 +19,7 @@ HmwAnalogIn::HmwAnalogIn( ADC_t* _adc, uint8_t _adcInputPin, Config* _config ) :
    config( _config ),
    state( INIT_ADC )
 {
-   nextActionDelay = 4600;	// some start delay
+   nextActionDelay = 3300;	// some start delay
    lastActionTime = 0;
    currentValue = 0;
 }

@@ -27,6 +27,49 @@ void HmwKey::loop( uint8_t channel )
       {
          handleSwitchSignal( channel );
       }
+      else if ( config->isMotionSensor() )
+      {
+         handleMotionSensorSignal( channel );
+      }
+   }
+}
+
+void HmwKey::handleMotionSensorSignal( uint8_t channel )	// TODO: Add brightness value to event message? (message id=0x41)
+{
+   if ( !isPressed() )
+   {
+      if ( lastSentLong.isValid() )		// only send KeyEvent for raising or falling edge - not both
+      {
+         lastSentLong.reset();
+      }
+      keyPressedTimestamp.reset();
+      if ( feedbackChannel && config->isFeedbackEnabled() )
+      {
+         uint8_t cmd = KEY_FEEDBACK_OFF;
+         feedbackChannel->set( 1, &cmd );
+      }
+   }
+   else
+   {
+      if ( !keyPressedTimestamp.isValid() )
+      {
+         // Taste war vorher nicht gedrueckt
+         keyPressedTimestamp = Timestamp();
+      }
+      else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
+      {
+         // if return value is 1, bus is not idle, retry next time
+         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == Stream::SUCCESS )	// TODO: Add brightness value to event message (message id=0x41)
+         {
+            keyPressNum++;
+            lastSentLong = Timestamp();
+         }
+      }
+      if ( feedbackChannel && config->isFeedbackEnabled() )
+      {
+         uint8_t cmd = KEY_FEEDBACK_ON;
+         feedbackChannel->set( 1, &cmd );
+      }
    }
 }
 

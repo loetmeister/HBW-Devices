@@ -31,6 +31,7 @@ class HmwKey : public HmwChannel
             {
                PUSHBUTTON = 0,
                SWITCH,
+               MOTIONSENSOR,
                MAX_INPUTTYPE
             };
 
@@ -60,6 +61,11 @@ class HmwKey : public HmwChannel
             inline bool isSwitch() const
             {
                return getInputType() == SWITCH;
+            }
+
+            inline bool isMotionSensor() const
+            {
+               return getInputType() == MOTIONSENSOR;
             }
 
             inline bool isUnlocked() const
@@ -131,6 +137,8 @@ class HmwKey : public HmwChannel
       void handlePushButtonSignal( uint8_t channel );
 
       void handleSwitchSignal( uint8_t channel );
+
+      void handleMotionSensorSignal( uint8_t channel );
 
    private:
       bool unlocked;

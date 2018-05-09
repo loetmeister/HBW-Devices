@@ -356,6 +356,12 @@
     <Compile Include="HMWired\HmwDimmer.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="HMWired\HmwBrightness.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HMWired\HmwBrightness.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="HMWired\HmwDS1820.cpp">
       <SubType>compile</SubType>
     </Compile>

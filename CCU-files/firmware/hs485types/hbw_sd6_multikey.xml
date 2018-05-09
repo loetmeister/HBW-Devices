@@ -82,6 +82,7 @@
 				<logical type="option">
 					<option id="PUSHBUTTON" default="true"/>
 					<option id="SWITCH"/>
+					<option id="MOTIONSENSOR"/>
 				</logical>
 				<physical size="0.3" type="integer" interface="eeprom">
 					<address index="+0.0"/>
@@ -369,40 +370,40 @@
 			<parameter id="SEND_DELTA_ANALOG">
 			   <logical type="integer" default="50" min="1" max="250">
 			       <special_value id="NOT_USED" value="0"/>
-			   </logical>	   
+			   </logical>
                <physical size="1.0" type="integer" interface="eeprom">
                   <address index="+1.0"/>
                </physical>	
                <conversion type="integer_integer_map">
                  <value_map to_device="false" from_device="true" parameter_value="50" device_value="0xff"/>
-               </conversion>			   
+               </conversion>
 			</parameter>
 			<parameter id="SEND_MIN_INTERVAL">
 			   <logical type="integer" unit="s" default="10" min="5" max="3600">
 			     <special_value id="NOT_USED" value="0"/>
-			   </logical>	   
+			   </logical>
                <physical size="2.0" type="integer" interface="eeprom" endian="little">
                   <address index="+2.0"/>
-               </physical>	  
+               </physical>
                <conversion type="integer_integer_map">
                  <value_map to_device="false" from_device="true" parameter_value="10" device_value="0xffff"/>
-               </conversion>				   
+               </conversion>
 			</parameter>
 			<parameter id="SEND_MAX_INTERVAL">
 			   <logical type="integer" unit="s" default="150" min="5" max="3600">
 			     <special_value id="NOT_USED" value="0"/>
-			   </logical>	   
+			   </logical>
                <physical size="2.0" type="integer" interface="eeprom" endian="little">
                   <address index="+4.0"/>
                </physical>	
                <conversion type="integer_integer_map">
                  <value_map to_device="false" from_device="true" parameter_value="150" device_value="0xffff"/>
-               </conversion>				   
+               </conversion>
 			</parameter>
 		</paramset>
 		<paramset type="VALUES" id="hmw_analog_input_values">
 			<parameter id="VALUE" operations="read,event">
-				<logical type="integer" min="0" max="1023"/>
+				<logical type="integer" min="0" max="4095"/>
 				<physical type="integer" interface="command" value_id="ANALOGVALUE">
 					<get request="LEVEL_GET" response="ANALOG_EVENT"/>
 					<event frame="ANALOG_EVENT"/>
@@ -411,6 +412,38 @@
 		</paramset>		
 	</channel>
 	
+	<channel index="33" count="2" physical_index_offset="-1" type="BRIGHTNESS">
+	    <paramset type="MASTER" id="hmw_brightness_ch_master" address_step="3" address_start="0x3e0">
+			<parameter id="SAMPLES">
+			   <logical type="integer" default="8" min="2" max="8"/>
+               <physical size="1.0" type="integer" interface="eeprom">
+                  <address index="+1.0"/>
+               </physical>
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="8" device_value="0xff"/>
+               </conversion>
+			</parameter>
+			<parameter id="INTERVAL">
+			   <logical type="integer" default="127" min="2" max="255"/>
+               <physical size="1.0" type="integer" interface="eeprom">
+                  <address index="+2.0"/>
+               </physical>
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="127" device_value="0xff"/>
+               </conversion>
+			</parameter>
+		</paramset>
+		<paramset type="VALUES" id="hmw_analog_brightness_values">
+			<parameter id="LEVEL" operations="read" control="BRIGHTNESS.LEVEL">
+				<logical type="float" unit="100%" default="0.0" max="1.0" min="0.0"/>
+				<physical type="integer" interface="command" value_id="LEVEL">
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+				</physical>
+				<conversion type="float_integer_scale" factor="2"/>
+			</parameter>
+		</paramset>
+	</channel>
+
 </channels>
 
 </device>
