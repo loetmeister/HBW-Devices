@@ -32,14 +32,16 @@ static DigitalOutputTmpl<PortR, 0> txEnable;
 
 #elif ( DEVICE_ID == 0xB2 )  // Release::HBW_IO_12_1W_UP
 
-#define LED_PORT PORTR
-#define LED_MASK 0
-
-#if ( HARDWARE_ID == 0 )
+#define LED_PORT PORTA
+#define LED_MASK 0x40
 static DigitalOutputTmpl<PortR, 0> txEnable;
 static DigitalInputTmpl<PortE, 2> rx;
 static DigitalOutputTmpl<PortE, 3> tx;
+
+#if ( HARDWARE_ID == 0 )
 static uint8_t ledData[] = { 0x00 };
+#elif ( HARDWARE_ID == 1 )
+static uint8_t ledData[] = { 0x00, LED_MASK };
 #else
 #error "Hardware revision not supported!!!"
 #endif
@@ -113,4 +115,47 @@ void HBWBooterHw::handleLeds( bool isDownloadRunning )
          lastTime = Timestamp();
       }
    }
+}
+
+#include <Peripherals/Oscillator.h>
+#include <Peripherals/Clock.h>
+#include <Peripherals/DigitalFrequencyLockedLoops.h>
+#include <Peripherals/WatchDog.h>
+
+static void
+__attribute__( ( section( ".reset" ), naked, used ) )
+ResetVector( void )
+{
+   asm ( "jmp __ctors_end" );
+}
+
+static void
+__attribute__( ( section( ".init3" ), naked, used ) )
+lowLevelInit( void )
+{
+   #ifdef EIND
+   __asm volatile ( "ldi r24,pm_hh8(__trampolines_start)\n\t"
+                    "out %i0,r24" ::"n" ( &EIND ) : "r24", "memory" );
+   #endif
+
+   #ifdef DEBUG
+   WatchDog::disable();
+   #else
+   WatchDog::enable( WatchDog::_4S );
+   #endif
+
+
+   Clock::configPrescalers( CLK_PSADIV_1_gc, CLK_PSBCDIV_1_1_gc );
+
+   // Enable internal 32 MHz and 32kHz ring oscillator and wait until they are stable.
+   Oscillator::enable( OSC_RC32MEN_bm | OSC_RC32KEN_bm );
+   Oscillator::waitUntilOscillatorIsReady( OSC_RC32MEN_bm | OSC_RC32KEN_bm );
+
+   // Set the 32 MHz ring oscillator as the main clock source.
+   Clock::selectMainClockSource( CLK_SCLKSEL_RC32M_gc );
+
+   // save some power and disable the 2MHz oscillator
+   Oscillator::disable( OSC_RC2MEN_bm );
+
+   DigitalFrequencyLockedLoops::instance( true ).enableAutoCalibration();
 }
