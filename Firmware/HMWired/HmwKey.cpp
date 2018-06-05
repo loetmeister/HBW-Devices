@@ -190,7 +190,7 @@ void HmwKey::resetChannel()
    else
    {
       digitalIn.setInverted( true );
-      needsPulldownIfInverted ? digitalIn.enablePulldown() : digitalIn.enablePullup();
+      needsPulldownIfInverted ? digitalIn.enablePullup() : digitalIn.enablePulldown();
    }
    keyPressedTimestamp.reset();
    lastSentLong.reset();
