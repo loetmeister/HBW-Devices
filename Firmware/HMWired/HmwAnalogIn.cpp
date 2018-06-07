@@ -19,7 +19,7 @@ HmwAnalogIn::HmwAnalogIn( ADC_t* _adc, uint8_t _adcInputPin, Config* _config ) :
    config( _config ),
    state( INIT_ADC )
 {
-   nextActionDelay = 3300;	// some start delay
+   nextActionDelay = 2300;	// some start delay
    lastActionTime = 0;
    currentValue = 0;
 }
@@ -28,7 +28,7 @@ HmwAnalogIn::HmwAnalogIn( ADC_t* _adc, uint8_t _adcInputPin, Config* _config ) :
 uint8_t HmwAnalogIn::get( uint8_t* data )
 {
    // MSB first
-   *data++ = ( currentValue >> 8 ) & 0xFF;
+   *data++ = ( currentValue >> 8 );
    *data = currentValue & 0xFF;
    return 2;
 }
@@ -61,11 +61,11 @@ void HmwAnalogIn::loop( uint8_t channel )
    {
 	   // based on example from http://wa4bvy.com/xmega_doxy/adc_quickstart.html
 
-	   adc.setConversionParameter( false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc );
+	   adc.setConversionParameter( false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc );	// unsigned, 12bit result, use internal 1 Volt ref.
 	   adc.setConversionTrigger( ADC_SWEEP_01_gc, ADC_EVSEL_0123_gc, ADC_EVACT_NONE_gc );
 	   adc.setClockRate( 200000UL );
 
-	   AdcChannel.setupInput( ADC_CH_INPUTMODE_SINGLEENDED_gc, adcInputPin, false, ADC_CH_GAIN_1X_gc );
+	   AdcChannel.setupInput( ADC_CH_INPUTMODE_SINGLEENDED_gc, adcInputPin, false, ADC_CH_GAIN_1X_gc );	// input mode, posPin, negPin, gain
 
 	   state = START_MEASUREMENT;
    }
@@ -73,8 +73,7 @@ void HmwAnalogIn::loop( uint8_t channel )
    {
       adc.enable();
       AdcChannel.startConversion();
-//      nextActionDelay = 1;
-      nextActionDelay = 21;
+      nextActionDelay = 13;
       state = SAMPLE_VALUES;
    }
    else if ( state == SAMPLE_VALUES )

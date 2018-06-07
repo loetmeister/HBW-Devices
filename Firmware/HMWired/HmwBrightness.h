@@ -2,7 +2,7 @@
  * HmwBrightness.h
  *
  *  Created on: 07.05.2018
- *      Author: 
+ *      Author: loetmeister.de
  */
 
 #ifndef HmwBrightness_H
@@ -11,6 +11,8 @@
 #include "HmwChannel.h"
 #include <Time/Timestamp.h>
 #include <xEeprom.h>
+
+#define MAX_SAMPLES 8
 
 class HmwAnalogIn;	// forward declare this class
 
@@ -68,8 +70,11 @@ class HmwBrightness : public HmwChannel
       uint8_t currentValue;
 
       Timestamp lastActionTime;
-
-      Timestamp lastSentTime;
+	  
+	  uint8_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	  int16_t result_sum;
+	  uint8_t index;
+	  uint8_t count;
 
 };
 

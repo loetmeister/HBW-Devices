@@ -2,20 +2,24 @@
  * HmwBrightness.cpp
  *
  *  Created on: 07.05.2018
- *      Author: 
+ *      Author: loetmeister.de
  */
 
 #include "HmwBrightness.h"
 #include "HmwDevice.h"
 #include "HmwAnalogIn.h"
 
+
 HmwBrightness::HmwBrightness( HmwAnalogIn& _linkedAnalogChannel, Config* _config ) :
    config( _config ),
    linkedAnalogChannel( &_linkedAnalogChannel )
 {
-   nextActionDelay = 6130;	// start after analog sampling started
+   nextActionDelay = 8694;	// start after analog sampling completed once
    lastActionTime = 0;
    currentValue = 0;
+   result_sum = 0;
+   index = 0;
+   count = 0;
 }
 
 
@@ -37,28 +41,25 @@ void HmwBrightness::loop( uint8_t channel )
       return;
    }
 
-   lastActionTime = Timestamp();   // at least last time of trying
-   
-   static uint8_t buffer[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-   static uint16_t result_sum = 0;
-   static uint8_t index = 0;
+   lastActionTime = Timestamp();
 
-   uint8_t reading, data[2];
-   linkedAnalogChannel->get( data );
-//   reading = (uint8_t) ( (uint16_t)( (data[1] <<8) & data[0]) / 20 );
-   reading = (((uint16_t) data[0] <<8) | data[1]) / 20 ;
+   uint8_t reading;
+   reading = linkedAnalogChannel->currentValue / 20;
+   //if (reading > 200) reading = 200;
 	
    /* calculate the average of the last n results */
-   result_sum += (reading - buffer[index]);  // add new and subtract old value
+   result_sum -= buffer[index];  // subtract old value
    buffer[index] = reading;  // update buffer with current reading
-   currentValue = result_sum / config->samples;  // calculate average
+   result_sum += buffer[index];  // add new value
+   index++;
+   index = index % MAX_SAMPLES; // reset when last array element was processed
+   if (count < MAX_SAMPLES) count++;
+   
+   if (result_sum > 0)
+	currentValue = result_sum / count;  // calculate average
+   else
+	currentValue = 0;
 
-   ++index;
-   if (index > config->samples) {
-	   index = 0; // reset when last array element was processed
-   }
-
-   lastSentTime = Timestamp();
 
    // start next measurement after x seconds (should be 8 [analogIn sample interval] to 255 seconds)
    nextActionDelay = config->interval* 1000;

@@ -58,6 +58,8 @@ class HmwAnalogIn : public HmwChannel
       ////    Attributes    ////
 
    public:
+   
+      uint16_t currentValue;
 
    private:
 
@@ -71,7 +73,7 @@ class HmwAnalogIn : public HmwChannel
 
       uint16_t nextActionDelay;
 
-      uint16_t currentValue;
+//      uint16_t currentValue;
 
       uint16_t lastSentValue;
 

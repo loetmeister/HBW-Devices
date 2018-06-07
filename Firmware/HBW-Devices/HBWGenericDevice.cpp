@@ -43,6 +43,7 @@ int main( void )
       ERROR_1( FSTR( "Flash::read() failed" ) );
       booterModId.firmwareId = Release::HBW_GENERIC;
    }
+   booterModId.firmwareId = Release::HBW_MultiKeySD6;	// overwrite device detection - TODO: fixme
    HmwDevice::setHardware( booterModId.firmwareId, HBWDeviceFactory::createDevice( (Release::FirmwareId)booterModId.firmwareId ) );
 
    // Authorize interrupts
