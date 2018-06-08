@@ -34,7 +34,7 @@ void HmwKey::loop( uint8_t channel )
    }
 }
 
-void HmwKey::handleMotionSensorSignal( uint8_t channel )	// TODO: Add brightness value to event message? (message id=0x41)
+void HmwKey::handleMotionSensorSignal( uint8_t channel )	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
    if ( !isPressed() )
    {
@@ -59,7 +59,7 @@ void HmwKey::handleMotionSensorSignal( uint8_t channel )	// TODO: Add brightness
       else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
       {
          // if return value is 1, bus is not idle, retry next time
-         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == Stream::SUCCESS )	// TODO: Add brightness value to event message (message id=0x41)
+         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == Stream::SUCCESS )
          {
             keyPressNum++;
             lastSentLong = Timestamp();

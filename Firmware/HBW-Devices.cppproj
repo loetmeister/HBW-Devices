@@ -347,6 +347,18 @@
     <Compile Include="HMWired\HmwAnalogIn.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="HMWired\HmwBrightnessKey.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HMWired\HmwBrightnessKey.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HMWired\HmwBrightnessSwitch.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HMWired\HmwBrightnessSwitch.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="HMWired\HmwDeviceHw.h">
       <SubType>compile</SubType>
     </Compile>
@@ -356,12 +368,12 @@
     <Compile Include="HMWired\HmwDimmer.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="HMWired\HmwBrightness.cpp">
+    <None Include="HMWired\HmwBrightness.cpp">
       <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="HMWired\HmwBrightness.h">
+    </None>
+    <None Include="HMWired\HmwBrightness.h">
       <SubType>compile</SubType>
-    </Compile>
+    </None>
     <Compile Include="HMWired\HmwDS1820.cpp">
       <SubType>compile</SubType>
     </Compile>

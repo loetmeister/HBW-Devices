@@ -19,7 +19,8 @@ struct hbw_config
    HmwAnalogIn::Config analogInCfg[2];   // 0x0064 - 0x006F
    HmwLinkKey::Config keyLinks[40];      // 0x0070 - 0x015F
    HmwLinkDimmer::Config ledLinks[40];   // 0x0160 - 0x03DF
-   HmwBrightness::Config brightnessCfg[2]; // 0x03E0 - 0x03E5
+   HmwBrightnessSwitch::Config brightnessSwCfg[2]; // 0x03E0 - 0x03E3
+   HmwBrightnessKey::Config brightnessKeyCfg[2]; // 0x03E4 - 0x03E7
 };
 
 static hbw_config& config = *reinterpret_cast<hbw_config*>( MAPPED_EEPROM_START );
@@ -65,8 +66,10 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
    hbwAnIn1( &ADCA, 6, &config.analogInCfg[0] ),
    hbwAnIn2( &ADCA, 7, &config.analogInCfg[1] ),
 
-   hbwBrightness1( hbwAnIn1, &config.brightnessCfg[0] ),
-   hbwBrightness2( hbwAnIn2, &config.brightnessCfg[1] ),
+   hbwBrightnessSwitch1( hbwAnIn1, &config.brightnessSwCfg[0] ),
+   hbwBrightnessSwitch2( hbwAnIn2, &config.brightnessSwCfg[1] ),
+   hbwBrightnessKey1( hbwBrightnessSwitch1, &config.brightnessKeyCfg[0] ),
+   hbwBrightnessKey2( hbwBrightnessSwitch2, &config.brightnessKeyCfg[1] ),
 
    linkSender( sizeof( config.keyLinks ) / sizeof( config.keyLinks[0] ), config.keyLinks ),
    linkReceiver( sizeof( config.ledLinks ) / sizeof( config.ledLinks[0] ), config.ledLinks ),

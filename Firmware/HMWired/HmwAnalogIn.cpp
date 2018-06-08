@@ -13,13 +13,16 @@
 #define ADC_CH0      (1U << 0)                 /**< ADC channel 0. */
 #define ADC_CH1      (1U << 1)                 /**< ADC channel 1. */
 
+#define SAMPLE_INTERVAL_ADC 1510	 // sample every 1510 ms (6 samples * 1.51 = 9s for a full reading)
+
+
 HmwAnalogIn::HmwAnalogIn( ADC_t* _adc, uint8_t _adcInputPin, Config* _config ) :
    adc( _adc ),
    adcInputPin( _adcInputPin ),
    config( _config ),
    state( INIT_ADC )
 {
-   nextActionDelay = 2300;	// some start delay
+   nextActionDelay = SAMPLE_INTERVAL_ADC;	// some start delay
    lastActionTime = 0;
    currentValue = 0;
 }
@@ -78,8 +81,8 @@ void HmwAnalogIn::loop( uint8_t channel )
    }
    else if ( state == SAMPLE_VALUES )
    {
-      static const uint8_t MAX_SAMPLES = 8;
-      static uint16_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+      static const uint8_t MAX_SAMPLES = 6;
+      static uint16_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0, 0, 0 };
       static uint8_t nextIndex = 0;
 
       if ( adc.getInterrupts( adcChannelMask ) )
@@ -129,9 +132,9 @@ void HmwAnalogIn::loop( uint8_t channel )
          lastSentTime = Timestamp();
 
       }
-      // start next measurement after 1s
+      // start next measurement
       state = START_MEASUREMENT;
-      nextActionDelay = 1000;
+      nextActionDelay = SAMPLE_INTERVAL_ADC;
 
    }
 }
