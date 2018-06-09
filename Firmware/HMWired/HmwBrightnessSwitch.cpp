@@ -24,7 +24,7 @@ HmwBrightnessSwitch::HmwBrightnessSwitch( HmwAnalogIn& _linkedAnalogChannel, Con
 }
 
 
-// allow to read the level (not the triggered state)
+// allow to read the level (not the actual 'triggered' state)
 uint8_t HmwBrightnessSwitch::get( uint8_t* data )
 {
    *data = currentValue;
@@ -40,14 +40,17 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 	}
 	else
 		triggered = false;
+
+	//TODO: useful to send current level as info message? (same as logging mode for switch actor)
 }
 
 void HmwBrightnessSwitch::loop( uint8_t channel )
 {
-   // start next measurement after x seconds (min. 10s (larger than analogIn sample interval), up to 255 seconds)
+   // start next calculation after x seconds
+   // min. 10s (larger than analogIn sample interval), up to 45 seconds (gives 1 hour with 8 samples)
    nextActionDelay = config->interval* 1000;
    
-   if ( !nextActionDelay )	// not used value, return >100%
+   if ( !nextActionDelay )	// not used value, return >100% (TODO: test if this is good slotion...)
    {
 	  currentValue = 255;
       return;

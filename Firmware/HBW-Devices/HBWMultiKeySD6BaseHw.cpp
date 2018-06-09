@@ -68,6 +68,7 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
 
    hbwBrightnessSwitch1( hbwAnIn1, &config.brightnessSwCfg[0] ),
    hbwBrightnessSwitch2( hbwAnIn2, &config.brightnessSwCfg[1] ),
+
    hbwBrightnessKey1( hbwBrightnessSwitch1, &config.brightnessKeyCfg[0] ),
    hbwBrightnessKey2( hbwBrightnessSwitch2, &config.brightnessKeyCfg[1] ),
 

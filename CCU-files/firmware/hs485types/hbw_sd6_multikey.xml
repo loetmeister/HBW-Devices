@@ -429,8 +429,8 @@
 		</link_roles>
 	    <paramset type="MASTER" id="hmw_brightness_ch_master" address_step="2" address_start="0x3e0">
 			<parameter id="SAMPLE_INTERVAL">
-				<logical type="float" default="140" min="10" max="2550" unit="s *8 samples">
-					<special_value id="NOT_USED" value="0"/>
+				<logical type="float" default="140" min="10" max="450" unit="s *8 samples">
+					<special_value id="DISABLED" value="0"/>
 				</logical>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+1.0"/>
@@ -446,35 +446,35 @@
 			<parameter id="UI_HINT">
 				<logical type="string" default="" use_default_on_failure="true"/>
 				<physical id="UI_HINT" type="string" interface="store" save_on_change="true"/>
-			</parameter>		
-            <parameter id="SENSOR" hidden="true" operations="none">
-                <logical type="address"/>
-                <physical type="array">
-                    <physical size="4.0" type="integer" interface="eeprom">
-                        <address index="+0"/>
-                    </physical>
-                    <physical size="1.0" type="integer" interface="eeprom">
-                        <address index="+4"/>
-                    </physical>
-                </physical>
-            </parameter>
-            <parameter id="CHANNEL" hidden="true" operations="none">
-                <logical type="integer" min="0" max="255" default="255"/>
-                <physical size="1.0" type="integer" interface="eeprom">
-                    <address index="+5"/>
-                </physical>
-            </parameter>
-            <parameter id="SHORT_ACTION_TYPE">
-                <logical type="option">
-                    <option id="ON" default="true"/>
-                    <option id="OFF"/>
-                    <option id="INACTIVE"/>
-                </logical>
-                <physical size="0.3" type="integer" interface="eeprom">
-                    <address index="+6"/>
-                </physical>
-            </parameter>
-        </paramset>
+			</parameter>
+			<parameter id="SENSOR" hidden="true" operations="none">
+				<logical type="address"/>
+				<physical type="array">
+					<physical size="4.0" type="integer" interface="eeprom">
+						<address index="+0"/>
+					</physical>
+					<physical size="1.0" type="integer" interface="eeprom">
+						<address index="+4"/>
+					</physical>
+				</physical>
+			</parameter>
+			<parameter id="CHANNEL" hidden="true" operations="none">
+				<logical type="integer" min="0" max="255" default="255"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+5"/>
+				</physical>
+			</parameter>
+			<parameter id="SHORT_ACTION_TYPE">
+				<logical type="option">
+					<option id="ON" default="true"/>
+					<option id="OFF"/>
+					<option id="INACTIVE"/>
+				</logical>
+				<physical size="0.3" type="integer" interface="eeprom">
+					<address index="+6"/>
+				</physical>
+			</parameter>
+		</paramset>
 		
 		<paramset type="VALUES" id="hmw_analog_brightness_values">
 			<parameter id="LEVEL" operations="read" control="BRIGHTNESS.LEVEL">
@@ -489,46 +489,46 @@
 	
 	<channel index="35" count="2" physical_index_offset="-1" type="BRIGHTNESS KEY">
 		<link_roles>
-            <source name="SWITCH"/>
-        </link_roles>
-	    <paramset type="MASTER" id="hmw_brightnesskey_ch_master" address_step="2" address_start="0x3e4">			
+			<source name="SWITCH"/>
+		</link_roles>
+		<paramset type="MASTER" id="hmw_brightnesskey_ch_master" address_step="2" address_start="0x3e4">			
 			<parameter id="CONDITION_TYPE">
 				<logical type="option">
 					<option id="X GE COND_VALUE"/>
 					<option id="X LE COND_VALUE" default="true"/>
 				</logical>
 				<physical size="0.1" type="integer" interface="eeprom">
-					<address index="+0.7"/>			
+					<address index="+0.7"/>
 				</physical>
 			</parameter>
 			<parameter id="COND_VALUE">
-                <logical type="float" unit="%" default="10" max="100" min="0"/>
-                <conversion type="float_integer_scale" factor="2"/>
+				<logical type="float" unit="%" default="10" max="100" min="0"/>
+				<conversion type="float_integer_scale" factor="2"/>
 				<physical size="1.0" type="integer" interface="eeprom">
-                  <address index="+1.0"/>
-               </physical>
+					<address index="+1.0"/>
+				</physical>
 			</parameter>
 		</paramset>
 		<!-- use same peering area in EEPROM -->
-        <paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x070" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
-            <parameter id="CHANNEL" hidden="true" operations="none">
-                <logical type="integer" min="0" max="255" default="255"/>
-                <physical size="1.0" type="integer" interface="eeprom">
-                    <address index="+0"/>
-                </physical>
-            </parameter>
-            <parameter id="ACTUATOR" hidden="true" operations="none">
-                <logical type="address"/>
-                <physical type="array">
-                    <physical size="4.0" type="integer" interface="eeprom">
-                        <address index="+1"/>
-                    </physical>
-                    <physical size="1.0" type="integer" interface="eeprom">
-                        <address index="+5"/>
-                    </physical>
-                </physical>
-            </parameter>
-        </paramset>
+		<paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x070" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
+			<parameter id="CHANNEL" hidden="true" operations="none">
+				<logical type="integer" min="0" max="255" default="255"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+0"/>
+				</physical>
+			</parameter>
+			<parameter id="ACTUATOR" hidden="true" operations="none">
+				<logical type="address"/>
+				<physical type="array">
+					<physical size="4.0" type="integer" interface="eeprom">
+						<address index="+1"/>
+					</physical>
+					<physical size="1.0" type="integer" interface="eeprom">
+						<address index="+5"/>
+					</physical>
+				</physical>
+			</parameter>
+		</paramset>
 		
 		<paramset id="hmw_input_ch_values" type="VALUES">
 			<parameter id="PRESS_SHORT" operations="event,write" loopback="true" control="BUTTON.SHORT">
@@ -538,7 +538,7 @@
 				</physical>
 				<conversion type="action_key_counter" counter_size="6" sim_counter="SIM_COUNTER"/>
 			</parameter>		
-        </paramset>
+		</paramset>
 	</channel>
 
 </channels>

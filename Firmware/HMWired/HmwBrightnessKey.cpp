@@ -41,7 +41,6 @@ void HmwBrightnessKey::loop( uint8_t channel )
 
 void HmwBrightnessKey::resetChannel()
 {
-   //linkedBrightnessSwitchChannel->triggered = false;
    keyPressNum = 0;
 }
 
