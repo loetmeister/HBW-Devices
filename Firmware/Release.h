@@ -19,7 +19,9 @@ class Release
          HBW_GENERIC = 0xB0,
          HBW_MultiKeySD6 = 0xB1,
          HBW_IO12_1W_UP = 0xB2,
-         HBW_LC4_IN4_DR = 0xB3
+         HBW_LC4_IN4_DR = 0xB3,
+
+         HBW_LC_DIM8_1W_DR = 0xB8
       };
 
       enum HardwareId
@@ -32,7 +34,7 @@ class Release
 
       static const uint8_t MAJOR = 2;
 
-      static const uint8_t MINOR = 1;
+      static const uint8_t MINOR = 7;
 };
 
 #endif

@@ -51,8 +51,23 @@ static uint8_t ledData[] = { 0x00, LED_MASK };
 #define LED_PORT PORTR
 #define LED_MASK 0x02
 
-#if ( HARDWARE_ID == 0 )
+#if ( HARDWARE_ID == 0 ) || ( HARDWARE_ID == 1 )
 static DigitalOutputTmpl<PortR, 0> txEnable;
+static DigitalInputTmpl<PortE, 2> rx;
+static DigitalOutputTmpl<PortE, 3> tx;
+static uint8_t ledData[] = { 0x00, LED_MASK };
+#else
+#error "Hardware revision not supported!!!"
+#endif
+
+#elif ( DEVICE_ID == 0xB8 )  // Release::HBW_LC_DIM8_DR
+
+#define LED_PORT PORTR
+#define LED_MASK 0x01
+
+#if ( HARDWARE_ID == 0 )
+static DigitalOutputTmpl<PortA, 5> txEnable;
+static DigitalOutputTmpl<PortA, 6> rxEnable;
 static DigitalInputTmpl<PortE, 2> rx;
 static DigitalOutputTmpl<PortE, 3> tx;
 static uint8_t ledData[] = { 0x00, LED_MASK };
@@ -64,7 +79,7 @@ static uint8_t ledData[] = { 0x00, LED_MASK };
 #error "HBW-Device not supported!!!"
 #endif
 
-static uint8_t ledIdx = 0;
+static uint8_t ledIdx = 1;
 static Timestamp lastTime;
 
 HBWBooterHw::HBWBooterHw()
@@ -109,6 +124,12 @@ void HBWBooterHw::handleLeds( bool isDownloadRunning )
    }
    else
    {
+      if ( ledIdx )
+      {
+         // reset LEDs here so that IDLE is different from Downloading
+         LED_PORT.OUTCLR = LED_MASK;
+         ledIdx = 0;
+      }
       if ( lastTime.since() > 500 )
       {
          LED_PORT.OUTTGL = LED_MASK;

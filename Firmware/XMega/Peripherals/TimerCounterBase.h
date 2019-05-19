@@ -8,7 +8,7 @@
 #ifndef Peripherals_TimerCounterBase_H
 #define Peripherals_TimerCounterBase_H
 
-#include "Peripherals.h"
+#include "Peripherals/Peripherals.h"
 
 class TimerCounterBase
 {
@@ -227,7 +227,7 @@ class TimerCounterBase
 
    protected:
 
-      TCBase_t baseReg;         // ## attribute baseReg
+      TCBase_t baseReg;
 };
 
 #endif

@@ -11,17 +11,15 @@
 
 #include "HBWGenericDeviceHw.h"
 
-#include <HMWired/HmwKey.h>
-#include <HMWired/HmwDimmer.h>
-#include <HMWired/HmwLinkKey.h>
-#include <HMWired/HmwLinkDimmer.h>
+#include <HmwUnits/HmwKey.h>
+#include <HmwUnits/HmwDimmer.h>
+#include <HmwUnits/HmwLinkKey.h>
+#include <HmwUnits/HmwLinkDimmer.h>
 
 class HBWLC4IN4DRHw : public HBWGenericDeviceHw
 {
 // variables
    public:
-
-      static const uint8_t DEFAULT_PWM_RANGE = 64;
 
    protected:
 
@@ -43,7 +41,7 @@ class HBWLC4IN4DRHw : public HBWGenericDeviceHw
 
 // functions
    public:
-      HBWLC4IN4DRHw();
+      HBWLC4IN4DRHw( uint16_t additionalPeriodValue );
 
       HmwDeviceHw::BasicConfig* getBasicConfig();
 

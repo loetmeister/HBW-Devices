@@ -11,15 +11,13 @@
 
 #include "HBWGenericDeviceHw.h"
 
-#include <HMWired/HmwKey.h>
-#include <HMWired/HmwDimmer.h>
-#include <HMWired/HmwDS1820.h>
-#include <HMWired/HmwLinkKey.h>
-#include <HMWired/HmwLinkDimmer.h>
-#include <HMWired/HmwAnalogIn.h>
-//#include <HMWired/HmwBrightness.h>
-#include <HMWired/HmwBrightnessSwitch.h>
-#include <HMWired/HmwBrightnessKey.h>
+#include <HmwUnits/HmwKey.h>
+#include <HmwUnits/HmwLed.h>
+#include <HmwUnits/HmwDS1820.h>
+#include <HmwUnits/HmwSHTC3.h>
+#include <HmwUnits/HmwLinkKey.h>
+#include <HmwUnits/HmwLinkLed.h>
+#include <HmwUnits/HmwBrightness.h>
 #include <PortPin.h>
 
 
@@ -32,19 +30,20 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
       HmwKey hbwKey1, hbwKey2, hbwKey3, hbwKey4, hbwKey5, hbwKey6;
       HmwKey extHbwKey1, extHbwKey2, extHbwKey3, extHbwKey4, extHbwKey5, extHbwKey6;
 
-      HmwDimmer hbwLed1, hbwLed2, hbwLed3, hbwLed4, hbwLed5, hbwLed6;
-      HmwDimmer extHbwLed1, extHbwLed2, extHbwLed3, extHbwLed4, extHbwLed5, extHbwLed6;
+      HmwLed hbwLed1, hbwLed2, hbwLed3, hbwLed4, hbwLed5, hbwLed6;
+
+      HmwLed extHbwLed1, extHbwLed2, extHbwLed3, extHbwLed4, extHbwLed5, extHbwLed6;
 
       OneWire ow;
       HmwDS1820 hbwTmp1, hbwTmp2, hbwTmp3, hbwTmp4, hbwTmp5, hbwTmp6;
-      
-      HmwAnalogIn hbwAnIn1, hbwAnIn2;
-      HmwBrightnessSwitch hbwBrightnessSwitch1, hbwBrightnessSwitch2;
-	  HmwBrightnessKey hbwBrightnessKey1, hbwBrightnessKey2;
+
+      HmwBrightness hbwOnboardBrightness;
+
+      HmwSHTC3 shtc3;
 
       HmwLinkKey linkSender;
 
-      HmwLinkDimmer linkReceiver;
+      HmwLinkLed linkReceiver;
 
    private:
 
@@ -85,7 +84,7 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
             case FIRST_PRESS:
             {
-               uint8_t data[] = { HmwDimmer::MAX_LEVEL / 2 };
+               uint8_t data[] = { HmwLed::MAX_LEVEL / 2 };
                hbwLed5.set( sizeof( data ), data );
                hbwLed6.set( sizeof( data ), data );
                hbwKey5.setUnlocked( false );
@@ -95,7 +94,7 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
             case FIRST_LONG_PRESS:
             {
-               uint8_t data[] = { HmwChannel::BLINK_ON, 0, HmwDimmer::MAX_LEVEL, 5, 5, 0xFF };
+               uint8_t data[] = { HmwChannel::BLINK_ON, 0, HmwLed::MAX_LEVEL, 5, 5, 0xFF };
                hbwLed5.set( sizeof( data ), data );
                hbwLed6.set( sizeof( data ), data );
                break;
@@ -103,7 +102,7 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
             case SECOND_LONG_PRESS:
             {
-               uint8_t data[] = { HmwChannel::BLINK_ON, 0, HmwDimmer::MAX_LEVEL, 2, 2, 0xFF };
+               uint8_t data[] = { HmwChannel::BLINK_ON, 0, HmwLed::MAX_LEVEL, 2, 2, 0xFF };
                hbwLed5.set( sizeof( data ), data );
                hbwLed6.set( sizeof( data ), data );
                break;

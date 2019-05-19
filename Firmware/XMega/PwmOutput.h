@@ -8,17 +8,23 @@
 #ifndef Basics_PwmOutput_H
 #define Basics_PwmOutput_H
 
-#include "PortPin.h"
+#include "DigitalOutput.h"
 
-class TimerCounter0;
+class TimerCounter;
 
-class TimerCounter1;
 
-class PwmOutput : public PortPin
+class PwmOutput : public DigitalOutput
 {
    ////    Constructors and destructors    ////
 
    public:
+      inline PwmOutput( PortPin _portPin ) : DigitalOutput( _portPin )
+      {
+      }
+
+      inline PwmOutput( uint8_t _portNumber, uint8_t _pinNumber ) : DigitalOutput( _portNumber, _pinNumber )
+      {
+      }
 
       PwmOutput( uint8_t _portNumber, uint8_t _pinNumber, uint16_t _period );
 
@@ -31,14 +37,17 @@ class PwmOutput : public PortPin
 
       uint16_t isSet() const;
 
+      bool isRunning() const;
+
       void set( uint16_t value );
 
       void setPeriode( uint16_t period );
 
+      uint16_t getPeriode() const;
+
    protected:
 
-      TimerCounter0* getTC0() const;
-      TimerCounter1* getTC1() const;
+      TimerCounter* getTC() const;
 
 };
 
