@@ -90,6 +90,7 @@
 				<logical type="option">
 					<option id="PUSHBUTTON" default="true"/>
 					<option id="SWITCH"/>
+					<option id="MOTIONSENSOR"/>
 				</logical>
 				<physical size="0.3" type="integer" interface="eeprom">
 					<address index="+0.0"/>
@@ -420,10 +421,53 @@
 		<link_roles>
 			<source name="WEATHER_TH"/>
 		</link_roles>
-		<paramset type="MASTER" id="shtc3_ch_master"/>
+		<paramset type="MASTER" id="shtc3_ch_master" address_step="6" address_start="0x6A">
+			<parameter id="SEND_DELTA_HUMIDITY" operations="read,write">
+				<logical type="integer" min="10" max="100" unit="%" default="0.0">
+					<special_value id="NOT_USED" value="0.0"/>
+				</logical>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+0.0"/>
+				</physical>	
+			</parameter>
+			<parameter id="SEND_DELTA_TEMP">
+			   <logical type="float" unit="&#x2103;" default="0.5" min="0.1" max="25.0">
+			       <special_value id="NOT_USED" value="0"/>
+			   </logical>	   
+               <physical size="1.0" type="integer" interface="eeprom">
+                  <address index="+1.0"/>
+               </physical>	
+               <conversion type="float_integer_scale" factor="10"/>		
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="5" device_value="0xff"/>
+               </conversion>			   
+			</parameter>			
+			<parameter id="SEND_MIN_INTERVAL">
+			   <logical type="integer" unit="s" default="10" min="5" max="3600">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>
+               <physical size="2.0" type="integer" interface="eeprom" endian="little">
+                  <address index="+2.0"/>
+               </physical>	  
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="10" device_value="0xffff"/>
+               </conversion>
+			</parameter>
+			<parameter id="SEND_MAX_INTERVAL">
+			   <logical type="integer" unit="s" default="150" min="5" max="3600">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>	   
+               <physical size="2.0" type="integer" interface="eeprom" endian="little">
+                  <address index="+4.0"/>
+               </physical>	
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="150" device_value="0xffff"/>
+               </conversion>				   
+			</parameter>
+		</paramset>
 		<paramset type="VALUES" id="shtc3_ch_values">
 			<parameter id="TEMPERATURE" operations="read,event">
-				<logical type="float" min="-40.0" max="80.0" unit="&#x2103"/>
+				<logical type="float" min="-40.0" max="80.0" unit="&#x2103;"/>
 				<physical type="integer" interface="command" value_id="TEMPERATURE">
 					<event frame="WEATHER_EVENT"/>
 				</physical>

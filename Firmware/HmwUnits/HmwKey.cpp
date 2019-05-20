@@ -59,7 +59,7 @@ void HmwKey::handleMotionSensorSignal( uint8_t channel )	// TODO: Add brightness
       else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
       {
          // if return value is 1, bus is not idle, retry next time
-         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == Stream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
+         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {
             keyPressNum++;
             lastSentLong = Timestamp();
