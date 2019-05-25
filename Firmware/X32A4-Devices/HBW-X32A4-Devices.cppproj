@@ -22,10 +22,10 @@
     <preserveEEPROM>true</preserveEEPROM>
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <BootSegment>2</BootSegment>
-    <eraseonlaunchrule>1</eraseonlaunchrule>
+    <eraseonlaunchrule>0</eraseonlaunchrule>
     <ExternalProgrammingToolCommand />
-    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
-    <avrtoolserialnumber>J41800037616</avrtoolserialnumber>
+    <avrtool>com.atmel.avrdbg.tool.ispmk2</avrtool>
+    <avrtoolserialnumber>0000000000000</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x1E9541</avrdeviceexpectedsignature>
     <com_atmel_avrdbg_tool_simulator>
       <ToolOptions>
@@ -55,7 +55,7 @@
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
         <InterfaceProperties>
-          <PdiClock>4000000</PdiClock>
+          <PdiClock>0</PdiClock>
         </InterfaceProperties>
         <InterfaceName>PDI</InterfaceName>
       </ToolOptions>
@@ -63,7 +63,7 @@
       <ToolNumber>J41800037616</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
-    <avrtoolinterfaceclock>4000000</avrtoolinterfaceclock>
+    <avrtoolinterfaceclock>0</avrtoolinterfaceclock>
     <AsfFrameworkConfig>
       <framework-data xmlns="">
         <options />
@@ -79,6 +79,16 @@
     <Name>HBW-X32A4-Devices</Name>
     <ResetRule>0</ResetRule>
     <EraseKey />
+    <com_atmel_avrdbg_tool_ispmk2>
+      <ToolOptions>
+        <InterfaceProperties>
+        </InterfaceProperties>
+        <InterfaceName>PDI</InterfaceName>
+      </ToolOptions>
+      <ToolType>com.atmel.avrdbg.tool.ispmk2</ToolType>
+      <ToolNumber>0000000000000</ToolNumber>
+      <ToolName>AVRISP mkII</ToolName>
+    </com_atmel_avrdbg_tool_ispmk2>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -142,7 +152,7 @@
         <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
       </AvrGccCpp>
     </ToolchainSettings>
-    <PostBuildEvent>"$(ToolchainDir)\avr-objcopy" -j .text -j .data -O binary  $(OutputFileName).elf  $(OutputFileName).bin &amp;&amp;  "$(SolutionDir)..\tools\modid" $(OutputFileName).bin $(SolutionDir)..\Binaries\$(OutputFileName) &amp;&amp;  "$(SolutionDir)..\tools\modid" $(OutputFileName).bin &amp;&amp;  "$(SolutionDir)..\tools\bin2hex" $(OutputFileName).bin $(SolutionDir)..\CCU-files\firmware\$(OutputFileName).hex</PostBuildEvent>
+    <PostBuildEvent>"$(ToolchainDir)\avr-objcopy" -j .text -j .data -O binary  $(OutputFileName).elf  $(OutputFileName).bin &amp;&amp;  "$(SolutionDir)..\..\tools\modid" $(OutputFileName).bin $(SolutionDir)..\..\Binaries\$(OutputFileName) &amp;&amp;  "$(SolutionDir)..\..\tools\modid" $(OutputFileName).bin &amp;&amp;  "$(SolutionDir)..\..\tools\bin2hex" $(OutputFileName).bin $(SolutionDir)..\..\CCU-files\firmware\$(OutputFileName).hex</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
@@ -514,6 +524,14 @@
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwMsgWriteFlash.h</Link>
     </Compile>
+    <Compile Include="..\HmwUnits\HmwSHT2x.cpp">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwSHT2x.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwSHT2x.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwSHT2x.h</Link>
+    </Compile>
     <Compile Include="..\HmwUnits\HmwStream.cpp">
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwStream.cpp</Link>
@@ -729,7 +747,7 @@
     <Compile Include="..\XMega\SerialStream.h">
       <SubType>compile</SubType>
       <Link>XMega\SerialStream.h</Link>
-    </Compile>	
+    </Compile>
     <Compile Include="..\XMega\xEeprom.h">
       <SubType>compile</SubType>
       <Link>XMega\xEeprom.h</Link>

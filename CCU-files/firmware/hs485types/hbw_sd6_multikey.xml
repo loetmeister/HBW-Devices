@@ -423,7 +423,7 @@
 		</link_roles>
 		<paramset type="MASTER" id="shtc3_ch_master" address_step="6" address_start="0x6A">
 			<parameter id="SEND_DELTA_HUMIDITY" operations="read,write">
-				<logical type="integer" min="10" max="100" unit="%" default="0.0">
+				<logical type="integer" min="2" max="100" unit="%" default="0.0">
 					<special_value id="NOT_USED" value="0.0"/>
 				</logical>
 				<physical size="1.0" type="integer" interface="eeprom">

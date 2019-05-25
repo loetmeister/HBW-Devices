@@ -28,7 +28,7 @@ class HBWIo12OneWireUpHw : public HBWMultiKeySD6BaseHw
       {
          // disable not available channels on this hardware
          hbwOnboardBrightness.disable();
-         shtc3.disable();
+         sht2x.disable();
 
          // config specific IOs
          configLed.setInverted( true );

@@ -19,7 +19,7 @@ struct hbw_config
    HmwLed::Config ledcfg[12];             // 0x0028 - 0x003F
    HmwDS1820::Config ds1820cfg[6];        // 0x0040 - 0x0063
    HmwBrightness::Config brightnessCfg;   // 0x0064 - 0x0069
-   HmwSHTC3::Config shtc3Config;          // 0x006A - 0x006F
+   HmwSHT2x::Config sht2xConfig;          // 0x006A - 0x006F
    HmwLinkKey::Config keyLinks[40];       // 0x0070 - 0x015F
    HmwLinkLed::Config ledLinks[40];       // 0x0160 - 0x03DF
 };
@@ -74,7 +74,7 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
    hbwTmp6( ow, &config.ds1820cfg[5] ),
 
    hbwOnboardBrightness( PortPin( PortA, 6 ), TimerCounterChannel( &TimerCounter::instance( PortE, 0 ), TimerCounter::A ), &config.brightnessCfg ),
-   shtc3( Twi::instance<PortE>(), &config.shtc3Config ),
+   sht2x( Twi::instance<PortE>(), &config.sht2xConfig ),
 
    linkSender( sizeof( config.keyLinks ) / sizeof( config.keyLinks[0] ), config.keyLinks ),
    linkReceiver( sizeof( config.ledLinks ) / sizeof( config.ledLinks[0] ), config.ledLinks ),

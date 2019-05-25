@@ -14,7 +14,8 @@
 #include <HmwUnits/HmwKey.h>
 #include <HmwUnits/HmwLed.h>
 #include <HmwUnits/HmwDS1820.h>
-#include <HmwUnits/HmwSHTC3.h>
+#include <HmwUnits/HmwSHT2x.h>
+//#include <HmwUnits/HmwSHTC3.h>
 #include <HmwUnits/HmwLinkKey.h>
 #include <HmwUnits/HmwLinkLed.h>
 #include <HmwUnits/HmwBrightness.h>
@@ -39,7 +40,8 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
       HmwBrightness hbwOnboardBrightness;
 
-      HmwSHTC3 shtc3;
+      HmwSHT2x sht2x;
+	  //HmwSHTC3 shtc3;
 
       HmwLinkKey linkSender;
 
