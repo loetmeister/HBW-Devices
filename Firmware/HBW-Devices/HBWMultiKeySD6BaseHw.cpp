@@ -19,9 +19,11 @@ struct hbw_config
    HmwLed::Config ledcfg[12];             // 0x0028 - 0x003F
    HmwDS1820::Config ds1820cfg[6];        // 0x0040 - 0x0063
    HmwBrightness::Config brightnessCfg;   // 0x0064 - 0x0069
-   HmwSHT2x::Config sht2xConfig;          // 0x006A - 0x006F
-   HmwLinkKey::Config keyLinks[40];       // 0x0070 - 0x015F
-   HmwLinkLed::Config ledLinks[40];       // 0x0160 - 0x03DF
+   HmwSHT3x::Config sht3xConfig;          // 0x006A - 0x006F
+   HmwLinkInfoEvent::Config TempLinks[1]; // 0x0070 - 0x0075	// dummy address, will be skipped in XML
+   HmwLinkKey::Config keyLinks[40];       // 0x0076 - 0x0165 //0x0070 - 0x015F
+   HmwLinkLed::Config ledLinks[40];       // 0x0166 - 0x03E5 //0x0160 - 0x03..
+   //HmwLinkInfoEvent::Config TempLinks[18];// 0x0340 - 0x03AC // FHEM (HM?) only allows one start address in XML for sensor and actor each
 };
 
 static hbw_config& config = *reinterpret_cast<hbw_config*>( MAPPED_EEPROM_START );
@@ -74,10 +76,12 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
    hbwTmp6( ow, &config.ds1820cfg[5] ),
 
    hbwOnboardBrightness( PortPin( PortA, 6 ), TimerCounterChannel( &TimerCounter::instance( PortE, 0 ), TimerCounter::A ), &config.brightnessCfg ),
-   sht2x( Twi::instance<PortE>(), &config.sht2xConfig ),
+   sht3x( Twi::instance<PortE>(), &config.sht3xConfig ),
 
    linkSender( sizeof( config.keyLinks ) / sizeof( config.keyLinks[0] ), config.keyLinks ),
    linkReceiver( sizeof( config.ledLinks ) / sizeof( config.ledLinks[0] ), config.ledLinks ),
+   //linkSenderTemp( sizeof( config.TempLinks ) / sizeof( config.TempLinks[0] ), config.TempLinks ),
+   linkSenderTemp( (sizeof( config.keyLinks ) / sizeof( config.keyLinks[0])+1 ), config.TempLinks ),
 
    txEnable( txEnablePin )
 {

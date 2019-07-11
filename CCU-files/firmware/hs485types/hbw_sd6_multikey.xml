@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <device eep_size="1024" version="01">
 <supported_types>
-	<type priority="2" id="HBW-SD6-Multikey" name="Haus-Bus.de 6-Fach Taster mit 1-Wire (version 0)">
+	<!--<type priority="2" id="HBW-SD6-Multikey" name="Haus-Bus.de 6-Fach Taster mit 1-Wire (version 0)">
 		<parameter const_value="0xB1" size="1" index="0"/>
 		<parameter const_value="0" size="1" index="1"/>
-	</type>
+	</type>-->
 	<type priority="2" id="HBW-SD6-Multikey-v1" name="Haus-Bus.de 6-Fach Taster mit 1-Wire (version 1)">
 		<parameter const_value="0xB1" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
@@ -138,7 +138,7 @@
 			</parameter>
 		</paramset>
 		
-        <paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x070" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
+        <paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x076" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
             <parameter id="CHANNEL" hidden="true" operations="none">
                 <logical type="integer" min="0" max="255" default="255"/>
                 <physical size="1.0" type="integer" interface="eeprom">
@@ -201,7 +201,7 @@
 			</parameter>
 		</paramset>
 		
-		<paramset id="hmw_switch_ch_link" type="LINK" count="40" address_start="0x160" address_step="16" peer_param="SENSOR" channel_param="CHANNEL">
+		<paramset id="hmw_switch_ch_link" type="LINK" count="40" address_start="0x166" address_step="16" peer_param="SENSOR" channel_param="CHANNEL">
 			<parameter id="UI_HINT">
 				<logical type="string" default="" use_default_on_failure="true"/>
 				<physical id="UI_HINT" type="string" interface="store" save_on_change="true"/>
@@ -320,10 +320,10 @@
 		</paramset>		
 	</channel>	
 
-	<channel index="25" count="6" physical_index_offset="-1" type="WEATHER">
+	<channel index="25" count="6" physical_index_offset="-1" type="TEMPSENSOR"><!-- WEATHER -->
 		<link_roles>
 			<source name="WEATHER_T"/>
-		</link_roles>	
+		</link_roles>
 	    <paramset type="MASTER" id="hmw_temp_ch_master" address_step="6" address_start="0x40">
 			<parameter id="SENSOR_ID">
 			   <logical type="integer" default="255" max="254" min="1">
@@ -384,7 +384,7 @@
 	</channel>
 	
 	<channel index="31" type="LUXMETER" count="1" physical_index_offset="-1">
-		<paramset type="MASTER" id="lux_ch_master" address_step="6" address_start="0x64">
+		<paramset type="MASTER" id="hmw_lux_ch_master" address_step="6" address_start="0x64">
 			<parameter id="TX_MINDELAY" operations="read,write">
 			   <logical type="integer" unit="s" default="10" min="5" max="3600">
 			     <special_value id="NOT_USED" value="0"/>
@@ -405,7 +405,7 @@
 				</physical>	
 			</parameter>
 		</paramset>
-		<paramset type="VALUES" id="lux_ch_values">
+		<paramset type="VALUES" id="hmw_lux_ch_values">
 			<parameter id="LUX" operations="read,event" control="LUXMETER.LUX">
 				<logical type="float" min="0.00" max="200000.00" unit="Lux"/>
 				<physical type="integer" interface="command" value_id="LUX" no_init="true">
@@ -420,8 +420,10 @@
 	<channel index="32" count="1" physical_index_offset="-1" type="WEATHER">
 		<link_roles>
 			<source name="WEATHER_TH"/>
+			<source name="TEST"/>
 		</link_roles>
-		<paramset type="MASTER" id="shtc3_ch_master" address_step="6" address_start="0x6A">
+		
+		<paramset type="MASTER" id="hmw_shtc3_ch_master" address_step="6" address_start="0x6A">
 			<parameter id="SEND_DELTA_HUMIDITY" operations="read,write">
 				<logical type="integer" min="2" max="100" unit="%" default="0.0">
 					<special_value id="NOT_USED" value="0.0"/>
@@ -465,28 +467,49 @@
                </conversion>				   
 			</parameter>
 		</paramset>
-		<paramset type="VALUES" id="shtc3_ch_values">
+		
+		<paramset id="hmw_shtc3_ch_link" type="LINK" count="40" address_start="0x076" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
+            <parameter id="CHANNEL" hidden="true" operations="none">
+                <logical type="integer" min="0" max="255" default="255"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+0.0"/>
+                </physical>
+            </parameter>
+            <parameter id="ACTUATOR" hidden="true" operations="none">
+                <logical type="address"/>
+                <physical type="array">
+                    <physical size="4.0" type="integer" interface="eeprom">
+                        <address index="+1.0"/>
+                    </physical>
+                    <physical size="1.0" type="integer" interface="eeprom">
+                        <address index="+5.0"/>
+                    </physical>
+                </physical>
+            </parameter>
+		</paramset>
+		
+		<paramset type="VALUES" id="hmw_shtc3_ch_values">
 			<parameter id="TEMPERATURE" operations="read,event">
 				<logical type="float" min="-40.0" max="80.0" unit="&#x2103;"/>
 				<physical type="integer" interface="command" value_id="TEMPERATURE">
 					<event frame="WEATHER_EVENT"/>
 				</physical>
 				<conversion type="float_integer_scale" factor="100"/>
-				<description>
+				<!--<description>
 					<field id="AutoconfRoles" value="WEATHER"/>
-				</description>
+				</description>-->
 			</parameter>
 			<parameter id="HUMIDITY" operations="read,event">
 				<logical type="integer" min="0" max="99" unit="%"/>
 				<physical type="integer" interface="command" value_id="HUMIDITY">
+					<get request="LEVEL_GET" response="WEATHER_EVENT"/>
 					<event frame="WEATHER_EVENT"/>
 				</physical>
-				<description>
+				<!--<description>
 					<field id="AutoconfRoles" value="WEATHER"/>
-				</description>
+				</description>-->
 			</parameter>
 		</paramset>
-		<paramset type="LINK" id="shtc3_ch_link"/>
 	</channel>	
 	
 </channels>

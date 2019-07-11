@@ -64,6 +64,7 @@ class HmwMessageBase
          START_FW = 'g',
          GET_HARDWARE_VERSION = 'h',
          INFO_LEVEL = 'i',
+         INFO_EVENT = 0xB4,
          SET_LOCK = 'l',
          GET_SERIAL = 'n',
          GET_PACKET_SIZE = 'p',

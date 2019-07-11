@@ -46,7 +46,7 @@ class HmwChannel
          HMW_DIMMER,
          HMW_DS18X20,
          HMW_SHTC3,
-		 HMW_SHT2x
+		 HMW_SHT3x
       };
 
    protected:

@@ -1,5 +1,5 @@
 /*
-** HmwLinkKey
+** HmwLinkInfoEvent
 **
 ** Einfache direkte Verknuepfung (Peering), vom Tastereingang ausgehend
 ** Ein Link-Objekt steht immer fuer alle (direkt aufeinander folgenden) Verknuepfungen
@@ -8,20 +8,20 @@
 */
 
 
-#include "HmwLinkKey.h"
+#include "HmwLinkInfoEvent.h"
 #include "HmwChannel.h"
 #include "HmwDevice.h"
 
 
-HmwLinkKey::HmwLinkKey( uint8_t _numLinks, Config* _links )
+HmwLinkInfoEvent::HmwLinkInfoEvent( uint8_t _numLinks, Config* _links )
 {
    numLinks = _numLinks;
    links = _links;
 }
 
 
-// keyPressed wird aufgerufen, wenn ein Tastendruck erkannt wurde
-IStream::Status HmwLinkKey::sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress )
+// sendInfoEvent wird aufgerufen, wenn neue daten bereit stehen
+IStream::Status HmwLinkInfoEvent::sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
 {
    IStream::Status status = IStream::NO_DATA;
 
@@ -33,7 +33,6 @@ IStream::Status HmwLinkKey::sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, 
       {
          continue;
       }
-
       // channel is key?
       if ( links[i].ownChannel != srcChan )
       {
@@ -47,16 +46,17 @@ IStream::Status HmwLinkKey::sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, 
       // own address? -> internal peering
       if ( actorAddress == HmwDevice::ownAddress )
       {
-         HmwDevice::receiveKeyEvent( actorAddress, srcChan, links[i].actorChannel, longPress, keyPressNum );
+		  // internal peering not supported
+         //HmwDevice::receiveInfoEvent( actorAddress, srcChan, links[i].actorChannel, longPress, keyPressNum );
       }
       else
       {
          // external peering
-         HmwDevice::sendKeyEvent( srcChan, keyPressNum, longPress, actorAddress, links[i].actorChannel );
+         HmwDevice::sendInfoEvent( srcChan, data, length, actorAddress, links[i].actorChannel );
       }
    }
 
    return status;
 }
-//TODO: wohin? besser!?
-//IStream::Status HmwLinkKey::sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length ){return IStream::INVALID_STREAM;};
+
+

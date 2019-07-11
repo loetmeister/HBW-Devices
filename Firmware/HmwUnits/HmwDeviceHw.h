@@ -11,6 +11,7 @@
 
 #include "HmwStreamHw.h"
 #include "HmwLinkSender.h"
+#include "HmwLinkSenderInfoEvent.h"
 #include "HmwLinkReceiver.h"
 
 #include <xEeprom.h>

@@ -27,7 +27,6 @@ class HmwLinkSender
       // functions
    public:
       virtual IStream::Status sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress ) = 0;
-
       static inline IStream::Status notifyKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress )
       {
          if ( instance )

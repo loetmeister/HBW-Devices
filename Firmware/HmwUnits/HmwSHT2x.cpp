@@ -116,16 +116,19 @@ void HmwSHT2x::loop( uint8_t channel )
 
          if ( doSend )
          {
-            uint8_t data[3];
-            uint8_t errcode = HmwDevice::sendInfoMessage( channel, get( data ), data );
+            uint8_t data[3];get( data );
+            uint8_t errcode = HmwDevice::sendInfoMessage( channel, 3, data );
 
             // sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
-            if ( errcode != 0 )
+            if ( errcode != IStream::SUCCESS )
             {
                // retry in 500ms if something fails
                nextActionDelay = 500;
                break;
             }
+			//fixme
+			//HmwDevice::sendInfoEvent( channel, data, 2 );	//send temp only
+			
             lastSentCentiCelsius = currentCentiCelsius;
 			lastSentHumidity = currentHumidity;
             lastSentTime = Timestamp();
