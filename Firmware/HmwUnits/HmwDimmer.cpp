@@ -11,21 +11,23 @@
 
 #define getId() FSTR( "HmwDimmer." ) << channelId
 
-const uint8_t HmwDimmer::debugLevel( DEBUG_LEVEL_LOW | DEBUG_STATE_L3 );
+const uint8_t HmwDimmer::debugLevel( DEBUG_LEVEL_OFF | DEBUG_STATE_L3 );
 
 HmwDimmer::HmwDimmer( PortPin _portPin, PortPin _enablePin, Config* _config, uint8_t _normalizeLevel ) :
    normalizeLevel( _normalizeLevel ),
+   dimmingFactor( _normalizeLevel ),
+   dimmingOffset( 0 ),
    pwmOutput( _portPin.getPortNumber(), _portPin.getPinNumber() ),
    enableOutput( _enablePin ),
    currentLevel( 0 ),
    config( _config ),
    actionParameter( NULL ),
-   nextFeedbackTime( 0 ),
    nextActionTime( 0 ),
    lastKeyNum( 0 )
 {
    type = HmwChannel::HMW_DIMMER;
    pwmOutput.setInverted( config->isDimmingModeLeading() );
+   calculateDimmingParameter();
    SET_STATE_L1( START_UP );
 }
 
@@ -215,32 +217,14 @@ void HmwDimmer::loop( uint8_t channel )
    {
       handleStateChart();
    }
-
-   // feedback trigger set?
-   if ( !nextFeedbackTime.isValid() || !nextFeedbackTime.since() )
-   {
-      return;
-   }
-
-   uint8_t errcode = HmwDevice::sendInfoMessage( channel, sizeof( currentLevel ), &currentLevel );
-
-   // sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
-   if ( errcode )
-   {
-      // bus busy
-      // try again later, but insert a small delay
-      nextFeedbackTime += 250;
-   }
-   else
-   {
-      nextFeedbackTime.reset();
-   }
+   handleFeedback();
 }
 
 void HmwDimmer::checkConfig()
 {
    config->checkOrRestore();
    pwmOutput.setInverted( config->isDimmingModeLeading() );
+   calculateDimmingParameter();
 }
 
 void HmwDimmer::setLevel( uint8_t level )
@@ -256,8 +240,7 @@ void HmwDimmer::setLevel( uint8_t level )
       if ( config->isDimmingModeSwitch() || config->isDimmingModePwm() )
       {
          // disable PWM in this mode, set only digital pin
-         pwmOutput.set( 0 );
-         level ? pwmOutput.DigitalOutput::set() : pwmOutput.DigitalOutput::clear();
+         level ? pwmOutput.DigitalOutput::set() : pwmOutput.clear();
       }
       else
       {
@@ -265,15 +248,19 @@ void HmwDimmer::setLevel( uint8_t level )
          {
             level = MAX_LEVEL - level;
          }
-         pwmOutput.set( level * normalizeLevel );
+         if ( level )
+         {
+            uint16_t pwmValue = level * dimmingFactor + dimmingOffset;
+            pwmOutput.set( pwmValue );
+            DEBUG_M2( FSTR( " pwmValue 0x" ), pwmValue );
+         }
+         else
+         {
+            pwmOutput.clear();
+         }
       }
 
-      // Logging
-      if ( !nextFeedbackTime.isValid() && config->isLogging() )
-      {
-         nextFeedbackTime = Timestamp();
-         nextFeedbackTime += ( HmwDevice::getLoggingTime() * 100 );
-      }
+      checkLogging( config->isLogging() );
    }
 }
 
@@ -456,6 +443,25 @@ void HmwDimmer::handleStateChart( bool fromMainLoop )
          WARN_3( FSTR( "HmwDimmer::handleJumpToTargetCmd from state: 0x" ), (uint8_t)state, FSTR( " not implemented" ) );
       }
    }
+}
+
+void HmwDimmer::calculateDimmingParameter()
+{
+   DEBUG_H1( FSTR( " calculateDimmingParameter" ) );
+
+   uint8_t cutOffStart = Config::_00_PERCENT - config->getPwmRangeStart();
+   uint8_t cutOffEnd = Config::_100_PERCENT - config->getPwmRangeEnd();
+
+   dimmingOffset = normalizeLevel * cutOffStart * ( MAX_LEVEL / 10 );
+
+   // use extra 16bit variable to have accurate calculation for the dimmingFactor
+   uint16_t pwmRange = normalizeLevel * MAX_LEVEL;
+   pwmRange = pwmRange - ( normalizeLevel * ( cutOffStart + cutOffEnd ) * ( MAX_LEVEL / 10 ) );
+
+   dimmingFactor = pwmRange / MAX_LEVEL;
+
+   DEBUG_M2( FSTR( "dimmingOffset : 0x" ), dimmingOffset );
+   DEBUG_M2( FSTR( "dimmingFactor : 0x" ), dimmingFactor );
 }
 
 void HmwDimmer::calculateRampParameter()

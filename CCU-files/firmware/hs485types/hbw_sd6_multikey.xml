@@ -68,7 +68,7 @@
 		<parameter type="integer" signed="true" index="11.0" size="2.0" param="TEMPERATURE"/>
 	</frame>
 	<frame id="LUX_EVENT" direction="from_device" event="true" type="#i" channel_field="10">
-		<parameter type="integer" index="11.0" size="4.0" param="LUX"/>
+		<parameter type="integer" index="11.0" size="2.0" param="LUX"/>
 	</frame>	
 	<frame id="WEATHER_EVENT" direction="from_device" event="true" type="#i" channel_field="10">
 		<parameter type="integer" signed="true" index="11.0" size="2.0" param="TEMPERATURE"/>
@@ -78,6 +78,21 @@
 
 <channels>
 	<channel index="0" type="MAINTENANCE" count="1" class="maintenance" ui_flags="internal">
+		<paramset type="MASTER" id="maint_ch_master"/>
+		<paramset type="VALUES" id="maint_ch_values">
+			<parameter id="UNREACH" operations="read,event" ui_flags="service">
+				<logical type="boolean"/>
+				<physical type="integer" interface="internal" value_id="UNREACH"/>
+			</parameter>
+			<parameter id="STICKY_UNREACH" operations="read,write,event" ui_flags="service">
+				<logical type="boolean"/>
+				<physical type="integer" interface="internal" value_id="STICKY_UNREACH"/>
+			</parameter>
+			<parameter id="CONFIG_PENDING" operations="read,event" ui_flags="service">
+				<logical type="boolean"/>
+				<physical type="integer" interface="internal" value_id="CONFIG_PENDING"/>
+			</parameter>
+		</paramset>	
 	</channel>
 
 	<channel index="1" type="KEY" count="12" physical_index_offset="-1">
@@ -88,8 +103,8 @@
 		<paramset id="hmw_input_ch_master" type="MASTER" address_step="2" address_start="0x10">
 			<parameter id="INPUT_TYPE">
 				<logical type="option">
-					<option id="PUSHBUTTON" default="true"/>
 					<option id="SWITCH"/>
+					<option id="PUSHBUTTON" default="true"/>
 					<option id="MOTIONSENSOR"/>
 				</logical>
 				<physical size="0.3" type="integer" interface="eeprom">
@@ -182,14 +197,6 @@
         </link_roles>
 
 	    <paramset id="hmw_dim_ch_master" type="MASTER" address_step="2" address_start="0x28">
-			<parameter id="PWM_RANGE">
-				<logical type="integer" unit="%" default="100" min="0" max="100">
-			       <special_value id="DISABLE" value="0"/>
-			   </logical>	
-				<physical size="0.7" type="integer" interface="eeprom">
-					<address index="+0"/>
-				</physical>
-			</parameter>
 			<parameter id="LOGGING">
 				<logical type="option">
 					<option id="OFF"/>
@@ -397,22 +404,34 @@
                </conversion>
 			</parameter>
 			<parameter id="TX_THRESHOLD_PERCENT" operations="read,write">
-				<logical type="integer" min="10" max="100" unit="%" default="0.0">
+				<logical type="integer" min="10" max="100" unit="%" default="10">
 					<special_value id="NOT_USED" value="0.0"/>
 				</logical>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+2.0"/>
 				</physical>	
 			</parameter>
+			<parameter id="SCALE" operations="read,write">
+				<logical type="integer" min="5" max="200" default="60"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+3.0"/>
+				</physical>	
+			</parameter>
+			<parameter id="OFFSET" operations="read,write">
+				<logical type="integer" min="5" max="2500" default="50"/>
+				<physical size="2.0" type="integer" interface="eeprom">
+					<address index="+4.0"/>
+				</physical>	
+			</parameter>
 		</paramset>
 		<paramset type="VALUES" id="hmw_lux_ch_values">
 			<parameter id="LUX" operations="read,event" control="LUXMETER.LUX">
-				<logical type="float" min="0.00" max="200000.00" unit="Lux"/>
+				<logical type="float" min="0.0" max="1600.0" unit="Lux"/>
 				<physical type="integer" interface="command" value_id="LUX" no_init="true">
 					<get request="LEVEL_GET" response="LUX_EVENT"/>
 					<event frame="LUX_EVENT"/>
 				</physical>
-				<conversion type="float_integer_scale" factor="100"/>
+				<conversion type="float_integer_scale" factor="10"/>
 			</parameter>
 		</paramset>
 	</channel>	
@@ -450,11 +469,19 @@
 			   </logical>
                <physical size="2.0" type="integer" interface="eeprom" endian="little">
                   <address index="+2.0"/>
+		<!--<paramset type="MASTER" id="shtc3_ch_master" address_step="6" address_start="0x6A">
+			<parameter id="TX_MINDELAY" operations="read,write">
+			   <logical type="integer" unit="s" default="10" min="5" max="3600">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>	   
+               <physical size="2.0" type="integer" interface="eeprom" endian="little">
+                  <address index="+0.0"/>-->
                </physical>	  
                <conversion type="integer_integer_map">
                  <value_map to_device="false" from_device="true" parameter_value="10" device_value="0xffff"/>
                </conversion>
 			</parameter>
+<<<<<<< HEAD
 			<parameter id="SEND_MAX_INTERVAL">
 			   <logical type="integer" unit="s" default="150" min="5" max="3600">
 			     <special_value id="NOT_USED" value="0"/>
@@ -489,6 +516,16 @@
 		</paramset>
 		
 		<paramset type="VALUES" id="hmw_shtc3_ch_values">
+			<!--<parameter id="TX_THRESHOLD_PERCENT" operations="read,write">
+				<logical type="integer" min="1" max="100" unit="%" default="2">
+					<special_value id="NOT_USED" value="0.0"/>
+				</logical>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+2.0"/>
+				</physical>	
+			</parameter>
+		</paramset>		
+		<paramset type="VALUES" id="shtc3_ch_values">-->
 			<parameter id="TEMPERATURE" operations="read,event">
 				<logical type="float" min="-40.0" max="80.0" unit="&#x2103;"/>
 				<physical type="integer" interface="command" value_id="TEMPERATURE">

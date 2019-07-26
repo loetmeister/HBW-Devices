@@ -145,12 +145,10 @@ void HmwDS1820::loop( uint8_t channel )
    {
       bool doSend = ( readMeasurement() == OK );	//TODO: handle CRC_FAILTURE (add error counter, then use "#define ERROR_TEMP -27314     // CRC or read error", for SEND_INVALID_VALUE)
 
-      // do not send before min interval
-      doSend &= !( config->minInterval && ( lastSentTime.since() < ( (uint32_t)config->minInterval * 1000 ) ) );
-      doSend &= ( ( config->maxInterval && ( lastSentTime.since() >= ( (uint32_t)config->maxInterval * 1000 ) ) )
-                || ( config->minDelta && ( (uint16_t)abs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
+      doSend &= ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= ( config->maxInterval - config->minInterval ) ) )
+                || ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
 
-      if ( doSend )
+      if ( doSend ) //&& handleFeedback( SystemTime::S* config->minInterval ) )
       {
          uint8_t data[2];
 		 get( data );
@@ -184,6 +182,7 @@ void HmwDS1820::loop( uint8_t channel )
 		 lastSentCentiCelsius = currentCentiCelsius;
 		 lastSentTime = Timestamp();
       }
+
       // start next measurement after 5s
       state = START_MEASUREMENT;
       nextActionDelay = 5000;
@@ -193,7 +192,7 @@ void HmwDS1820::loop( uint8_t channel )
       // send the INVALID_VALUE one time
       uint8_t data[2];
       HmwDevice::sendInfoMessage( channel, get( data ), data );
-      nextActionDelay = 0;
+      disable();
    }
 
 }
@@ -220,6 +219,7 @@ void HmwDS1820::checkConfig()
    // maybe someone has changed the Ids, search the desired sensor now
    state = SEARCH_SENSOR;
    nextActionDelay = 500;
+   nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
 }
 
 

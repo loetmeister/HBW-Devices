@@ -156,7 +156,6 @@ class HmwDS1820 : public HmwChannel
 
       Timestamp lastActionTime;
 
-      Timestamp lastSentTime;
 };
 
 
