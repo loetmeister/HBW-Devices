@@ -124,6 +124,7 @@
     <ListValues>
       <Value>F_CPU=32000000UL</Value>
       <Value>_HEAP_SIZE_=2048</Value>
+      <Value>_Support_HBWLink_InfoEvent_</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>
   <avrgcccpp.compiler.directories.IncludePaths>

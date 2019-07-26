@@ -21,7 +21,9 @@ const uint8_t HmwDS1820::debugLevel( DEBUG_LEVEL_OFF );
 bool HmwDS1820::selfPowered( true );
 
 HmwDS1820::HmwDS1820( OneWire& _hardware, Config* _config ) :
-   hardware( &_hardware ), state( SEARCH_SENSOR )
+   hardware( &_hardware ),
+   state( SEARCH_SENSOR ),
+   sendPeer( true )
 {
    type = HmwChannel::HMW_DS18X20;
    config = _config;
@@ -141,7 +143,7 @@ void HmwDS1820::loop( uint8_t channel )
    }
    else if ( state == SEND_FEEDBACK )
    {
-      bool doSend = ( readMeasurement() == OK );
+      bool doSend = ( readMeasurement() == OK );	//TODO: handle CRC_FAILTURE (add error counter, then use "#define ERROR_TEMP -27314     // CRC or read error", for SEND_INVALID_VALUE)
 
       // do not send before min interval
       doSend &= !( config->minInterval && ( lastSentTime.since() < ( (uint32_t)config->minInterval * 1000 ) ) );
@@ -151,14 +153,36 @@ void HmwDS1820::loop( uint8_t channel )
       if ( doSend )
       {
          uint8_t data[2];
-         uint8_t errcode = HmwDevice::sendInfoMessage( channel, get( data ), data );
-
+		 get( data );
+	#if defined(_Support_HBWLink_InfoEvent_)
+		if ( sendPeer )
+		{
+			sendPeer = false;
+			if ( HmwDevice::sendInfoEvent( channel, data, 2 ) == IStream::SUCCESS)
+			{
+				nextActionDelay = 500;	// at least one peer existed, so add some delay before sending InfoMessage
+				return;
+			}
+		}
+		else {
+	#endif
+		
+         //uint8_t errcode = HmwDevice::sendInfoMessage( channel, get( data ), data );
+		 uint8_t errcode = HmwDevice::sendInfoMessage( channel, 2, data );
          // sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
-         if ( errcode == 0 )
+         if ( errcode != 0 )
          {
-            lastSentCentiCelsius = currentCentiCelsius;
-            lastSentTime = Timestamp();
+            // retry in 500ms if something fails
+            nextActionDelay = 500;
+			return;
          }
+	#if defined(_Support_HBWLink_InfoEvent_)
+		 	sendPeer = true;	// InfoMessage was send, try sendInfoEvent next time "doSend"
+	 	}
+	#endif
+	
+		 lastSentCentiCelsius = currentCentiCelsius;
+		 lastSentTime = Timestamp();
       }
       // start next measurement after 5s
       state = START_MEASUREMENT;

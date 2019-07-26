@@ -182,7 +182,7 @@ class HmwDevice
          HmwMsgKeyEvent msg( ownAddress, targetAddr, srcChan, targetChan, keyPressNum, longPress );
          return HmwStream::sendMessage( msg );
       }
-//#ifdef Support_HBWLink_InfoEvent
+#if defined(_Support_HBWLink_InfoEvent_)
 	/* direkt aufeinanderfolgendes senden funktioniert nicht richtig. Eventuell da beide Nachrichten ein ACK erwarten? */
       /*static inline IStream::Status sendInfoMsgAndEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
       {
@@ -199,17 +199,17 @@ class HmwDevice
 		 return IStream::ABORTED;
       }*/
 	  
-	static inline IStream::Status sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
-	{
+	  static inline IStream::Status sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
+	  {
 		return HmwLinkSenderInfoEvent::notifyInfoEvent( srcChan, data, length );
-	}
+	  }
 	  
       static inline IStream::Status sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length, uint32_t targetAddr, uint8_t targetChan )
       {
          HmwMsgInfoEvent msg( ownAddress, targetAddr, srcChan, targetChan, data, length );
          return HmwStream::sendMessage( msg );
       }
-//#endif
+#endif
       static inline uint8_t sendInfoMessage( uint8_t channel, uint8_t length, uint8_t const* const data, uint32_t target_address = 0 )
       {
          HmwMsgInfo msg( ownAddress, target_address ? target_address : changeEndianness( basicConfig->centralAddress ), channel, data, length );

@@ -12,7 +12,7 @@
 #include "HmwChannel.h"
 #include "HmwDevice.h"
 
-
+#if defined(_Support_HBWLink_InfoEvent_)
 HmwLinkInfoEvent::HmwLinkInfoEvent( uint8_t _numLinks, Config* _links )
 {
    numLinks = _numLinks;
@@ -38,7 +38,6 @@ IStream::Status HmwLinkInfoEvent::sendInfoEvent( uint8_t srcChan, uint8_t const*
       {
          continue;
       }
-
       // at least one peering fired
       status = IStream::SUCCESS;
       uint32_t actorAddress = changeEndianness( links[i].actorAddress );
@@ -58,5 +57,6 @@ IStream::Status HmwLinkInfoEvent::sendInfoEvent( uint8_t srcChan, uint8_t const*
 
    return status;
 }
+#endif
 
 

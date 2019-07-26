@@ -58,5 +58,4 @@ IStream::Status HmwLinkKey::sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, 
 
    return status;
 }
-//TODO: wohin? besser!?
-//IStream::Status HmwLinkKey::sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length ){return IStream::INVALID_STREAM;};
+

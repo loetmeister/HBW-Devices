@@ -13,6 +13,7 @@
 
 #include "HmwLinkSenderInfoEvent.h"
 
+#if defined(_Support_HBWLink_InfoEvent_)
 class HmwLinkInfoEvent : public HmwLinkSenderInfoEvent
 {
    public:
@@ -32,5 +33,5 @@ class HmwLinkInfoEvent : public HmwLinkSenderInfoEvent
       uint8_t numLinks;         // number of links of this type
       Config* links;            // size sollte konstant sein -> als define in .cpp
 };
-
+#endif  //_Support_HBWLink_InfoEvent_
 #endif

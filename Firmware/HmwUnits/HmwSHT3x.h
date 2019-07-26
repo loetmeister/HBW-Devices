@@ -3,7 +3,7 @@
  * 
  *  Created on: 26.06.2019
  *  by,    loetmeister.de
- *  support Sensirion Humidity Sensor SHT30-D
+ *  support Sensirion Humidity Sensor SHT30-D (and SHT31?)
  * 
  *  Created on: 26.04.2017
  *      Author: Viktor Pankraz

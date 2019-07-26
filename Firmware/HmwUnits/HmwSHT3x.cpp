@@ -3,7 +3,7 @@
  * 
  *  Created on: 26.06.2019
  *  by,    loetmeister.de
- *  support Sensirion Humidity Sensor SHT30-D
+ *  support Sensirion Humidity Sensor SHT30-D (and SHT31?)
  * 
  *  Created on: 26.04.2017
  *      Author: Viktor Pankraz
@@ -20,7 +20,7 @@
 #define getId() FSTR( "HmwSHT3x " )
 
 #define INVALID_VALUE -27315
-#define READ_ERR_COUNT 10 // allow 10 consecutive failures before going to error state (retry is 1 second)
+#define READ_ERR_COUNT 10 // allow 10 consecutive failures before going to error state (retry frequency is 1 second)
 
 const uint8_t HmwSHT3x::debugLevel( DEBUG_LEVEL_OFF );
 
@@ -96,7 +96,7 @@ void HmwSHT3x::loop( uint8_t channel )
 			readMeasurementErrorCounter--;
 			if (!readMeasurementErrorCounter)
 			{
-			// error counter hit - set next state CHECK_SENSOR after 10 consecutive failures (send msg once, then go to CHECK_SENSOR)
+			// error counter hit - set next state CHECK_SENSOR after 10 consecutive failures (send InfoMessage once, then go to CHECK_SENSOR)
 				softReset();
 				//SET_STATE_L1( CHECK_SENSOR );
 				SET_STATE_L1( SEND_FEEDBACK );
@@ -108,7 +108,7 @@ void HmwSHT3x::loop( uint8_t channel )
 			}
             return;
          }
-		 readMeasurementErrorCounter = READ_ERR_COUNT;
+		 readMeasurementErrorCounter = READ_ERR_COUNT;	// reset counter
          SET_STATE_L1( SEND_FEEDBACK );
       }
 
@@ -126,21 +126,19 @@ void HmwSHT3x::loop( uint8_t channel )
          {
             uint8_t data[3];
 			get( data );
-			
+		#if defined(_Support_HBWLink_InfoEvent_)
 			if ( sendPeer )
 			{
 				sendPeer = false;
-				if ( HmwDevice::sendInfoEvent( channel, data, 2 ) == IStream::SUCCESS)	//send temp only
+				if ( HmwDevice::sendInfoEvent( channel, data, 2 ) == IStream::SUCCESS)	//send temp only (length == 2)
 				{
-					// at least one peer existed, aad some delay
-					nextActionDelay = 500;
+					nextActionDelay = 500;	// at least one peer existed, so add some delay before sending InfoMessage
 					break;
 				}
 			}
 			else {
+		#endif
 				uint8_t errcode = HmwDevice::sendInfoMessage( channel, 3, data );
-				//uint8_t errcode = HmwDevice::sendInfoMsgAndEvent( channel, data, get( data ) );	// send InfoMessage and InfoEvent at the same time
-			
 				// sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
 				if ( errcode != 0 )
 				{
@@ -148,16 +146,18 @@ void HmwSHT3x::loop( uint8_t channel )
 				   nextActionDelay = 500;
 				   break;
 				}
-				sendPeer = true;
+		#if defined(_Support_HBWLink_InfoEvent_)
+				sendPeer = true;	// InfoMessage was send, try sendInfoEvent next time "doSend"
 			}
-			
+		#endif
 			
             lastSentCentiCelsius = currentCentiCelsius;
 			lastSentHumidity = currentHumidity;
             lastSentTime = Timestamp();
          }
          //sleep(); // switch off sensor
-		 // sensor lost or in error state
+		 
+		 // connection to sensor lost or in error state
 		 if (currentCentiCelsius == INVALID_VALUE) {
 			 SET_STATE_L1( CHECK_SENSOR );
 			 break;
@@ -212,7 +212,7 @@ HmwSHT3x::HwStatus HmwSHT3x::checkSensorId()
             if ( checkCrc( data, 0, data[2] ) == OK )
             {
                uint16_t myId = ( data[0] << 8 ) | data[1];
-               if ( myId ) //( ( myId & 0x083F ) == 0x0807 )
+               if ( myId )	// myId: 0x3DC == SHT30 / check the correct sensor family ID for SHT31 and others
                {
                   // yes, this is the expected sensor
                   return OK;

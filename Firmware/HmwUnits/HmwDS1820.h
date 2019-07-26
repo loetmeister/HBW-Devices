@@ -145,6 +145,8 @@ class HmwDS1820 : public HmwChannel
       Config* config;
 
       State state;
+	  
+	  bool sendPeer;
 
       OneWire::RomCode romCode;
 
