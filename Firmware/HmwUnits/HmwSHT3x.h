@@ -140,7 +140,7 @@ class HmwSHT3x : public HmwChannel
 
       Timestamp lastActionTime;
 
-      Timestamp lastSentTime;
+      //Timestamp lastSentTime;
 
       Config* config;
 };

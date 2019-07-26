@@ -162,25 +162,14 @@ void HmwDS1820::loop( uint8_t channel )
 				return;
 			}
 		}
-		else {
 	#endif
-		
-         //uint8_t errcode = HmwDevice::sendInfoMessage( channel, get( data ), data );
-		 uint8_t errcode = HmwDevice::sendInfoMessage( channel, 2, data );
-         // sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
-         if ( errcode != 0 )
-         {
-            // retry in 500ms if something fails
-            nextActionDelay = 500;
-			return;
-         }
+		if ( handleFeedback( SystemTime::S* config->minInterval ) )
+		{
 	#if defined(_Support_HBWLink_InfoEvent_)
 		 	sendPeer = true;	// InfoMessage was send, try sendInfoEvent next time "doSend"
-	 	}
 	#endif
-	
-		 lastSentCentiCelsius = currentCentiCelsius;
-		 lastSentTime = Timestamp();
+	 		lastSentCentiCelsius = currentCentiCelsius;
+		 }
       }
 
       // start next measurement after 5s

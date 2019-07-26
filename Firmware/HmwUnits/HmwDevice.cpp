@@ -104,12 +104,12 @@ void HmwDevice::handlePendingActions()
    }
    if ( SystemTime::now() > FIRST_ANNOUNCEMENT_TIME )
    {
-      if ( ResetSystem::getSources() )
-      {
-         HmwMsgStartupReason msg( ownAddress, ResetSystem::getSources() );
-         HmwStream::sendMessage( msg );
-         ResetSystem::clearSources();
-      }
+      // if ( ResetSystem::getSources() )
+      // {
+         // HmwMsgStartupReason msg( ownAddress, ResetSystem::getSources() );
+         // HmwStream::sendMessage( msg );
+         // ResetSystem::clearSources();
+      // }
       handleAnnouncement();
    }
 }
