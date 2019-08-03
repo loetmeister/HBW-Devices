@@ -55,6 +55,7 @@
 	<frame id="LEVEL_GET" type="#S" channel_field="10" direction="to_device"/>
 	<frame id="INFO_LEVEL" type="#i" channel_field="10" direction="from_device" event="true">
 		<parameter size="1.0" index="11.0" type="integer" param="LEVEL"/>
+		<parameter type="integer" index="12.4" size="0.3" param="STATE_FLAGS"/>
 	</frame>
 	<frame id="KEY_EVENT_SHORT" type="#K" channel_field="10" direction="from_device" event="true">
 		<parameter const_value="0" size="0.1" index="12.0" type="integer"/>
@@ -73,7 +74,10 @@
 	<frame id="WEATHER_EVENT" direction="from_device" event="true" type="#i" channel_field="10">
 		<parameter type="integer" signed="true" index="11.0" size="2.0" param="TEMPERATURE"/>
 		<parameter type="integer" index="13.0" size="1.0" param="HUMIDITY"/>
-	</frame>	
+	</frame>
+	<frame id="ANALOG_EVENT" direction="from_device" event="true" type="#i" channel_field="10">
+		<parameter type="integer" index="11.0" size="2.0" param="ANALOGVALUE"/>
+	</frame>
 </frames>
 
 <channels>
@@ -153,7 +157,7 @@
 			</parameter>
 		</paramset>
 		
-        <paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x076" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
+        <paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x07C" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
             <parameter id="CHANNEL" hidden="true" operations="none">
                 <logical type="integer" min="0" max="255" default="255"/>
                 <physical size="1.0" type="integer" interface="eeprom">
@@ -208,7 +212,7 @@
 			</parameter>
 		</paramset>
 		
-		<paramset id="hmw_switch_ch_link" type="LINK" count="40" address_start="0x166" address_step="16" peer_param="SENSOR" channel_param="CHANNEL">
+		<paramset id="hmw_switch_ch_link" type="LINK" count="40" address_start="0x16C" address_step="16" peer_param="SENSOR" channel_param="CHANNEL">
 			<parameter id="UI_HINT">
 				<logical type="string" default="" use_default_on_failure="true"/>
 				<physical id="UI_HINT" type="string" interface="store" save_on_change="true"/>
@@ -390,7 +394,7 @@
 		</paramset>		
 	</channel>
 	
-	<channel index="31" type="LUXMETER" count="1" physical_index_offset="-1">
+<!--<channel index="31" type="LUXMETER" count="1" physical_index_offset="-1">
 		<paramset type="MASTER" id="hmw_lux_ch_master" address_step="6" address_start="0x64">
 			<parameter id="TX_MINDELAY" operations="read,write">
 			   <logical type="integer" unit="s" default="10" min="5" max="3600">
@@ -434,15 +438,62 @@
 				<conversion type="float_integer_scale" factor="10"/>
 			</parameter>
 		</paramset>
-	</channel>	
-
-	<channel index="32" count="1" physical_index_offset="-1" type="WEATHER">
+	</channel>	-->
+	
+	<channel index="31" count="2" physical_index_offset="-1" type="ANALOGSENSOR">
+	    <paramset type="MASTER" id="hmw_analog_ch_master" address_step="6" address_start="0x64">
+			<parameter id="SEND_DELTA_ANALOG">
+			   <logical type="integer" default="50" min="1" max="250">
+			       <special_value id="NOT_USED" value="0"/>
+			   </logical>
+               <physical size="1.0" type="integer" interface="eeprom">
+                  <address index="+1.0"/>
+               </physical>	
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="50" device_value="0xff"/>
+               </conversion>
+			</parameter>
+			<parameter id="SEND_MIN_INTERVAL">
+			   <logical type="integer" unit="s" default="10" min="5" max="3600">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>
+               <physical size="2.0" type="integer" interface="eeprom" endian="little">
+                  <address index="+2.0"/>
+               </physical>
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="10" device_value="0xffff"/>
+               </conversion>
+			</parameter>
+			<parameter id="SEND_MAX_INTERVAL">
+			   <logical type="integer" unit="s" default="150" min="5" max="3600">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>
+               <physical size="2.0" type="integer" interface="eeprom" endian="little">
+                  <address index="+4.0"/>
+               </physical>	
+               <conversion type="integer_integer_map">
+                 <value_map to_device="false" from_device="true" parameter_value="150" device_value="0xffff"/>
+               </conversion>
+			</parameter>
+		</paramset>
+		<paramset type="VALUES" id="hmw_analog_input_values">
+			<parameter id="VALUE" operations="read,event">
+				<logical type="integer" min="0" max="4095"/>
+				<physical type="integer" interface="command" value_id="ANALOGVALUE">
+					<get request="LEVEL_GET" response="ANALOG_EVENT"/>
+					<event frame="ANALOG_EVENT"/>
+				</physical>
+			</parameter>
+		</paramset>		
+	</channel>
+	
+	<channel index="33" count="1" physical_index_offset="-1" type="WEATHER">
 		<link_roles>
 			<source name="WEATHER_TH"/>
 			<source name="TEST"/>
 		</link_roles>
 		
-		<paramset type="MASTER" id="hmw_shtc3_ch_master" address_step="6" address_start="0x6A">
+		<paramset type="MASTER" id="hmw_sht3x_ch_master" address_step="6" address_start="0x70">
 			<parameter id="SEND_DELTA_HUMIDITY" operations="read,write">
 				<logical type="integer" min="2" max="100" unit="%" default="0.0">
 					<special_value id="NOT_USED" value="0.0"/>
@@ -461,8 +512,8 @@
                <conversion type="float_integer_scale" factor="10"/>		
                <conversion type="integer_integer_map">
                  <value_map to_device="false" from_device="true" parameter_value="5" device_value="0xff"/>
-               </conversion>			   
-			</parameter>			
+               </conversion>
+			</parameter>
 			<parameter id="SEND_MIN_INTERVAL">
 			   <logical type="integer" unit="s" default="10" min="5" max="3600">
 			     <special_value id="NOT_USED" value="0"/>
@@ -481,7 +532,6 @@
                  <value_map to_device="false" from_device="true" parameter_value="10" device_value="0xffff"/>
                </conversion>
 			</parameter>
-<<<<<<< HEAD
 			<parameter id="SEND_MAX_INTERVAL">
 			   <logical type="integer" unit="s" default="150" min="5" max="3600">
 			     <special_value id="NOT_USED" value="0"/>
@@ -495,7 +545,7 @@
 			</parameter>
 		</paramset>
 		
-		<paramset id="hmw_shtc3_ch_link" type="LINK" count="40" address_start="0x076" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
+		<paramset id="hmw_sht3x_ch_link" type="LINK" count="40" address_start="0x076" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
             <parameter id="CHANNEL" hidden="true" operations="none">
                 <logical type="integer" min="0" max="255" default="255"/>
                 <physical size="1.0" type="integer" interface="eeprom">
@@ -515,17 +565,7 @@
             </parameter>
 		</paramset>
 		
-		<paramset type="VALUES" id="hmw_shtc3_ch_values">
-			<!--<parameter id="TX_THRESHOLD_PERCENT" operations="read,write">
-				<logical type="integer" min="1" max="100" unit="%" default="2">
-					<special_value id="NOT_USED" value="0.0"/>
-				</logical>
-				<physical size="1.0" type="integer" interface="eeprom">
-					<address index="+2.0"/>
-				</physical>	
-			</parameter>
-		</paramset>		
-		<paramset type="VALUES" id="shtc3_ch_values">-->
+		<paramset type="VALUES" id="hmw_sht3x_ch_values">
 			<parameter id="TEMPERATURE" operations="read,event">
 				<logical type="float" min="-40.0" max="80.0" unit="&#x2103;"/>
 				<physical type="integer" interface="command" value_id="TEMPERATURE">
@@ -546,6 +586,309 @@
 					<field id="AutoconfRoles" value="WEATHER"/>
 				</description>-->
 			</parameter>
+		</paramset>
+	</channel>
+	
+	
+	<channel index="34" count="2" physical_index_offset="-1" type="BRIGHTNESS SWITCH">
+		<link_roles>
+			<target name="SWITCH"/>
+		</link_roles>
+	    <paramset type="MASTER" id="hmw_brightness_ch_master" address_step="2" address_start="0x3EC">
+			<parameter id="SAMPLE_INTERVAL">
+				<logical type="float" default="140" min="10" max="450" unit="s *8 samples">
+					<special_value id="DISABLED" value="0"/>
+				</logical>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+1.0"/>
+				</physical>
+				<conversion type="float_configtime" factors="10" value_size="1"/>
+				<conversion type="integer_integer_map">
+					<value_map device_value="0xff" parameter_value="0xff" mask="0x00"/>
+				</conversion>
+			</parameter>
+		</paramset>
+		
+		<paramset id="hmw_brightness_switch_ch_link" type="LINK" count="40" address_start="0x16C" address_step="16" peer_param="SENSOR" channel_param="CHANNEL">
+			<parameter id="UI_HINT">
+				<logical type="string" default="" use_default_on_failure="true"/>
+				<physical id="UI_HINT" type="string" interface="store" save_on_change="true"/>
+			</parameter>
+			<parameter id="SENSOR" hidden="true" operations="none">
+				<logical type="address"/>
+				<physical type="array">
+					<physical size="4.0" type="integer" interface="eeprom">
+						<address index="+0"/>
+					</physical>
+					<physical size="1.0" type="integer" interface="eeprom">
+						<address index="+4"/>
+					</physical>
+				</physical>
+			</parameter>
+			<parameter id="CHANNEL" hidden="true" operations="none">
+				<logical type="integer" min="0" max="255" default="255"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+5"/>
+				</physical>
+			</parameter>
+			<!-- cannot use different names or structure as other peering (Link LED)
+            <parameter id="SHORT_ACTION_TYPE">
+                <logical type="option">
+                    <option id="INACTIVE"/>
+                    <option id="INACTIVE"/>
+                    <option id="INACTIVE"/>
+                    <option id="X LE COND_VALUE" default="true"/>
+					<option id="X GE COND_VALUE"/>
+					<option id="BLINK_TOGGLE"/>
+                </logical>
+                <physical size="0.3" type="integer" interface="eeprom">
+                    <address index="+6"/>
+                </physical>
+            </parameter>
+            <parameter id="LONG_ACTION_TYPE">
+                <logical type="option">
+                    <option id="ON"/>
+                    <option id="OFF"/>
+                    <option id="INACTIVE"/>
+                    <option id="TOGGLE" default="true"/>
+					<option id="BLINK_ON"/>
+					<option id="BLINK_TOGGLE"/>
+				</logical>
+                <physical size="0.3" type="integer" interface="eeprom">
+                    <address index="+6.3"/>
+                </physical>
+            </parameter>
+			<parameter id="SHORT_X_COND_VALUE">
+                <logical type="float" unit="%" default="100" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+7"/>
+                </physical>
+            </parameter>
+  		    <parameter id="SHORT_OFF_COND_VALUE">
+                <logical type="float" unit="%" default="0" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+8"/>
+                </physical>
+            </parameter>
+			<parameter id="LONG_ON_COND_VALUE">
+                <logical type="float" unit="%" default="100" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+9"/>
+                </physical>
+            </parameter>
+  		    <parameter id="LONG_OFF_COND_VALUE">
+                <logical type="float" unit="%" default="0" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+10"/>
+                </physical>
+            </parameter>
+			<parameter id="BLOCKING_TIME">
+			   <logical type="integer" default="0" min="1" max="255">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>	   
+               <physical size="1.0" type="integer" interface="eeprom">
+                  <address index="+13.0"/>
+               </physical>
+			</parameter> -->
+			
+            <parameter id="SHORT_ACTION_TYPE">
+                <logical type="option">
+                    <option id="ON"/>
+                    <option id="OFF"/>
+                    <option id="INACTIVE"/>
+                    <option id="TOGGLE" default="true"/><!--X LE COND_VALUE-->
+					<option id="BLINK_ON"/><!--X GE COND_VALUE-->
+					<option id="BLINK_TOGGLE"/>
+                </logical>
+                <physical size="0.3" type="integer" interface="eeprom">
+                    <address index="+6"/>
+                </physical>
+            </parameter>
+            <parameter id="LONG_ACTION_TYPE">
+                <logical type="option">
+                    <option id="ON"/>
+                    <option id="OFF"/>
+                    <option id="INACTIVE"/>
+                    <option id="TOGGLE" default="true"/>
+					<option id="BLINK_ON"/>
+					<option id="BLINK_TOGGLE"/>
+				</logical>
+                <physical size="0.3" type="integer" interface="eeprom">
+                    <address index="+6.3"/>
+                </physical>
+            </parameter>
+			<parameter id="SHORT_ON_LEVEL"><!--X_COND_VALUE-->
+                <logical type="float" unit="%" default="100" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+7"/>
+                </physical>
+            </parameter>
+  		    <parameter id="SHORT_OFF_LEVEL">
+                <logical type="float" unit="%" default="0" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+8"/>
+                </physical>
+            </parameter>
+			<parameter id="LONG_ON_LEVEL">
+                <logical type="float" unit="%" default="100" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+9"/>
+                </physical>
+            </parameter>
+  		    <parameter id="LONG_OFF_LEVEL">
+                <logical type="float" unit="%" default="0" max="100" min="0"/>
+                <conversion type="float_integer_scale" factor="2"/>
+                <physical size="1.0" type="integer" interface="eeprom">
+                    <address index="+10"/>
+                </physical>
+            </parameter>
+			<parameter id="BLINK_ON_TIME">
+				<logical type="float" unit="s" default="1.0" max="25.0" min="0.1"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+11"/>
+				</physical>
+				<conversion type="float_integer_scale" factor="10"/>
+				<conversion type="integer_integer_map">
+					<value_map to_device="false" from_device="true" parameter_value="10" device_value="0xff"/>
+				</conversion>
+			</parameter>
+			<parameter id="BLINK_OFF_TIME">
+				<logical type="float" unit="s" default="1.0" max="25.0" min="0.1"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+12"/>
+				</physical>
+				<conversion type="float_integer_scale" factor="10"/>
+				<conversion type="integer_integer_map">
+					<value_map to_device="false" from_device="true" parameter_value="10" device_value="0xff"/>
+				</conversion>
+			</parameter>
+			<parameter id="BLINK_QUANTITY"><!--BLOCKING_TIME-->
+			   <logical type="integer" default="0" min="1" max="255">
+			     <special_value id="NOT_USED" value="0"/>
+			   </logical>	   
+               <physical size="1.0" type="integer" interface="eeprom">
+                  <address index="+13.0"/>
+               </physical>	  
+			</parameter>
+		</paramset>
+		
+		<paramset type="VALUES" id="hmw_analog_brightness_values">
+			<parameter id="LEVEL" operations="read" control="BRIGHTNESS.LEVEL">
+				<logical type="float" unit="100%" default="0.0" max="1.0" min="0.0"/>
+				<physical type="integer" interface="command" value_id="LEVEL">
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+				</physical>
+				<conversion type="float_integer_scale" factor="2"/>
+			</parameter>
+			
+			<parameter id="LAST_ACTION" operations="read,event" ui_flags="internal">
+				<logical type="option">
+					<option id="NOT_TRIGGERED" default="true"/>
+					<option id="TRIGGERED_GE_X"/>
+					<option id="NOT_TRIGGERED"/>
+					<option id="TRIGGERED_LE_X"/>
+					<option id="NOT_TRIGGERED"/>
+					<option id="TRIGGERED_GE_X"/>
+					<option id="NOT_TRIGGERED"/>
+					<option id="TRIGGERED_LE_X"/>
+				</logical>
+				<physical type="integer" interface="command" value_id="STATE_FLAGS">
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+					<event frame="INFO_LEVEL"/>
+					<event frame="ACK_STATUS"/>
+				</physical>
+				<conversion type="option_integer">
+					<value_map device_value="0x00" parameter_value="0"/>
+					<value_map device_value="0x01" parameter_value="1"/>
+					<value_map device_value="0x02" parameter_value="2"/>
+					<value_map device_value="0x03" parameter_value="3"/>
+					<value_map device_value="0x04" parameter_value="4"/>
+					<value_map device_value="0x05" parameter_value="5"/>
+					<value_map device_value="0x06" parameter_value="6"/>
+					<value_map device_value="0x07" parameter_value="7"/>
+				</conversion>
+			</parameter>
+			<parameter id="MODE" operations="read,event" ui_flags="internal"><!--BLOCKING_TIME active: brightness calculation paused-->
+				<logical type="option">
+					<option id="NORMAL" default="true"/>
+					<option id="NOT_BLOCKED"/>
+					<option id="NORMAL"/>
+					<option id="NOT_BLOCKED"/>
+					<option id="NORMAL"/>
+					<option id="BLOCKED"/>
+					<option id="NORMAL"/>
+					<option id="BLOCKED"/>
+				</logical>
+				<physical type="integer" interface="command" value_id="STATE_FLAGS">
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+					<event frame="INFO_LEVEL"/>
+					<event frame="ACK_STATUS"/>
+				</physical>
+				<conversion type="option_integer">
+					<value_map device_value="0x00" parameter_value="0"/>
+					<value_map device_value="0x01" parameter_value="1"/>
+					<value_map device_value="0x02" parameter_value="2"/>
+					<value_map device_value="0x03" parameter_value="3"/>
+					<value_map device_value="0x04" parameter_value="4"/>
+					<value_map device_value="0x05" parameter_value="5"/>
+					<value_map device_value="0x06" parameter_value="6"/>
+					<value_map device_value="0x07" parameter_value="7"/>
+				</conversion>
+			</parameter>
+		</paramset>
+	</channel>
+	
+	<channel index="36" count="2" physical_index_offset="-1" type="BRIGHTNESS KEY">
+		<link_roles>
+			<source name="SWITCH"/>
+		</link_roles>
+		<paramset type="MASTER" id="hmw_brightnesskey_ch_master" address_step="2" address_start="0x3F0">			
+			<!--<parameter id="CONDITION_TYPE">
+				<logical type="option">
+					<option id="X GE COND_VALUE"/>
+					<option id="X LE COND_VALUE" default="true"/>
+				</logical>
+				<physical size="0.1" type="integer" interface="eeprom">
+					<address index="+0.7"/>
+				</physical>
+			</parameter>-->
+		</paramset>
+		<!-- use same peering area in EEPROM -->
+		<paramset id="hmw_input_ch_link" type="LINK" count="40" address_start="0x07C" address_step="6" peer_param="ACTUATOR" channel_param="CHANNEL">
+			<parameter id="CHANNEL" hidden="true" operations="none">
+				<logical type="integer" min="0" max="255" default="255"/>
+				<physical size="1.0" type="integer" interface="eeprom">
+					<address index="+0"/>
+				</physical>
+			</parameter>
+			<parameter id="ACTUATOR" hidden="true" operations="none">
+				<logical type="address"/>
+				<physical type="array">
+					<physical size="4.0" type="integer" interface="eeprom">
+						<address index="+1"/>
+					</physical>
+					<physical size="1.0" type="integer" interface="eeprom">
+						<address index="+5"/>
+					</physical>
+				</physical>
+			</parameter>
+		</paramset>
+		
+		<paramset id="hmw_input_ch_values" type="VALUES">
+			<parameter id="PRESS_SHORT" operations="event,write" loopback="true" control="BUTTON.SHORT">
+				<logical type="action"/>
+				<physical type="integer" interface="command" value_id="COUNTER">
+					<event frame="KEY_EVENT_SHORT"/>
+				</physical>
+				<conversion type="action_key_counter" counter_size="6" sim_counter="SIM_COUNTER"/>
+			</parameter>		
 		</paramset>
 	</channel>	
 	

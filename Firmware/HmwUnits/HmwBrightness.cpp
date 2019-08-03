@@ -57,7 +57,7 @@ uint8_t HmwBrightness::get( uint8_t* data )
 {
    // MSB first
    *data++ = HBYTE( currentValue );
-   *data++ = LBYTE( currentValue );
+   *data = LBYTE( currentValue );
 
    return 2;
 }

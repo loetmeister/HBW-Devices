@@ -20,6 +20,9 @@
 #include <HmwUnits/HmwLinkKey.h>
 #include <HmwUnits/HmwLinkLed.h>
 #include <HmwUnits/HmwBrightness.h>
+#include <HmwUnits/HmwBrightnessSwitch.h>
+#include <HmwUnits/HmwBrightnessKey.h>
+#include <HmwUnits/HmwAnalogIn.h>
 #include <PortPin.h>
 
 
@@ -39,9 +42,10 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
       OneWire ow;
       HmwDS1820 hbwTmp1, hbwTmp2, hbwTmp3, hbwTmp4, hbwTmp5, hbwTmp6;
 
-      HmwBrightness hbwOnboardBrightness;
-
-      HmwSHT3x sht3x;
+      //HmwBrightness hbwOnboardBrightness;
+	  HmwAnalogIn hbwAnIn1, hbwAnIn2;
+      
+	  HmwSHT3x sht3x;
 	  //HmwSHTC3 shtc3;
 
       HmwLinkKey linkSender;
@@ -49,6 +53,9 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
       HmwLinkLed linkReceiver;
 	  
       HmwLinkInfoEvent linkSenderTemp;
+	  
+	  HmwBrightnessSwitch hbwBrightnessSwitch1, hbwBrightnessSwitch2;
+	  HmwBrightnessKey hbwBrightnessKey1, hbwBrightnessKey2;
 
    private:
 

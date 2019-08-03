@@ -20,7 +20,6 @@
 #include <Time/Timestamp.h>
 #include <xEeprom.h>
 
-#define DEFAULT_TRIGGER_LEVEL 20
 
 class HmwBrightnessSwitch;	// forward declare this class
 
@@ -30,20 +29,9 @@ class HmwBrightnessKey : public HmwChannel
 
       struct Config
       {
-         uint8_tx options;
-         uint8_tx triggerLevel;
+         uint8_tx dummy[2];	// not used
       };
 	  
-      enum OptionMask
-      {
-	      CON_LE_GE_MASK = 0x80
-      };
-
-      inline bool compareConditionLE() const
-      {
-	      return config->options & CON_LE_GE_MASK;
-      }
-
       ////    Constructors and destructors    ////
 
       HmwBrightnessKey( HmwBrightnessSwitch& _linkedBrightnessSwitchChannel, Config* _config );

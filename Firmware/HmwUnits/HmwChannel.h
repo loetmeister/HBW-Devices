@@ -10,7 +10,7 @@
 #define __HMWCHANNEL_H__
 
 #ifndef MAX_CHANNELS
-#define MAX_CHANNELS 36
+#define MAX_CHANNELS 38
 #endif
 
 

@@ -117,8 +117,6 @@ void HmwSHT3x::loop( uint8_t channel )
          bool doSend = true;
 
          // do not send before min interval
-         //doSend &= !( config->minInterval && ( lastSentTime.since() < ( (uint32_t)config->minInterval * 1000 ) ) );
-         //doSend &= ( ( config->maxInterval && ( lastSentTime.since() >= ( (uint32_t)config->maxInterval * 1000 ) ) )
 		 doSend &= ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= ( config->maxInterval - config->minInterval ) ) )
                    || ( config->minHumidityDelta && ( abs( currentHumidity - lastSentHumidity ) >= config->minHumidityDelta ) )
                    || ( config->minTempDelta && ( abs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (int16_t)config->minTempDelta * 10 ) ) ) );
@@ -137,27 +135,15 @@ void HmwSHT3x::loop( uint8_t channel )
 					break;
 				}
 			}
-			//else {
 		#endif
-				//uint8_t errcode = HmwDevice::sendInfoMessage( channel, 3, data );
-				//// sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
-				//if ( errcode != 0 )
-				//{
-				   //// retry in 500ms if something fails
-				   //nextActionDelay = 500;
-				   //break;
-				//}
 			if ( handleFeedback( SystemTime::S* config->minInterval ) )
 			{
 		#if defined(_Support_HBWLink_InfoEvent_)
 				sendPeer = true;	// InfoMessage was send, try sendInfoEvent next time "doSend"
-			//}
 		#endif
-			
 				lastSentCentiCelsius = currentCentiCelsius;
 				lastSentHumidity = currentHumidity;
 			}
-            //lastSentTime = Timestamp();
          }
          //sleep(); // switch off sensor
 		 

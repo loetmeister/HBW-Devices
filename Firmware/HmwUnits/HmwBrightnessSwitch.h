@@ -20,7 +20,6 @@
 #include <Time/Timestamp.h>
 #include <xEeprom.h>
 
-#define MAX_SAMPLES 8
 
 class HmwAnalogIn;	// forward declare this class
 
@@ -34,7 +33,33 @@ class HmwBrightnessSwitch : public HmwChannel
          uint8_tx interval;
       };
 
+      static const uint8_t MAX_SAMPLES = 8;
 
+	// using peering layout of HmwLed!	//TOD: add as struct? HBWLinkLed works differently to dimmer...
+      //struct ActionParameter
+      //{
+	      ////uint32_t sensorAddress;
+	      ////uint8_t sensorChannel;
+	      ////uint8_t ownChannel;
+	      ////uint8_t shortActionType : 3;
+	      ////uint8_t longActionType : 3;
+		  //uint8_t onOffLevelOrCmd;
+	      //uint8_t offLevel;
+	      //uint8_t onLevel;
+	      ////uint8_t longOnLevel;
+	      ////uint8_t longOffLevel;
+	      //uint8_t blinkOnTime;
+	      //uint8_t blinkOffTime;
+	      //uint8_t blockingTime;
+	      ////uint8_t reserved[2];
+      //};
+	  //
+      //struct LinkCommand
+      //{
+	      ////uint8_t keyNum;
+	      //ActionParameter* actionParameter;
+      //};
+	  
       ////    Constructors and destructors    ////
 
       HmwBrightnessSwitch( HmwAnalogIn& _linkedAnalogChannel, Config* _config );
@@ -45,6 +70,7 @@ class HmwBrightnessSwitch : public HmwChannel
       virtual uint8_t get( uint8_t* data );
 	  virtual void set( uint8_t length, uint8_t const* const data );
       virtual void loop( uint8_t channel );
+	  virtual void checkConfig();
 
    private:
 
@@ -61,7 +87,7 @@ class HmwBrightnessSwitch : public HmwChannel
 
    public:
 
-      bool triggered;
+	  uint8_t triggered;
 	  
 	  uint8_t currentValue;
 
@@ -75,11 +101,22 @@ class HmwBrightnessSwitch : public HmwChannel
 
       Timestamp lastActionTime;
 	  
+	  //ActionParameter const* actionParameter;
+	  
 	  uint8_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	  int16_t result_sum;
 	  uint8_t index;
 	  uint8_t count;
-
+	  
+	  union tag_state_flags {
+		struct state_flags {
+			uint8_t notUsed :4; // lowest 6 bit are not used, based on XML state_flag definition (index="12.4" size="0.3")
+			uint8_t active  :1; // condition is currently met
+			uint8_t le  :1; // less or equals (false: ge, greater or equals)
+			uint8_t blockingTimeActive  :1; 
+		} element;
+		uint8_t byte:8;
+	  } stateFlags;
 };
 
 
