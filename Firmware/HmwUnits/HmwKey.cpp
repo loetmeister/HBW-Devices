@@ -5,7 +5,7 @@
 HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
    unlocked( true ),
    needsPulldownIfInverted( false ),
-   keyPressNum( 0 ),
+   keyPressNum( 1 ),
    config( _config ),
    feedbackChannel( _feedbackChannel ),
    digitalIn( _pin )
@@ -129,13 +129,13 @@ void HmwKey::handlePushButtonSignal( uint8_t channel )
          // entprellen, nur senden, wenn laenger als 50ms gedrueckt
          if ( ( keyPressedTimestamp.since() >= 50 ) )
          {
+            // auch beim loslassen nach einem langen Tastendruck ein weiteres Event senden
+            HmwDevice::sendKeyEvent( channel, keyPressNum, lastSentLong.isValid() );
             if ( !lastSentLong.isValid() )
             {
                // noch kein "long" gesendet, für kurzes drücken keyPressNum erhöhen
                keyPressNum++;
             }
-            // auch beim loslassen nach einem langen Tastendruck ein weiteres Event senden
-            HmwDevice::sendKeyEvent( channel, keyPressNum, lastSentLong.isValid() );
          }
          keyPressedTimestamp.reset();
          if ( feedbackChannel && config->isFeedbackEnabled() )
@@ -159,16 +159,16 @@ void HmwKey::handlePushButtonSignal( uint8_t channel )
             {
                // alle 300ms wiederholen
                // keyPressNum nicht erhoehen
-               lastSentLong = Timestamp();
                HmwDevice::sendKeyEvent( channel, keyPressNum, true, true );                  // long press
+               lastSentLong = Timestamp();
             }
          }
          else if ( keyPressedTimestamp.since() >= long(config->getLongPressTime() ) * 100 )
          {
             // erstes LONG
+            HmwDevice::sendKeyEvent( channel, keyPressNum, true, true );                    // long press
             keyPressNum++;
             lastSentLong = Timestamp();
-            HmwDevice::sendKeyEvent( channel, keyPressNum, true, true );                    // long press
          }
       }
       else
@@ -199,7 +199,7 @@ void HmwKey::resetChannel()
    }
    keyPressedTimestamp.reset();
    lastSentLong.reset();
-   keyPressNum = 0;
+   keyPressNum = 1;
 }
 
 void HmwKey::checkConfig()

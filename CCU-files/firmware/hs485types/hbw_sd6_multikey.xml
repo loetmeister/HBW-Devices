@@ -8,15 +8,16 @@
 	<type priority="2" id="HBW-SD6-Multikey-v1" name="Haus-Bus.de 6-Fach Taster mit 1-Wire (version 1)">
 		<parameter const_value="0xB1" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
+		<parameter const_value="0x0232" size="2" cond_op="GE" index="2"/><!--Min. FIRMWARE_VERSION-->
 	</type>	
-	<type priority="2" id="HBW-IO-12-1W-UP" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AL)">
+	<!--<type priority="2" id="HBW-IO-12-1W-UP" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AL)">
 		<parameter const_value="0xB2" size="1" index="0"/>
 		<parameter const_value="0" size="1" index="1"/>
 	</type>	
 	<type priority="2" id="HBW-IO-12-1W-UP-v1" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AH)">
 		<parameter const_value="0xB2" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
-	</type>		
+	</type>		-->
 </supported_types>
 
 <paramset id="HBW-SD6-Multikey_dev_master" type="MASTER">
@@ -55,7 +56,7 @@
 	<frame id="LEVEL_GET" type="#S" channel_field="10" direction="to_device"/>
 	<frame id="INFO_LEVEL" type="#i" channel_field="10" direction="from_device" event="true">
 		<parameter size="1.0" index="11.0" type="integer" param="LEVEL"/>
-		<parameter type="integer" index="12.4" size="0.3" param="STATE_FLAGS"/>
+		<parameter type="integer" index="12.4" size="0.4" param="STATE_FLAGS"/>
 	</frame>
 	<frame id="KEY_EVENT_SHORT" type="#K" channel_field="10" direction="from_device" event="true">
 		<parameter const_value="0" size="0.1" index="12.0" type="integer"/>
@@ -65,6 +66,14 @@
 		<parameter const_value="1" size="0.1" index="12.0" type="integer"/>
 		<parameter size="0.6" index="12.2" type="integer" param="COUNTER"/>
 	</frame>
+	<frame id="KEY_SIM_SHORT" direction="from_device" type="#K" channel_field="10" receiver_channel_field="11">
+		<parameter type="integer" index="12.0" size="0.1" const_value="0"/>
+		<parameter type="integer" index="12.2" size="0.6" param="SIM_COUNTER"/>
+	</frame>
+	<frame id="KEY_SIM_LONG" direction="from_device" type="#K" channel_field="10" receiver_channel_field="11">
+		<parameter type="integer" index="12.0" size="0.1" const_value="1"/>
+		<parameter type="integer" index="12.2" size="0.6" param="SIM_COUNTER"/>
+	</frame>	
 	<frame id="TEMP_EVENT" direction="from_device" event="true" type="#i" channel_field="10">
 		<parameter type="integer" signed="true" index="11.0" size="2.0" param="TEMPERATURE"/>
 	</frame>
@@ -77,6 +86,12 @@
 	</frame>
 	<frame id="ANALOG_EVENT" direction="from_device" event="true" type="#i" channel_field="10">
 		<parameter type="integer" index="11.0" size="2.0" param="ANALOGVALUE"/>
+	</frame>
+	<frame id="SET_LOCK" direction="to_device" type="#l" channel_field="11">
+		<parameter type="integer" index="12.0" size="1.0" param="INHIBIT"/>
+	</frame>
+	<frame id="TOGGLE_INSTALL_TEST" direction="to_device" type="#x" channel_field="10">
+		<parameter type="integer" index="11.0" size="1.0" param="TOGGLE_FLAG"/>
 	</frame>
 </frames>
 
@@ -328,6 +343,66 @@
 				</physical>
 				<conversion type="float_integer_scale" factor="200"/>
 			</parameter>
+			<parameter id="WORKING" operations="read,event" ui_flags="internal">
+				<logical type="boolean" default="false"/>
+				<physical type="integer" interface="command" value_id="STATE_FLAGS">
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+					<event frame="INFO_LEVEL"/>
+					<event frame="ACK_STATUS"/>
+				</physical>
+				<conversion type="boolean_integer"/>
+				<conversion type="integer_integer_map">
+					<value_map device_value="0x00" parameter_value="0" />
+					<value_map device_value="0x01" parameter_value="0" />
+					<value_map device_value="0x02" parameter_value="0" />
+					<value_map device_value="0x03" parameter_value="0" />
+					<value_map device_value="0x04" parameter_value="0" />
+					<value_map device_value="0x05" parameter_value="0" />
+					<value_map device_value="0x06" parameter_value="0" />
+					<value_map device_value="0x07" parameter_value="0" />	
+					<value_map device_value="0x08" parameter_value="1" />
+					<value_map device_value="0x09" parameter_value="1" />
+					<value_map device_value="0x0A" parameter_value="1" />
+					<value_map device_value="0x0B" parameter_value="1" />
+					<value_map device_value="0x0C" parameter_value="1" />
+					<value_map device_value="0x0D" parameter_value="1" />
+					<value_map device_value="0x0E" parameter_value="1" />
+					<value_map device_value="0x0F" parameter_value="1" />	
+				</conversion>				
+			</parameter>	
+			<parameter id="STATE" operations="read,event" ui_flags="internal">
+				<logical type="option">
+					<option id="ON" default="true"/>
+					<option id="OFF"/>
+					<option id="TOGGLE"/>
+					<option id="BLINK_ON"/>
+					<option id="BLINK_OFF"/>
+					<option id="UNDEFINED"/>
+				</logical>
+				<physical type="integer" interface="command" value_id="STATE_FLAGS">
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+					<event frame="INFO_LEVEL"/>
+					<event frame="ACK_STATUS"/>
+				</physical>
+				<conversion type="option_integer">
+					<value_map device_value="0x00" parameter_value="0" />
+					<value_map device_value="0x01" parameter_value="1" />
+					<value_map device_value="0x02" parameter_value="2" />
+					<value_map device_value="0x03" parameter_value="3" />
+					<value_map device_value="0x04" parameter_value="4" />
+					<value_map device_value="0x05" parameter_value="5" />
+					<value_map device_value="0x06" parameter_value="5" />
+					<value_map device_value="0x07" parameter_value="5" />	
+					<value_map device_value="0x08" parameter_value="0" />
+					<value_map device_value="0x09" parameter_value="1" />
+					<value_map device_value="0x0A" parameter_value="2" />
+					<value_map device_value="0x0B" parameter_value="3" />
+					<value_map device_value="0x0C" parameter_value="4" />
+					<value_map device_value="0x0D" parameter_value="5" />
+					<value_map device_value="0x0E" parameter_value="5" />
+					<value_map device_value="0x0F" parameter_value="5" />	
+				</conversion>
+			</parameter>
 		</paramset>		
 	</channel>	
 
@@ -338,7 +413,7 @@
 	    <paramset type="MASTER" id="hmw_temp_ch_master" address_step="6" address_start="0x40">
 			<parameter id="SENSOR_ID">
 			   <logical type="integer" default="255" max="254" min="1">
-			       <special_value id="NOT_USED" value="0"/>
+			       <!--<special_value id="NOT_USED" value="0"/> FHEM does not display two special_values-->
 			       <special_value id="AUTO" value="255"/>
 			   </logical>	   
                <physical size="1.0" type="integer" interface="eeprom">

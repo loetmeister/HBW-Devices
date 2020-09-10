@@ -28,6 +28,7 @@ class HmwMessageBase
          ESCAPE_BYTE = 0xFC,
          MAX_PACKET_SIZE = 64,
          MAX_FRAME_LENGTH = 72,
+         //MAX_FRAME_LENGTH = 64, default???
          ADDRESS_SIZE = 4,
          FRAME_HEADER_SIZE = 9,
 

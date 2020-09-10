@@ -158,6 +158,7 @@ class HmwDevice
 
       static inline IStream::Status sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress, bool keyPressed = false )
       {
+		 keyPressed = false; //TODO: fixme (overwrite to get back old behavior - which sends peering for long press, not only broadcasts)
          IStream::Status status;
          if ( keyPressed )
          {
