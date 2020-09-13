@@ -60,10 +60,11 @@ static uint8_t ledData[] = { 0x00, LED_MASK };
 #error "Hardware revision not supported!!!"
 #endif
 
-#elif ( DEVICE_ID == 0xB8 )  // Release::HBW_LC_DIM8_DR
+// Release::HBW_LC_BL8_DR || Release::HBW_LC_DIM8_DR || Release::HBW_LC_SW16_DR || Release::HBW_LC_SW8_IN8_DR
+#elif ( DEVICE_ID == 0xB7 ) || ( DEVICE_ID == 0xB8 ) || ( DEVICE_ID == 0xB9 ) || ( DEVICE_ID == 0xBA )
 
 #define LED_PORT PORTR
-#define LED_MASK 0x01
+#define LED_MASK 0x02
 
 #if ( HARDWARE_ID == 0 )
 static DigitalOutputTmpl<PortA, 5> txEnable;

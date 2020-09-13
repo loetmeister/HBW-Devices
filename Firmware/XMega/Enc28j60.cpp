@@ -186,8 +186,8 @@ uint8_t Enc28j60::init()
    // setup enc registers according to the enc_configdata struct
    while ( 1 )
    {
-      r = Flash::read( address );
-      d = Flash::read( address );
+      r = Flash::read( address++ );
+      d = Flash::read( address++ );
       if ( r == 0xFF && d == 0xFF )
       {
          break;
@@ -198,14 +198,14 @@ uint8_t Enc28j60::init()
    uint16_t u;
    while ( 1 )
    {
-      r = Flash::read( address );
-      d = Flash::read( address );
+      r = Flash::read( address++ );
+      d = Flash::read( address++ );
       if ( r == 0xFF && d == 0xFF )
       {
          break;
       }
       u = ( ( (uint16_t) d ) << 8 );
-      d = Flash::read( address );
+      d = Flash::read( address++ );
       u |= d;
       writePhyRegister( r, u );
    }

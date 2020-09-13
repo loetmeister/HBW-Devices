@@ -28,7 +28,6 @@ class HmwMessageBase
          ESCAPE_BYTE = 0xFC,
          MAX_PACKET_SIZE = 64,
          MAX_FRAME_LENGTH = 72,
-         //MAX_FRAME_LENGTH = 64, default???
          ADDRESS_SIZE = 4,
          FRAME_HEADER_SIZE = 9,
 
@@ -65,7 +64,7 @@ class HmwMessageBase
          START_FW = 'g',
          GET_HARDWARE_VERSION = 'h',
          INFO_LEVEL = 'i',
-         INFO_EVENT = 0xB4,
+		 INFO_EVENT = 0xB4,
          SET_LOCK = 'l',
          GET_SERIAL = 'n',
          GET_PACKET_SIZE = 'p',

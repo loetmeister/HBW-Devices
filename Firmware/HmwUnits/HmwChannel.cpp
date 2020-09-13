@@ -12,12 +12,18 @@
 uint8_t HmwChannel::numChannels = 0;
 HmwChannel* HmwChannel::instances[];
 
-HmwChannel::HmwChannel() : type( UNKNOWN ), channelId( numChannels ), nextActionDelay( 1000 ), nextFeedbackTime( 0 )
+HmwChannel::HmwChannel() :
+   type( UNKNOWN ),
+   channelId( numChannels ),
+   currentState( 0 ),
+   nextState( 0 ),
+   nextActionTime( 0 ),
+   nextFeedbackTime( 0 )
 {
    instances[numChannels++] = this;
 }
 
-uint32_t HmwChannel::convertToTime( uint16_t timeValue )
+uint32_t HmwChannel::convertToTime( uint16_t timeValue ) const
 {
    uint8_t factor = ( timeValue >> 14 ); // mask out factor (highest two bits)
    timeValue &= 0x3FFF; // keep time value only
@@ -47,7 +53,7 @@ uint8_t HmwChannel::get( uint8_t* data )
    return 0;
 }
 
-void HmwChannel::loop( uint8_t channel )
+void HmwChannel::loop()
 {
 }
 

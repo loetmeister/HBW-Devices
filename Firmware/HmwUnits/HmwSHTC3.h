@@ -64,10 +64,41 @@ class HmwSHTC3 : public HmwChannel
 
       struct Config
       {
+         uint8_tx id;
+         uint8_tx minDelta;
          uint16_tx minInterval;
-         uint8_tx minDeltaPercent;
-         uint8_tx reserve1;
-         uint16_tx reserve2;
+         uint16_tx maxInterval;
+      };
+
+      class PassiveHumidity : public HmwChannel
+      {
+         public:
+            struct Config
+            {
+               uint16_tx minInterval;
+               uint8_tx minDeltaPercent;
+               uint8_tx reserve1;
+               uint16_tx reserve2;
+            };
+
+            ////    Constructors and destructors    ////
+
+            PassiveHumidity( Config* _config );
+
+            ////    Operations    ////
+            void setMeasurementResult( uint8_t humidity );
+
+            virtual uint8_t get( uint8_t* data );
+            virtual void checkConfig();
+
+            ////    Attributes    ////
+
+         private:
+            uint8_t currentHumidity;
+
+            uint8_t lastSentHumidity;
+
+            Config* config;
       };
 
       ////    Constructors and destructors    ////
@@ -84,17 +115,17 @@ class HmwSHTC3 : public HmwChannel
 
       HwStatus startMeasurement();
 
+      inline void setPassiveHumidityChannel( PassiveHumidity* hChannel )
+      {
+         humidityChannel = hChannel;
+      }
+
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
       virtual void checkConfig();
 
    private:
-
-      inline void setMainState( States _state )
-      {
-         state = _state;
-      }
 
       HwStatus sendCommand( Commands cmd );
 
@@ -128,21 +159,13 @@ class HmwSHTC3 : public HmwChannel
 
       bool isSleeping;
 
-      States state;
-
-      uint8_t currentHumidity;
-
-      uint8_t lastSentHumidity;
-
-      uint16_t nextActionDelay;
-
       int16_t currentCentiCelsius;
 
       int16_t lastSentCentiCelsius;
 
-      Timestamp lastActionTime;
-
       Config* config;
+
+      PassiveHumidity* humidityChannel;
 };
 
 

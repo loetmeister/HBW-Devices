@@ -43,7 +43,7 @@ class IoStream : public IStream
 
       struct CommandSET_FILTER
       {
-         char filter[];
+         char filter[32];
       };
 
       ////    Operations    ////

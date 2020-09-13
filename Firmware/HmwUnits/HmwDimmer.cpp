@@ -11,7 +11,7 @@
 
 #define getId() FSTR( "HmwDimmer." ) << channelId
 
-const uint8_t HmwDimmer::debugLevel( DEBUG_LEVEL_OFF | DEBUG_STATE_L3 );
+const uint8_t HmwDimmer::debugLevel( DEBUG_LEVEL_OFF ); // DEBUG_LEVEL_LOW | DEBUG_STATE_L3 );
 
 HmwDimmer::HmwDimmer( PortPin _portPin, PortPin _enablePin, Config* _config, uint8_t _normalizeLevel ) :
    normalizeLevel( _normalizeLevel ),
@@ -19,16 +19,17 @@ HmwDimmer::HmwDimmer( PortPin _portPin, PortPin _enablePin, Config* _config, uin
    dimmingOffset( 0 ),
    pwmOutput( _portPin.getPortNumber(), _portPin.getPinNumber() ),
    enableOutput( _enablePin ),
-   currentLevel( 0 ),
+   currentLevel( 0xFF ),
    config( _config ),
    actionParameter( NULL ),
-   nextActionTime( 0 ),
-   lastKeyNum( 0 )
+   timeMode( TIME_MODE_ABSOLUTE ),
+   lastKeyNum( 0 ),
+   dimTargetLevel( 0 )
 {
    type = HmwChannel::HMW_DIMMER;
    pwmOutput.setInverted( config->isDimmingModeLeading() );
-   calculateDimmingParameter();
-   SET_STATE_L1( START_UP );
+   setLevel( 0, false );
+   SET_STATE_L1( JT_OFF );
 }
 
 
@@ -51,38 +52,38 @@ void HmwDimmer::set( uint8_t length, uint8_t const* const data )
    {
       LinkCommand const* cmd = (LinkCommand const*)data;
       actionParameter = cmd->actionParameter;
-      /*
-         DEBUG_H2( FSTR( "setAction 0x" ), (uintptr_t)actionParameter );
-         DEBUG_M2( FSTR( "onTimeMode   " ), actionParameter->onTimeMode );
-         DEBUG_M2( FSTR( "offTimeMode  " ), actionParameter->offTimeMode );
-         DEBUG_M2( FSTR( "onDelayMode  " ), actionParameter->onDelayMode );
-         DEBUG_M2( FSTR( "multiExecute " ), actionParameter->multiExecute );
-         DEBUG_M2( FSTR( "actionType   " ), actionParameter->actionType );
-         DEBUG_M2( FSTR( "offLevel     " ), actionParameter->offLevel );
-         DEBUG_M2( FSTR( "onMinLevel   " ), actionParameter->onMinLevel );
-         DEBUG_M2( FSTR( "onLevel      " ), actionParameter->onLevel );
-         DEBUG_M2( FSTR( "rampStartStep" ), actionParameter->rampStartStep );
-         DEBUG_M2( FSTR( "offDelayStep " ), actionParameter->offDelayStep );
-         DEBUG_M2( FSTR( "onDelayTime  " ), actionParameter->onDelayTime );
-         DEBUG_M2( FSTR( "rampOnTime   " ), actionParameter->rampOnTime );
-         DEBUG_M2( FSTR( "onTime       " ), actionParameter->onTime );
-         DEBUG_M2( FSTR( "offDelayTime " ), actionParameter->offDelayTime );
-         DEBUG_M2( FSTR( "rampOffTime  " ), actionParameter->rampOffTime );
-         DEBUG_M2( FSTR( "offTime      " ), actionParameter->offTime );
-         DEBUG_M2( FSTR( "dimMinLevel  " ), actionParameter->dimMinLevel );
-         DEBUG_M2( FSTR( "dimMaxLevel  " ), actionParameter->dimMaxLevel );
-         DEBUG_M2( FSTR( "dimStep      " ), actionParameter->dimStep );
-         DEBUG_M2( FSTR( "jtRampOn     " ), actionParameter->jtRampOn );
-         DEBUG_M2( FSTR( "jtOnDelay    " ), actionParameter->jtOnDelay );
-         DEBUG_M2( FSTR( "jtOffDelay   " ), actionParameter->jtOffDelay );
-         DEBUG_M2( FSTR( "jtOn         " ), actionParameter->jtOn );
-         DEBUG_M2( FSTR( "jtOff        " ), actionParameter->jtOff );
-         DEBUG_M2( FSTR( "jtRampOff    " ), actionParameter->jtRampOff );
-       */
+
+      DEBUG_H2( FSTR( "setAction 0x" ), (uintptr_t)actionParameter );
+      DEBUG_M2( FSTR( "actionType   " ), actionParameter->actionType );
+      DEBUG_M2( FSTR( "multiExecute " ), actionParameter->multiExecute );
+      DEBUG_M2( FSTR( "onDelayMode  " ), actionParameter->onDelayMode );
+      DEBUG_M2( FSTR( "offTimeMode  " ), actionParameter->offTimeMode );
+      DEBUG_M2( FSTR( "onTimeMode   " ), actionParameter->onTimeMode );
+      DEBUG_M2( FSTR( "offLevel     " ), actionParameter->offLevel );
+      DEBUG_M2( FSTR( "onMinLevel   " ), actionParameter->onMinLevel );
+      DEBUG_M2( FSTR( "onLevel      " ), actionParameter->onLevel );
+      DEBUG_M2( FSTR( "rampStartStep" ), actionParameter->rampStartStep );
+      DEBUG_M2( FSTR( "offDelayStep " ), actionParameter->offDelayStep );
+      DEBUG_M2( FSTR( "onDelayTime  " ), actionParameter->onDelayTime );
+      DEBUG_M2( FSTR( "rampOnTime   " ), actionParameter->rampOnTime );
+      DEBUG_M2( FSTR( "onTime       " ), actionParameter->onTime );
+      DEBUG_M2( FSTR( "offDelayTime " ), actionParameter->offDelayTime );
+      DEBUG_M2( FSTR( "rampOffTime  " ), actionParameter->rampOffTime );
+      DEBUG_M2( FSTR( "offTime      " ), actionParameter->offTime );
+      DEBUG_M2( FSTR( "dimMinLevel  " ), actionParameter->dimMinLevel );
+      DEBUG_M2( FSTR( "dimMaxLevel  " ), actionParameter->dimMaxLevel );
+      DEBUG_M2( FSTR( "dimStep      " ), actionParameter->dimStep );
+      DEBUG_M2( FSTR( "jtOnDelay    " ), actionParameter->jtOnDelay );
+      DEBUG_M2( FSTR( "jtRampOn     " ), actionParameter->jtRampOn );
+      DEBUG_M2( FSTR( "jtOn         " ), actionParameter->jtOn );
+      DEBUG_M2( FSTR( "jtOffDelay   " ), actionParameter->jtOffDelay );
+      DEBUG_M2( FSTR( "jtRampOff    " ), actionParameter->jtRampOff );
+      DEBUG_M2( FSTR( "jtOff        " ), actionParameter->jtOff );
+
       if ( actionParameter->actionType > JUMP_TO_TARGET )
       {
-         // do not interrupt running timer. First key press goes here, repeated press only when LONG_MULTIEXECUTE is enabled
-         if ( !nextActionTime.isValid() && ( ( lastKeyNum != cmd->keyNum ) || ( lastKeyNum == cmd->keyNum && actionParameter->multiExecute ) ) )
+         // First key press goes here, repeated press only when LONG_MULTIEXECUTE is enabled
+         if ( ( lastKeyNum != cmd->keyNum ) || ( ( lastKeyNum == cmd->keyNum ) && actionParameter->multiExecute ) )
          {
             uint8_t level = -1;
             switch ( actionParameter->actionType )
@@ -123,18 +124,33 @@ void HmwDimmer::set( uint8_t length, uint8_t const* const data )
                   WARN_3( FSTR( "HmwDimmer::set actionType: 0x" ), (uint8_t)actionParameter->actionType, FSTR( " not implemented" ) );
                }
             }
+            DEBUG_M1( FSTR( "targetLevel: 0x" ) << level );
 
             if ( level <= MAX_LEVEL )
             {
-               setLevel( level );
-               nextActionTime.reset();
-               if ( level )
+               if ( actionParameter->actionType < UPDIM )
                {
-                  SET_STATE_L1( JT_ON );
+                  // no ramp needed, set new level and stop statechart
+                  setLevel( level );
+                  nextActionTime.reset();
+                  if ( level )
+                  {
+                     SET_STATE_L1( JT_ON );
+                  }
+                  else
+                  {
+                     SET_STATE_L1( JT_OFF );
+                  }
                }
                else
                {
-                  SET_STATE_L1( JT_OFF );
+                  rampStep = 1;
+                  nextStepTime = MAX_DIMMING_TIME / abs( currentLevel - level );
+                  dimTargetLevel = level;
+                  enable();
+                  nextState = ( dimTargetLevel > currentLevel ) ? DIM_UP : DIM_DOWN;
+                  DEBUG_M1( FSTR( "nextStepTime  : 0x" ) << nextStepTime );
+                  handleStateChart();
                }
             }
          }
@@ -146,7 +162,13 @@ void HmwDimmer::set( uint8_t length, uint8_t const* const data )
       }
       else if ( actionParameter->actionType == JUMP_TO_TARGET )
       {
-         handleStateChart( false );
+         if ( !nextActionTime.isValid()
+            || isRampRunning()
+            || isMinimalTimeMode() )
+         {
+            prepareNextState( true );
+         }
+         handleStateChart();
       }
       lastKeyNum = cmd->keyNum;  // store key press number, to identify repeated key events
    }
@@ -159,61 +181,50 @@ void HmwDimmer::set( uint8_t length, uint8_t const* const data )
 uint8_t HmwDimmer::getNextDimLevel( bool dimUp )
 {
 
-   uint16_t level = currentLevel;  // keep current level if we cannot dim up or down anymore
+   int16_t level = currentLevel;  // keep current level if we cannot dim up or down anymore
 
    if ( dimUp )
    {
-      if ( currentLevel < actionParameter->dimMaxLevel )
-      {
-         level += ( actionParameter->dimStep * 2 );
-         if ( level >= actionParameter->dimMaxLevel )
-         {
-            return actionParameter->dimMaxLevel;
-         }
-         if ( ( level > actionParameter->offLevel ) && ( level < actionParameter->onMinLevel ) )
-         {
-            return actionParameter->onMinLevel;
-         }
-      }
-      else
-      {
-         return actionParameter->dimMaxLevel;
-      }
+      level += ( actionParameter->dimStep );
    }
    else
    {
-      if ( currentLevel > actionParameter->dimMinLevel )
-      {
-         level -= ( actionParameter->dimStep * 2 );
-         if ( level <= actionParameter->dimMinLevel )
-         {
-            return actionParameter->dimMinLevel;
-         }
-         if ( level < actionParameter->onMinLevel )
-         {
-            return actionParameter->onMinLevel;
-         }
-      }
-      else
-      {
-         return actionParameter->dimMinLevel;
-      }
+      level -= ( actionParameter->dimStep );
    }
-
+   // check limits
+   if ( level >= actionParameter->dimMaxLevel )
+   {
+      return actionParameter->dimMaxLevel;
+   }
+   if ( level <= actionParameter->dimMinLevel )
+   {
+      return actionParameter->dimMinLevel;
+   }
+   // return calculated value
    return (uint8_t)level;
 }
 
 
 uint8_t HmwDimmer::get( uint8_t* data )
 {
+   StateFlags stateFlags;
+   stateFlags.byte = 0;
+   stateFlags.flags.working = isWorkingState();
+
+   if ( isRampRunning() )
+   {
+      stateFlags.flags.upDown = ( currentState == JT_RAMP_ON ) ? 1 : 2;
+   }
+
    // map 0-100% to 0-200
-   ( *data ) = currentLevel;
-   return 1;
+   *data++ = currentLevel;
+   *data = stateFlags.byte;
+   return 2;
 }
 
-void HmwDimmer::loop( uint8_t channel )
+void HmwDimmer::loop()
 {
-   if ( ( nextActionTime.isValid() && nextActionTime.since() ) || ( state == START_UP ) )
+   if ( isNextActionPending() )
    {
       handleStateChart();
    }
@@ -227,9 +238,9 @@ void HmwDimmer::checkConfig()
    calculateDimmingParameter();
 }
 
-void HmwDimmer::setLevel( uint8_t level )
+void HmwDimmer::setLevel( uint8_t level, bool withLogging )
 {
-   if ( ( currentLevel != level ) || ( state == START_UP ) )
+   if ( ( currentLevel != level ) )
    {
       DEBUG_H2( FSTR( " setLevel 0x" ), level );
       level ? enableOutput.set() : enableOutput.clear();
@@ -260,189 +271,204 @@ void HmwDimmer::setLevel( uint8_t level )
          }
       }
 
-      checkLogging( config->isLogging() );
+      checkLogging( withLogging && config->isLogging() );
    }
 }
 
-void HmwDimmer::jumpToNextState( uint8_t nextState )
-{
-   nextActionTime = Timestamp();
 
-   if ( JT_ONDELAY == nextState )
-   {
-      if ( isValidActionTime( actionParameter->onDelayTime ) )
-      {
-         nextActionTime += convertToTime( actionParameter->onDelayTime );
-         SET_STATE_L1( JT_ONDELAY );
-      }
-      else
-      {
-         jumpToNextState( JT_RAMP_ON );
-      }
-   }
-   else if ( JT_RAMP_ON == nextState )
-   {
-      if ( isValidActionTime( actionParameter->rampOnTime ) )
-      {
-         SET_STATE_L1( JT_RAMP_ON );
-         calculateRampParameter();
-      }
-      else
-      {
-         jumpToNextState( JT_ON );
-      }
-   }
-   else if ( JT_ON == nextState )
-   {
-      SET_STATE_L1( JT_ON );
-      if ( isValidActionTime( actionParameter->onTime ) )
-      {
-         nextActionTime += convertToTime( actionParameter->onTime );
-      }
-      else
-      {
-         nextActionTime.reset();
-      }
-   }
-   else if ( JT_OFFDELAY == nextState )
-   {
-      if ( isValidActionTime( actionParameter->offDelayTime ) )
-      {
-         SET_STATE_L1( JT_OFFDELAY );
-         nextActionTime += convertToTime( actionParameter->offDelayTime );
-      }
-      else
-      {
-         jumpToNextState( JT_RAMP_OFF );
-      }
-   }
-   else if ( JT_RAMP_OFF == nextState )
-   {
-      if ( isValidActionTime( actionParameter->rampOffTime ) )
-      {
-         SET_STATE_L1( JT_RAMP_OFF );
-         calculateRampParameter();
-      }
-      else
-      {
-         jumpToNextState( JT_OFF );
-      }
-   }
-   else if ( JT_OFF == nextState )
-   {
-      SET_STATE_L1( JT_OFF );
-      if ( isValidActionTime( actionParameter->offTime ) )
-      {
-         nextActionTime += convertToTime( actionParameter->offTime );
-      }
-      else
-      {
-         nextActionTime.reset();
-      }
-   }
-   else if ( JT_NO_JUMP_IGNORE_COMMAND == nextState )
-   {
-      nextActionTime.reset();
-   }
-   else
-   {
-      WARN_2( FSTR( "HmwDimmer::jumpToNextState() has no transition to state : " ), nextState );
-      nextActionTime.reset();
-   }
-}
-
-void HmwDimmer::handleStateChart( bool fromMainLoop )
+void HmwDimmer::handleStateChart()
 {
+   DEBUG_H1( FSTR( ".handleStatechart()" ) );
    if ( actionParameter == NULL )
    {
-      if ( state == START_UP )
-      {
-         setLevel( 0 );
-         SET_STATE_L1( JT_OFF );
-      }
+      DEBUG_M1( FSTR( "no actionParameter" ) );
+      nextActionTime.reset();
       return;
    }
+   if ( handleSpecificState( nextState ) )
+   {
+      prepareNextState();
+   }
+}
 
-   switch ( state )
+bool HmwDimmer::handleSpecificState( uint8_t _state )
+{
+   // enter the state and execute action
+   switch ( _state )
    {
       case JT_OFF:
       {
+         SET_STATE_L1( JT_OFF );
          setLevel( actionParameter->offLevel );
-         jumpToNextState( actionParameter->jtOff );
          break;
       }
       case JT_ONDELAY:
       {
-         if ( fromMainLoop )
-         {
-            jumpToNextState( actionParameter->jtOnDelay );
-            break;
-         }
+         SET_STATE_L1( JT_ONDELAY );
+         break;
       }
       case JT_RAMP_ON:
       {
-         if ( !fromMainLoop || ( currentLevel >= actionParameter->onLevel ) || config->isDimmingModeSwitch() )
+         SET_STATE_L1( JT_RAMP_ON );
+         nextActionTime += nextStepTime;
+         if ( (uint16_t)( currentLevel + rampStep ) < actionParameter->onLevel )
          {
-            jumpToNextState( actionParameter->jtRampOn );
-            setLevel( actionParameter->onLevel );
+            setLevel( currentLevel + rampStep, false );
+            return false; // we need more time
          }
-         else
-         {
-            // do the ramp
-            if ( (uint16_t)( currentLevel + rampStep ) >= actionParameter->onLevel )
-            {
-               setLevel( actionParameter->onLevel );
-            }
-            else
-            {
-               setLevel( currentLevel + rampStep );
-               nextActionTime += ( nextStepTime );
-            }
-         }
-
          break;
       }
       case JT_ON:
       {
+         SET_STATE_L1( JT_ON );
          setLevel( actionParameter->onLevel );
-         jumpToNextState( actionParameter->jtOn );
          break;
       }
       case JT_OFFDELAY:
       {
-         if ( fromMainLoop )
-         {
-            jumpToNextState( actionParameter->jtOffDelay );
-            break;
-         }
+         SET_STATE_L1( JT_OFFDELAY );
+         break;
       }
       case JT_RAMP_OFF:
       {
-         if ( !fromMainLoop || ( currentLevel <= actionParameter->offLevel ) || config->isDimmingModeSwitch() )
+         SET_STATE_L1( JT_RAMP_OFF );
+         nextActionTime += nextStepTime;
+         if ( ( currentLevel >= rampStep ) && ( ( currentLevel - rampStep ) >= actionParameter->offLevel ) )
          {
-            jumpToNextState( actionParameter->jtRampOff );
-            setLevel( actionParameter->offLevel );
+            setLevel( currentLevel - rampStep, false );
+            return false; // we need more time
          }
-         else
+         break;
+      }
+      case DIM_UP:
+      {
+         SET_STATE_L1( DIM_UP );
+         nextActionTime += nextStepTime;
+         if ( (uint16_t)( currentLevel + rampStep ) <= dimTargetLevel )
          {
-            // do the ramp
-            if ( ( currentLevel <= rampStep ) || ( ( currentLevel - rampStep ) <= actionParameter->offLevel ) )
-            {
-               setLevel( actionParameter->offLevel );
-            }
-            else
-            {
-               setLevel( currentLevel - rampStep );
-               nextActionTime += ( nextStepTime );
-            }
+            setLevel( currentLevel + rampStep, false );
+            return false; // we need more time
+         }
+         break;
+      }
+      case DIM_DOWN:
+      {
+         SET_STATE_L1( DIM_DOWN );
+         nextActionTime += nextStepTime;
+         if ( ( currentLevel >= rampStep ) && ( ( currentLevel - rampStep ) >= dimTargetLevel ) )
+         {
+            setLevel( currentLevel - rampStep, false );
+            return false; // we need more time
          }
          break;
       }
       default:
       {
-         WARN_3( FSTR( "HmwDimmer::handleJumpToTargetCmd from state: 0x" ), (uint8_t)state, FSTR( " not implemented" ) );
+         WARN_3( FSTR( "HmwSwitch::handleJumpToTargetCmd to state: 0x" ), nextState, FSTR( " not implemented" ) );
       }
    }
+   return true;
+}
+
+void HmwDimmer::prepareNextState( bool fromAction )
+{
+   DEBUG_H1( FSTR( ".prepareNextState()" ) );
+   uint8_t targetState = JT_OFF;
+   TimeModes targetTimeMode = TIME_MODE_ABSOLUTE;
+   uint16_t delayTime = 0;
+
+   switch ( getCurrentState() )
+   {
+      case JT_OFF:
+      {
+         DEBUG_M1( FSTR( "currentState is JT_OFF" ) );
+         targetState = fromAction ? actionParameter->jtOff : JT_ONDELAY;
+         delayTime = actionParameter->offTime;
+         targetTimeMode = (TimeModes)actionParameter->offTimeMode;
+         break;
+      }
+      case JT_ONDELAY:
+      {
+         DEBUG_M1( FSTR( "currentState is JT_ONDELAY" ) );
+         targetState = fromAction ? actionParameter->jtOnDelay : JT_RAMP_ON;
+         delayTime = actionParameter->onDelayTime;
+         break;
+      }
+      case JT_RAMP_ON:
+      {
+         DEBUG_M1( FSTR( "currentState is JT_RAMP_ON" ) );
+         targetState = fromAction ? actionParameter->jtRampOn : JT_ON;
+         break;
+      }
+      case JT_ON:
+      {
+         DEBUG_M1( FSTR( "currentState is JT_ON" ) );
+         targetState = fromAction ? actionParameter->jtOn : JT_OFFDELAY;
+         delayTime = actionParameter->onTime;
+         targetTimeMode = (TimeModes)actionParameter->onTimeMode;
+         break;
+      }
+      case JT_OFFDELAY:
+      {
+         DEBUG_M1( FSTR( "currentState is JT_OFFDELAY" ) );
+         targetState = fromAction ? actionParameter->jtOffDelay : JT_RAMP_OFF;
+         delayTime = actionParameter->offDelayTime;
+         break;
+      }
+      case JT_RAMP_OFF:
+      {
+         DEBUG_M1( FSTR( "currentState is JT_RAMP_OFF" ) );
+         targetState = fromAction ? actionParameter->jtRampOff : JT_OFF;
+         break;
+      }
+      case DIM_UP:
+      case DIM_DOWN:
+      {
+         DEBUG_M1( FSTR( "currentState is DIM_UP/DOWN" ) );
+         if ( currentLevel )
+         {
+            SET_STATE_L1( JT_ON );
+         }
+         else
+         {
+            SET_STATE_L1( JT_OFF );
+         }
+         checkLogging( config->isLogging() );
+         nextActionTime.reset();
+         return;
+      }
+      default:
+      {
+         WARN_1( FSTR( "HmwDimmer::prepareNextState() invalid current state: 0x" ) << currentState );
+      }
+   }
+
+   nextActionTime = SystemTime::now() + convertToTime( delayTime );
+   if ( !isValidActionTime( delayTime ) )
+   {
+      nextActionTime.reset();
+   }
+
+   if ( targetState <= JT_OFF )
+   {
+      nextState = targetState;
+      timeMode = targetTimeMode;
+   }
+   else if ( targetState == JT_NO_JUMP_IGNORE_COMMAND )
+   {
+      // do nothing
+   }
+   else
+   {
+      WARN_2( FSTR( "HmwSwitch::prepareNextState() has no transition to state : " ), targetState );
+      nextActionTime.reset();
+   }
+
+   calculateRampParameter( targetState );
+
+   DEBUG_M1( FSTR( "nextActionDelay : " ) << delayTime );
+   DEBUG_M1( FSTR( "nextState       : " ) << nextState );
+   DEBUG_M1( FSTR( "nextActionTime  : " ) << nextActionTime.get() );
 }
 
 void HmwDimmer::calculateDimmingParameter()
@@ -452,7 +478,15 @@ void HmwDimmer::calculateDimmingParameter()
    uint8_t cutOffStart = Config::_00_PERCENT - config->getPwmRangeStart();
    uint8_t cutOffEnd = Config::_100_PERCENT - config->getPwmRangeEnd();
 
-   dimmingOffset = normalizeLevel * cutOffStart * ( MAX_LEVEL / 10 );
+   dimmingOffset = normalizeLevel * ( MAX_LEVEL / 10 );
+   if ( config->isDimmingModeLeading() )
+   {
+      dimmingOffset *= cutOffEnd;
+   }
+   else
+   {
+      dimmingOffset *= cutOffStart;
+   }
 
    // use extra 16bit variable to have accurate calculation for the dimmingFactor
    uint16_t pwmRange = normalizeLevel * MAX_LEVEL;
@@ -464,18 +498,18 @@ void HmwDimmer::calculateDimmingParameter()
    DEBUG_M2( FSTR( "dimmingFactor : 0x" ), dimmingFactor );
 }
 
-void HmwDimmer::calculateRampParameter()
+void HmwDimmer::calculateRampParameter( uint8_t targetState )
 {
-   if ( ( state != JT_RAMP_ON ) && ( state != JT_RAMP_OFF ) )
+   // only calculate ramp parameters if is needed for next state
+   if ( ( targetState != JT_RAMP_ON ) && ( targetState != JT_RAMP_OFF ) )
    {
-      ERROR_3( FSTR( "HmwDimmer::calculateRampParameter for state: 0x" ), (uint8_t)state, FSTR( " not implemented" ) );
       return;
    }
    DEBUG_H1( FSTR( " calculateRampParameter" ) );
    rampStep = actionParameter->onLevel - actionParameter->offLevel;
    nextStepTime = actionParameter->rampOnTime;
 
-   if ( state == JT_RAMP_OFF )
+   if ( targetState == JT_RAMP_OFF )
    {
       nextStepTime = actionParameter->rampOffTime;
    }

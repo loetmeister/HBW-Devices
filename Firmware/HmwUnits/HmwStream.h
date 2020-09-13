@@ -107,6 +107,11 @@ class HmwStream : public HmwStreamBase
 
    protected:
 
+      static inline bool isAwaitingAck()
+      {
+         return outMessageVector.size() != 0;
+      }
+
    private:
 
       static MessageQueue inMessageQueue;

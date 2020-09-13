@@ -21,7 +21,10 @@ class Release
          HBW_IO12_1W_UP = 0xB2,
          HBW_LC4_IN4_DR = 0xB3,
 
-         HBW_LC_DIM8_1W_DR = 0xB8
+         HBW_LC_BL8_1W_DR = 0xB7,
+         HBW_LC_DIM8_1W_DR = 0xB8,
+         HBW_LC_SW16_1W_DR = 0xB9,
+         HBW_LC_SW8_IN8_DR = 0xBA,
       };
 
       enum HardwareId
@@ -34,7 +37,7 @@ class Release
 
       static const uint8_t MAJOR = 2;
 
-      static const uint8_t MINOR = 50;
+      static const uint8_t MINOR = 71;
 };
 
 #endif

@@ -140,8 +140,8 @@ class HmwDimmer : public HmwChannel
 
       enum TimeModes
       {
-         ABSOLUTE,
-         MINIMAL,
+         TIME_MODE_ABSOLUTE,
+         TIME_MODE_MINIMAL,
       };
 
       struct ActionParameter
@@ -171,6 +171,23 @@ class HmwDimmer : public HmwChannel
          uint8_t jtOffDelay : 4;
          uint8_t jtRampOff  : 4;
          uint8_t jtOff      : 4;
+
+         inline bool isOffTimeAbsolute() const
+         {
+            return offTimeMode == TIME_MODE_ABSOLUTE;
+         }
+         inline bool isOnTimeAbsolute() const
+         {
+            return onTimeMode == TIME_MODE_ABSOLUTE;
+         }
+         inline bool isOffTimeMinimal() const
+         {
+            return offTimeMode == TIME_MODE_MINIMAL;
+         }
+         inline bool isOnTimeMinimal() const
+         {
+            return onTimeMode == TIME_MODE_MINIMAL;
+         }
       };
 
       struct LinkCommand
@@ -178,13 +195,6 @@ class HmwDimmer : public HmwChannel
          uint8_t keyNum;
          ActionParameter* actionParameter;
       };
-
-      static const uint8_t MAX_LEVEL = 200;
-      static const uint8_t DEFAULT_NORMALIZE_LEVEL = 205;
-      static const uint8_t LOOP_PERIOD_MS = 8;
-      static const uint16_t MAX_NEXT_ACTION_TIME = 0xC000;
-
-   protected:
 
       enum States
       {
@@ -195,8 +205,31 @@ class HmwDimmer : public HmwChannel
          JT_RAMP_OFF = 0x04,
          JT_OFF = 0x05,
          JT_NO_JUMP_IGNORE_COMMAND = 0x06,
-         START_UP
+         // internal states only
+         DIM_UP,
+         DIM_DOWN,
       };
+
+      union StateFlags
+      {
+         struct
+         {
+            uint8_t notUsed : 4; // lowest 4 bit are not used, based on XML state_flag definition
+            uint8_t upDown  : 2; // dim up = 1 or down = 2
+            uint8_t working : 1; // true, if working
+            uint8_t   : 1;
+         } flags;
+
+         uint8_t byte;
+      };
+
+
+      static const uint8_t MAX_LEVEL = 200;
+      static const uint8_t DEFAULT_NORMALIZE_LEVEL = 205;
+      static const uint8_t LOOP_PERIOD_MS = 8;
+      static const uint16_t MAX_DIMMING_TIME = 300;
+
+   protected:
 
    private:
 
@@ -218,13 +251,13 @@ class HmwDimmer : public HmwChannel
 
       ActionParameter const* actionParameter;
 
-      Timestamp nextActionTime;
-
-      States state;
+      TimeModes timeMode;
 
       uint8_t rampStep;
 
       uint8_t lastKeyNum;
+
+      uint8_t dimTargetLevel;
 
       uint32_t nextStepTime;
 
@@ -235,41 +268,62 @@ class HmwDimmer : public HmwChannel
 
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
       virtual void set( uint8_t length, uint8_t const* const data );
       virtual void checkConfig();
 
+      inline const Config& getConfig() const
+      {
+         return *config;
+      }
+
+      inline const PwmOutput& getPwmOutput() const
+      {
+         return pwmOutput;
+      }
+
+      inline const DigitalOutput& getEnableOutput() const
+      {
+         return enableOutput;
+      }
+
+      inline uint8_t getLastKeyNum() const
+      {
+         return lastKeyNum;
+      }
+
+      inline bool isRampRunning() const
+      {
+         return ( currentState == JT_RAMP_ON ) || ( currentState == JT_RAMP_OFF );
+      }
+
+      inline bool isAbsoluteTimeMode() const
+      {
+         return timeMode == TIME_MODE_ABSOLUTE;
+      }
+
+      inline bool isMinimalTimeMode() const
+      {
+         return timeMode == TIME_MODE_MINIMAL;
+      }
+
    protected:
 
-      void setLevel( uint8_t );
+      void setLevel( uint8_t level, bool withLogging = true );
 
    private:
 
-      void calculateRampParameter();
+      void calculateRampParameter( uint8_t targetState );
 
       void calculateDimmingParameter();
 
-      void jumpToNextState( uint8_t nextState );
-
       uint8_t getNextDimLevel( bool dimUp );
 
-      inline void setMainState( States _state )
-      {
-         if ( state == _state )
-         {
-            // we stay in the same state, stop loop
-            nextActionTime.reset();
-         }
-         state = _state;
-      }
+      void handleStateChart();
 
-      void handleStateChart( bool fromMainLoop = true );
+      bool handleSpecificState( uint8_t _state );
 
-      bool inline isValidActionTime( uint16_t time )
-      {
-         return ( time && ( time < MAX_NEXT_ACTION_TIME ) );
-      }
-
+      void prepareNextState( bool fromAction = false );
 
 }; // HmwDimmer
 

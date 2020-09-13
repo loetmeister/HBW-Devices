@@ -4,7 +4,7 @@
 // Class HmwKey
 HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
    unlocked( true ),
-   needsPulldownIfInverted( false ),
+   pulldownSupported( true ),
    keyPressNum( 1 ),
    config( _config ),
    feedbackChannel( _feedbackChannel ),
@@ -14,73 +14,41 @@ HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
    resetChannel();
 }
 
+uint8_t HmwKey::get( uint8_t* data )
+{
+   *data++ = ( isPressed() ? MAX_LEVEL : 0 );
+   *data++ = 0; // state flags not used   // TODO: why alway 0? fix?
+   return 2;
+}
 
-void HmwKey::loop( uint8_t channel )
+void HmwKey::loop()
 {
    if ( isUnlocked() )
    {
       if ( config->isPushButton() )
       {
-         handlePushButtonSignal( channel );
+         handlePushButtonSignal();
       }
       else if ( config->isSwitch() )
       {
-         handleSwitchSignal( channel );
+         handleSwitchSignal();
       }
       else if ( config->isMotionSensor() )
       {
-         handleMotionSensorSignal( channel );
+         handleMotionSensorSignal();
       }
    }
 }
 
-void HmwKey::handleMotionSensorSignal( uint8_t channel )	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
+void HmwKey::handleSwitchSignal()
 {
    if ( !isPressed() )
    {
       if ( lastSentLong.isValid() )
       {
-         lastSentLong.reset();
-      }
-      keyPressedTimestamp.reset();
-      if ( feedbackChannel && config->isFeedbackEnabled() )
-      {
-         uint8_t cmd = KEY_FEEDBACK_OFF;
-         feedbackChannel->set( 1, &cmd );
-      }
-   }
-   else
-   {
-      if ( !keyPressedTimestamp.isValid() )
-      {
-         // Taste war vorher nicht gedrueckt
-         keyPressedTimestamp = Timestamp();
-      }
-      else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
-      {
-         // if return value is 1, bus is not idle, retry next time
-         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
-         {
-            keyPressNum++;
-            lastSentLong = Timestamp();
-         }
-      }
-      if ( feedbackChannel && config->isFeedbackEnabled() )
-      {
-         uint8_t cmd = KEY_FEEDBACK_ON;
-         feedbackChannel->set( 1, &cmd );
-      }
-   }
-}
-
-void HmwKey::handleSwitchSignal( uint8_t channel )
-{
-   if ( !isPressed() )
-   {
-      if ( lastSentLong.isValid() )
-      {
-         // if return value is 1, bus is not idle, retry next time
-         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == IStream::SUCCESS )
+         uint8_t data[8];
+         HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
             lastSentLong.reset();
@@ -100,10 +68,11 @@ void HmwKey::handleSwitchSignal( uint8_t channel )
          // Taste war vorher nicht gedrueckt
          keyPressedTimestamp = Timestamp();
       }
-      else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
+      else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
-         // if return value is 1, bus is not idle, retry next time
-         if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == IStream::SUCCESS )
+         uint8_t data[8];
+         HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
             lastSentLong = Timestamp();
@@ -117,7 +86,7 @@ void HmwKey::handleSwitchSignal( uint8_t channel )
    }
 }
 
-void HmwKey::handlePushButtonSignal( uint8_t channel )
+void HmwKey::handlePushButtonSignal()
 {
    if ( !isPressed() )
    {
@@ -126,16 +95,17 @@ void HmwKey::handlePushButtonSignal( uint8_t channel )
       // Taste war vorher gedrueckt?
       if ( keyPressedTimestamp.isValid() )
       {
-         // entprellen, nur senden, wenn laenger als 50ms gedrueckt
-         if ( ( keyPressedTimestamp.since() >= 50 ) )
+         // entprellen, nur senden, wenn laenger als Entprellzeit gedrueckt
+         if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) )
          {
-            // auch beim loslassen nach einem langen Tastendruck ein weiteres Event senden
-            HmwDevice::sendKeyEvent( channel, keyPressNum, lastSentLong.isValid() );
             if ( !lastSentLong.isValid() )
             {
-               // noch kein "long" gesendet, für kurzes drücken keyPressNum erhöhen
+               // noch kein "long" gesendet, fuer kurzes druecken keyPressNum erhoehen
+            HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
                keyPressNum++;
             }
+            // auch beim loslassen nach einem langen Tastendruck ein weiteres Event senden
+//            HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
          }
          keyPressedTimestamp.reset();
          if ( feedbackChannel && config->isFeedbackEnabled() )
@@ -155,18 +125,18 @@ void HmwKey::handlePushButtonSignal( uint8_t channel )
          if ( lastSentLong.isValid() )
          {
             // schon ein LONG gesendet
-            if ( ( lastSentLong.since() >= 300 ) && config->repeatOnLongPress() )
+            if ( ( lastSentLong.since() >= REPEAT_LONG_PRESS_TIME ) && config->repeatOnLongPress() )
             {
                // alle 300ms wiederholen
                // keyPressNum nicht erhoehen
-               HmwDevice::sendKeyEvent( channel, keyPressNum, true, true );                  // long press
+               HmwDevice::sendKeyEvent( channelId, keyPressNum, true, true );                  // long press
                lastSentLong = Timestamp();
             }
          }
          else if ( keyPressedTimestamp.since() >= long(config->getLongPressTime() ) * 100 )
          {
             // erstes LONG
-            HmwDevice::sendKeyEvent( channel, keyPressNum, true, true );                    // long press
+            HmwDevice::sendKeyEvent( channelId, keyPressNum, true, true );                    // long press
             keyPressNum++;
             lastSentLong = Timestamp();
          }
@@ -185,18 +155,63 @@ void HmwKey::handlePushButtonSignal( uint8_t channel )
    }
 }
 
-void HmwKey::resetChannel()
+void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
-   if ( config->isActiveLow() )
+   if ( !isPressed() )
    {
-      digitalIn.setInverted( false );
-      digitalIn.enablePullup();
+      if ( lastSentLong.isValid() )
+      {
+         lastSentLong.reset();
+      }
+      keyPressedTimestamp.reset();
+      if ( feedbackChannel && config->isFeedbackEnabled() )
+      {
+         uint8_t cmd = KEY_FEEDBACK_OFF;
+         feedbackChannel->set( 1, &cmd );
+      }
    }
    else
    {
-      digitalIn.setInverted( true );
-      needsPulldownIfInverted ? digitalIn.enablePullup() : digitalIn.enablePulldown();
+      if ( !keyPressedTimestamp.isValid() )
+      {
+         // Taste war vorher nicht gedrueckt
+         keyPressedTimestamp = Timestamp();
+      }
+      else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
+      {
+         // if return value is 1, bus is not idle, retry next time
+         if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
+         {
+            keyPressNum++;   // increment only on success
+            lastSentLong = Timestamp();
+         }
+      }
+      if ( feedbackChannel && config->isFeedbackEnabled() )
+      {
+         uint8_t cmd = KEY_FEEDBACK_ON;
+         feedbackChannel->set( 1, &cmd );
+      }
    }
+}
+
+void HmwKey::resetChannel()
+{
+   if ( pulldownSupported )
+   {
+      config->isPullUp() ? digitalIn.enablePullup() : digitalIn.enablePulldown();
+   }
+   else
+   {
+      digitalIn.enablePullup();
+   }
+   // backward compatibility to prevent endless key events
+   if ( config->isPushButton() )
+   {
+      config->setInverted( !config->isPullUp() && pulldownSupported );
+   }
+
+   digitalIn.setInverted( config->isInverted() );
+
    keyPressedTimestamp.reset();
    lastSentLong.reset();
    keyPressNum = 1;

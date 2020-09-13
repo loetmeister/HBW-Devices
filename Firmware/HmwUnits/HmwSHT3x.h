@@ -81,15 +81,15 @@ class HmwSHT3x : public HmwChannel
 
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
       virtual void checkConfig();
 
    private:
 
-      inline void setMainState( States _state )
-      {
-         state = _state;
-      }
+      // inline void setMainState( States _state )
+      // {
+         // state = _state;
+      // }
 
       HwStatus sendCommand( Commands cmd );
 
@@ -126,19 +126,19 @@ class HmwSHT3x : public HmwChannel
 	  
 	  bool sendPeer;
 	  
-      States state;
+      // States state;
 
       uint8_t currentHumidity;
 
       uint8_t lastSentHumidity;
 
-      uint16_t nextActionDelay;
+      // uint16_t nextActionDelay;
 
       int16_t currentCentiCelsius;
 
       int16_t lastSentCentiCelsius;
 
-      Timestamp lastActionTime;
+      // Timestamp lastActionTime;
 
       //Timestamp lastSentTime;
 

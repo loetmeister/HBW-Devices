@@ -92,7 +92,7 @@ class HmwSHT2x : public HmwChannel
 
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
       virtual void checkConfig();
 
    private:

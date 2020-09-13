@@ -185,9 +185,6 @@
     <Compile Include="DefaultTypes.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Enc28j60.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="EventDrivenUnit.h">
       <SubType>compile</SubType>
     </Compile>

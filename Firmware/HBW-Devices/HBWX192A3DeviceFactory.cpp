@@ -1,5 +1,5 @@
 /*
- * HBWX32A4DeviceFactory.cpp
+ * HBWX192A3DeviceFactory.cpp
  *
  * Created: 04.12.2018 13:58:59
  * Author: viktor.pankraz
@@ -7,7 +7,10 @@
 
 
 #include "HBWDeviceFactory.h"
-#include "HBWLcDim8BaseHw.h"
+#include "HBWLcDim8Hw.h"
+#include "HBWLcSw8Hw.h"
+#include "HBWLcBl8Hw.h"
+#include "HBWLcSw16Hw.h"
 
 #include <Peripherals/Flash.h>
 
@@ -26,7 +29,28 @@ HmwDeviceHw* HBWDeviceFactory::createDevice( Release::FirmwareId firmwareId )
    {
       if ( config.hwVersion == Release::REV_0 )
       {
-         return new HBWLcDim8BaseHw();
+         return new HBWLcDim8Hw();
+      }
+   }
+   else if ( firmwareId == Release::HBW_LC_SW16_1W_DR )
+   {
+      if ( config.hwVersion == Release::REV_0 )
+      {
+         return new HBWLcSw16Hw();
+      }
+   }
+   else if ( firmwareId == Release::HBW_LC_SW8_IN8_DR )
+   {
+      if ( config.hwVersion == Release::REV_0 )
+      {
+         return new HBWLcSw8Hw();
+      }
+   }
+   else if ( firmwareId == Release::HBW_LC_BL8_1W_DR )
+   {
+      if ( config.hwVersion == Release::REV_0 )
+      {
+         return new HBWLcBl8Hw();
       }
    }
 

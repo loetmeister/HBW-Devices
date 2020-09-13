@@ -12,13 +12,16 @@ class HmwKey : public HmwChannel
 {
    public:
 
+      static const uint8_t DEBOUNCE_TIME = 100;
+
       class Config
       {
          enum OptionMask
          {
             INPUTTYPE_MASK = 0x07,
             UNLOCKED_MASK = 0x08,
-            ACTIVE_LOW_MASK = 0x10,
+            PULLUP_MASK = 0x10,
+            NOT_INVERT_MASK = 0x20,
             REPEAT_ON_LONG_PRESS_MASK = 0x40,
             FEEDBACK_MASK = 0x80,
          };
@@ -74,9 +77,14 @@ class HmwKey : public HmwChannel
                return options & UNLOCKED_MASK;
             }
 
-            inline bool isActiveLow() const
+            inline bool isPullUp() const
             {
-               return options & ACTIVE_LOW_MASK;
+               return options & PULLUP_MASK;
+            }
+
+            inline bool isInverted() const
+            {
+               return !( options & NOT_INVERT_MASK );
             }
 
             inline bool isFeedbackEnabled() const
@@ -92,6 +100,11 @@ class HmwKey : public HmwChannel
             inline uint8_t getLongPressTime() const
             {
                return long_press_time;
+            }
+
+            inline void setInverted( bool inverted )
+            {
+               options.update( ( options & ~NOT_INVERT_MASK ) | ( inverted ? 0 : NOT_INVERT_MASK ) );
             }
 
             inline void setLongPressTime( uint8_t time )
@@ -117,22 +130,33 @@ class HmwKey : public HmwChannel
          }
       }
 
-      inline void setNeedsPulldownIfInverted( bool _needsPulldownIfInverted )
+      inline void setPulldownSupport( bool enable )
       {
-         needsPulldownIfInverted = _needsPulldownIfInverted;
+         pulldownSupported = enable;
       }
 
-      inline bool isUnlocked()
+      inline bool isUnlocked() const
       {
          return config->isUnlocked() && unlocked;
       }
 
-      inline bool isPressed()
+      inline bool isPressed() const
       {
          return !digitalIn.isSet();
       }
 
-      virtual void loop( uint8_t channel );
+      inline const Config& getConfig() const
+      {
+         return *config;
+      }
+
+      inline const DigitalInput& getDigitalInput() const
+      {
+         return digitalIn;
+      }
+      virtual uint8_t get( uint8_t* data );
+
+      virtual void loop();
 
       virtual void checkConfig();
 
@@ -140,16 +164,17 @@ class HmwKey : public HmwChannel
 
       void resetChannel();
 
-      void handlePushButtonSignal( uint8_t channel );
+      void handlePushButtonSignal();
 
-      void handleSwitchSignal( uint8_t channel );
+      void handleSwitchSignal();
 
-      void handleMotionSensorSignal( uint8_t channel );
+      void handleMotionSensorSignal();
 
    private:
+
       bool unlocked;
 
-      bool needsPulldownIfInverted;
+      bool pulldownSupported;
 
       uint8_t keyPressNum;
 

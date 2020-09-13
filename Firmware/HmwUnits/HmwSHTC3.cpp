@@ -20,15 +20,21 @@ const uint8_t HmwSHTC3::debugLevel( DEBUG_LEVEL_OFF );
 HmwSHTC3::HmwSHTC3( Twi& _hardware, Config* _config ) :
    hardware( &_hardware ),
    isSleeping( true ),
-   currentHumidity( 0 ),
-   lastSentHumidity( 0 ),
    currentCentiCelsius( 0 ),
-   lastSentCentiCelsius( 0 )
+   lastSentCentiCelsius( 0 ),
+   config( _config ),
+   humidityChannel( NULL )
 {
    type = HmwChannel::HMW_SHTC3;
-   config = _config;
-   lastActionTime = 0;
    SET_STATE_L1( CHECK_SENSOR );
+   enable( 500 );
+}
+
+HmwSHTC3::PassiveHumidity::PassiveHumidity( PassiveHumidity::Config* _config ) :
+   currentHumidity( 0 ),
+   lastSentHumidity( 0 ),
+   config( _config )
+{
 }
 
 
@@ -37,27 +43,31 @@ uint8_t HmwSHTC3::get( uint8_t* data )
    // MSB first
    *data++ = ( currentCentiCelsius >> 8 ) & 0xFF;
    *data++ = currentCentiCelsius & 0xFF;
-   *data = currentHumidity;
-   return sizeof( currentCentiCelsius ) + sizeof( currentHumidity );
+   return sizeof( currentCentiCelsius );
 }
 
-void HmwSHTC3::loop( uint8_t channel )
+uint8_t HmwSHTC3::PassiveHumidity::get( uint8_t* data )
 {
-   if ( !nextActionDelay || ( lastActionTime.since() < nextActionDelay ) )
+   // MSB first
+   *data++ = currentHumidity;
+   return sizeof( currentHumidity );
+}
+
+void HmwSHTC3::loop()
+{
+   if ( !isNextActionPending() )
    {
       return;
    }
 
-   lastActionTime = Timestamp();   // at least last time of trying
-
-   switch ( state )
+   switch ( getCurrentState() )
    {
       case CHECK_SENSOR:
       {
          if ( checkSensorId() != OK )
          {
             // retry in 10s
-            nextActionDelay = 10000;
+            enable( 10000 );
             return;
          }
          SET_STATE_L1( START_MEASUREMENT );
@@ -67,13 +77,13 @@ void HmwSHTC3::loop( uint8_t channel )
          if ( startMeasurement() == OK )
          {
             // give some time for measuring before trying to read back the results
-            nextActionDelay = 20;
+            enable( 20 );
             SET_STATE_L1( READ_MEASUREMENT );
          }
          else
          {
             // retry after 1s
-            nextActionDelay = 1000;
+            enable( 1000 );
          }
          break;
       }
@@ -83,7 +93,7 @@ void HmwSHTC3::loop( uint8_t channel )
          if ( readMeasurement() != OK )
          {
             // retry after 1s
-            nextActionDelay = 1000;
+            enable( 1000 );
             SET_STATE_L1( START_MEASUREMENT );
             return;
          }
@@ -92,24 +102,19 @@ void HmwSHTC3::loop( uint8_t channel )
 
       case SEND_FEEDBACK:
       {
-         uint16_t perCentHumidity = perCentOf<uint16_t>( config->minDeltaPercent, lastSentHumidity );
-         uint32_t perCentCelsius = perCentOf<uint32_t>( config->minDeltaPercent, lastSentCentiCelsius );
-
-         bool doSend = ( perCentHumidity <= (uint8_t)abs( currentHumidity - lastSentHumidity ) );
-         doSend |= ( perCentCelsius <= (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) );
+         bool doSend = ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= config->maxInterval ) );
+         doSend |= ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) );
 
          if ( doSend && handleFeedback( SystemTime::S* config->minInterval ) )
          {
-            DEBUG_H4( FSTR( "Sending new values: " ), perCentCelsius, ' ', perCentHumidity )
             lastSentCentiCelsius = currentCentiCelsius;
-            lastSentHumidity = currentHumidity;
          }
 
          sleep(); // switch off sensor
 
          // start next measurement after 5s
          SET_STATE_L1( START_MEASUREMENT );
-         nextActionDelay = 5000;
+         enable( 5000 );
          break;
       }
 
@@ -118,20 +123,6 @@ void HmwSHTC3::loop( uint8_t channel )
 
       }
    }
-}
-
-void HmwSHTC3::checkConfig()
-{
-   if ( config->minInterval && ( ( config->minInterval < 5 ) || ( config->minInterval > 3600 ) ) )
-   {
-      config->minInterval = 10;
-   }
-   if ( config->minDeltaPercent && ( config->minDeltaPercent > 100 ) )
-   {
-      config->minDeltaPercent = 2;
-   }
-
-   nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
 }
 
 HmwSHTC3::HwStatus HmwSHTC3::checkSensorId()
@@ -188,7 +179,10 @@ HmwSHTC3::HwStatus HmwSHTC3::readMeasurement()
             rawData = ( data[3] << 8 ) | data[4];
             if ( checkCrc( rawData, data[5] ) == OK )
             {
-               currentHumidity = convertToRelativeHumidity( rawData );
+               if ( humidityChannel )
+               {
+                  humidityChannel->setMeasurementResult( convertToRelativeHumidity( rawData ) );
+               }
                return OK;
             }
             ERROR_1( FSTR( "CRC error humidity" ) );
@@ -280,4 +274,54 @@ HmwSHTC3::HwStatus HmwSHTC3::sleep()
       }
    }
    return status;
+}
+
+void HmwSHTC3::checkConfig()
+{
+   if ( config->minDelta > 250 )
+   {
+      config->minDelta = 5;
+   }
+   if ( config->minInterval && ( ( config->minInterval < 5 ) || ( config->minInterval > 3600 ) ) )
+   {
+      config->minInterval = 10;
+   }
+   if ( config->maxInterval && ( ( config->maxInterval < 5 ) || ( config->maxInterval > 3600 ) ) )
+   {
+      config->maxInterval = 150;
+   }
+   if ( config->maxInterval && ( config->maxInterval < config->minInterval ) )
+   {
+      config->maxInterval = 0;
+   }
+
+   nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
+}
+
+void HmwSHTC3::PassiveHumidity::checkConfig()
+{
+   if ( config->minInterval && ( ( config->minInterval < 5 ) || ( config->minInterval > 3600 ) ) )
+   {
+      config->minInterval = 10;
+   }
+   if ( config->minDeltaPercent && ( config->minDeltaPercent > 100 ) )
+   {
+      config->minDeltaPercent = 2;
+   }
+
+   nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
+}
+
+void HmwSHTC3::PassiveHumidity::setMeasurementResult( uint8_t humidity )
+{
+   currentHumidity = humidity;
+   uint16_t perCentHumidity = perCentOf<uint16_t>( config->minDeltaPercent, lastSentHumidity );
+
+   bool doSend = ( perCentHumidity <= (uint8_t)abs( currentHumidity - lastSentHumidity ) );
+
+   if ( doSend && handleFeedback( SystemTime::S* config->minInterval ) )
+   {
+      DEBUG_H2( FSTR( "Sending new values: " ), perCentHumidity )
+      lastSentHumidity = currentHumidity;
+   }
 }

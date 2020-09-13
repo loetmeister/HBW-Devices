@@ -23,53 +23,53 @@
 #define TRACE_TOGGLE( port, pins )   port.OUTTGL = pins
 
 #ifdef TEST_SD6
-#define TRACE_TWI_INIT               TRACE_INIT( PORTB, Pin0 | Pin1 | Pin2 | Pin3 ); \
-   TRACE_INIT( PORTC, Pin6 | Pin7 ); \
-   TRACE_INIT( PORTD, Pin0 | Pin1 | Pin2 | Pin3 | Pin4 | Pin5 | Pin6 )
+#define TRACE_TWI_INIT               TRACE_INIT( PORTB, Pin0Mask | Pin1Mask | Pin2Mask | Pin3Mask ); \
+   TRACE_INIT( PORTC, Pin6Mask | Pin7Mask ); \
+   TRACE_INIT( PORTD, Pin0Mask | Pin1Mask | Pin2Mask | Pin3Mask | Pin4Mask | Pin5Mask | Pin6Mask )
 
-#define TRACE_TWI_STATE_IDLE         TRACE_CLEAR( PORTB, Pin0 | Pin1 )
-#define TRACE_TWI_STATE_WRITING      TRACE_SET( PORTB, Pin0 | Pin1 )
-#define TRACE_TWI_STATE_READING      TRACE_SET( PORTB, Pin0 ) TRACE_CLEAR( PORTB, Pin1 )
+#define TRACE_TWI_STATE_IDLE         TRACE_CLEAR( PORTB, Pin0Mask | Pin1Mask )
+#define TRACE_TWI_STATE_WRITING      TRACE_SET( PORTB, Pin0Mask | Pin1Mask )
+#define TRACE_TWI_STATE_READING      TRACE_SET( PORTB, Pin0Mask ) TRACE_CLEAR( PORTB, Pin1Mask )
 
-#define TRACE_TWI_WRITE_BIT_START    TRACE_SET( PORTD, Pin0 )
-#define TRACE_TWI_WRITE_BIT_END      TRACE_CLEAR( PORTD, Pin0 )
-#define TRACE_TWI_READ_BIT_START     TRACE_SET( PORTD, Pin1 )
-#define TRACE_TWI_READ_BIT_END       TRACE_CLEAR( PORTD, Pin1 )
+#define TRACE_TWI_WRITE_BIT_START    TRACE_SET( PORTD, Pin0Mask )
+#define TRACE_TWI_WRITE_BIT_END      TRACE_CLEAR( PORTD, Pin0Mask )
+#define TRACE_TWI_READ_BIT_START     TRACE_SET( PORTD, Pin1Mask )
+#define TRACE_TWI_READ_BIT_END       TRACE_CLEAR( PORTD, Pin1Mask )
 
-#define TRACE_TWI_SCL_HOLD           TRACE_CLEAR( PORTD, Pin4 )
-#define TRACE_TWI_SCL_RELEASE        TRACE_SET( PORTD, Pin4 )
+#define TRACE_TWI_SCL_HOLD           TRACE_CLEAR( PORTD, Pin4Mask )
+#define TRACE_TWI_SCL_RELEASE        TRACE_SET( PORTD, Pin4Mask )
 
-#define TRACE_TWI_INT1_START         TRACE_SET( PORTD, Pin5 )
-#define TRACE_TWI_INT1_END           TRACE_CLEAR( PORTD, Pin5 )
+#define TRACE_TWI_INT1_START         TRACE_SET( PORTD, Pin5Mask )
+#define TRACE_TWI_INT1_END           TRACE_CLEAR( PORTD, Pin5Mask )
 
 
-#define TRACE_TWI_WRITE_ACK_START    TRACE_SET( PORTC, Pin6 )
-#define TRACE_TWI_WRITE_ACK_END      TRACE_CLEAR( PORTC, Pin6 )
-#define TRACE_TWI_READ_ACK_START     TRACE_SET( PORTC, Pin7 )
-#define TRACE_TWI_READ_ACK_END       TRACE_CLEAR( PORTC, Pin7 )
+#define TRACE_TWI_WRITE_ACK_START    TRACE_SET( PORTC, Pin6Mask )
+#define TRACE_TWI_WRITE_ACK_END      TRACE_CLEAR( PORTC, Pin6Mask )
+#define TRACE_TWI_READ_ACK_START     TRACE_SET( PORTC, Pin7Mask )
+#define TRACE_TWI_READ_ACK_END       TRACE_CLEAR( PORTC, Pin7Mask )
 #else
 #ifdef TEST_AR8
 
-#define TRACE_TWI_INIT               TRACE_INIT( PORTF, AllPins )
-#define TRACE_TWI_STATE_IDLE         TRACE_CLEAR( PORTF, Pin0 | Pin1 )
-#define TRACE_TWI_STATE_WRITING      TRACE_SET( PORTF, Pin0 | Pin1 )
-#define TRACE_TWI_STATE_READING      TRACE_SET( PORTF, Pin0 ); TRACE_CLEAR( PORTB, Pin1 )
+#define TRACE_TWI_INIT               TRACE_INIT( PORTF, AllPinsMask )
+#define TRACE_TWI_STATE_IDLE         TRACE_CLEAR( PORTF, Pin0Mask | Pin1Mask )
+#define TRACE_TWI_STATE_WRITING      TRACE_SET( PORTF, Pin0Mask | Pin1Mask )
+#define TRACE_TWI_STATE_READING      TRACE_SET( PORTF, Pin0Mask ); TRACE_CLEAR( PORTB, Pin1Mask )
 
-#define TRACE_TWI_WRITE_BIT_START    TRACE_SET( PORTF, Pin2 )
-#define TRACE_TWI_WRITE_BIT_END      TRACE_CLEAR( PORTF, Pin2 )
-#define TRACE_TWI_READ_BIT_START     TRACE_SET( PORTF, Pin3 )
-#define TRACE_TWI_READ_BIT_END       TRACE_CLEAR( PORTF, Pin3 )
+#define TRACE_TWI_WRITE_BIT_START    TRACE_SET( PORTF, Pin2Mask )
+#define TRACE_TWI_WRITE_BIT_END      TRACE_CLEAR( PORTF, Pin2Mask )
+#define TRACE_TWI_READ_BIT_START     TRACE_SET( PORTF, Pin3Mask )
+#define TRACE_TWI_READ_BIT_END       TRACE_CLEAR( PORTF, Pin3Mask )
 
-#define TRACE_TWI_WRITE_ACK_START    TRACE_SET( PORTF, Pin4 )
-#define TRACE_TWI_WRITE_ACK_END      TRACE_CLEAR( PORTF, Pin4 )
-#define TRACE_TWI_READ_ACK_START     TRACE_SET( PORTF, Pin5 )
-#define TRACE_TWI_READ_ACK_END       TRACE_CLEAR( PORTF, Pin5 )
+#define TRACE_TWI_WRITE_ACK_START    TRACE_SET( PORTF, Pin4Mask )
+#define TRACE_TWI_WRITE_ACK_END      TRACE_CLEAR( PORTF, Pin4Mask )
+#define TRACE_TWI_READ_ACK_START     TRACE_SET( PORTF, Pin5Mask )
+#define TRACE_TWI_READ_ACK_END       TRACE_CLEAR( PORTF, Pin5Mask )
 
-#define TRACE_TWI_SCL_HOLD           TRACE_CLEAR( PORTF, Pin6 )
-#define TRACE_TWI_SCL_RELEASE        TRACE_SET( PORTF, Pin6 )
+#define TRACE_TWI_SCL_HOLD           TRACE_CLEAR( PORTF, Pin6Mask )
+#define TRACE_TWI_SCL_RELEASE        TRACE_SET( PORTF, Pin6Mask )
 
-#define TRACE_TWI_INT1_START         TRACE_SET( PORTF, Pin7 )
-#define TRACE_TWI_INT1_END           TRACE_CLEAR( PORTF, Pin7 )
+#define TRACE_TWI_INT1_START         TRACE_SET( PORTF, Pin7Mask )
+#define TRACE_TWI_INT1_END           TRACE_CLEAR( PORTF, Pin7Mask )
 
 #else
 
@@ -101,8 +101,8 @@
 
 #define TWI_PORT              PORTE
 #define TWI_PER               TWIE
-#define SCL_PIN               Pin1
-#define SDA_PIN               Pin0
+#define SCL_PIN               Pin1Mask
+#define SDA_PIN               Pin0Mask
 #define STATE_HIGH            true
 #define STATE_LOW             false
 #define TIMEOUT_COUNT         50000

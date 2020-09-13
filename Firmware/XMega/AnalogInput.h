@@ -18,8 +18,7 @@ class AnalogInput : public DigitalInput
 
       ////    Constructors and destructors    ////
 
-      inline AnalogInput( uint8_t _portNumber, uint8_t _pinNumber ) :
-         DigitalInput( _portNumber, _pinNumber )
+      inline AnalogInput( PortPin _portPin ) : DigitalInput( _portPin )
       {
       }
 

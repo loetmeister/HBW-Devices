@@ -8,6 +8,7 @@
 #include <Security/ModuleId.h>
 #include <Peripherals/ResetSystem.h>
 #include <Peripherals/Flash.h>
+#include <Peripherals/Eeprom.h>
 #include <BooterFw.h>
 #include <Release.h>
 
@@ -43,6 +44,8 @@ int main( int argc, char* argv[] )
       }
 
       Flash::eraseApplication();
+      // Eeprom::erase();
+      // Flash::eraseUserSignature();
       ResetSystem::reset();
       while ( 1 )
       {

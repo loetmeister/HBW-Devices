@@ -42,9 +42,8 @@ class StaticQueue : public BasicQueue<
 };
 
 template<typename DataType, typename SizeType, SizeType capacity>
-StaticQueue<DataType, SizeType, capacity>::StaticQueue()
+StaticQueue<DataType, SizeType, capacity>::StaticQueue() : BasicQueue<DataType, SizeType, DataType[capacity]>()
 {
-   BasicQueue<DataType, SizeType, DataType[capacity]>();
 }
 
 template<typename DataType, typename SizeType, SizeType capacity>

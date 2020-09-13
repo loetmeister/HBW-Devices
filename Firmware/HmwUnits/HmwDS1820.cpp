@@ -12,7 +12,7 @@
 #include <Tracing/Logger.h>
 #include <stdlib.h>
 
-#define getId() FSTR( "HmwDS1820." ) << channel
+#define getId() FSTR( "HmwDS1820 " )
 
 #define INVALID_VALUE -27315
 
@@ -22,12 +22,12 @@ bool HmwDS1820::selfPowered( true );
 
 HmwDS1820::HmwDS1820( OneWire& _hardware, Config* _config ) :
    hardware( &_hardware ),
-   state( SEARCH_SENSOR ),
    sendPeer( true )
 {
    type = HmwChannel::HMW_DS18X20;
    config = _config;
-   lastActionTime = 0;
+   SET_STATE_L1( SEARCH_SENSOR );
+   enable( 500 );
 }
 
 bool HmwDS1820::isSelfPowered()
@@ -55,21 +55,14 @@ uint8_t HmwDS1820::get( uint8_t* data )
    return 2;
 }
 
-void HmwDS1820::loop( uint8_t channel )
+void HmwDS1820::loop()
 {
-   if ( !nextActionDelay || ( ( config->id == 0 ) && ( state != SEND_INVALID_VALUE ) ) )
+   if ( !isNextActionPending() || ( ( config->id == 0 ) && ( getCurrentState() != SEND_INVALID_VALUE ) ) )
    {
       return;
    }
 
-   if ( lastActionTime.since() < nextActionDelay )
-   {
-      return;
-   }
-
-   lastActionTime = Timestamp();   // at least last time of trying
-
-   if ( state == SEARCH_SENSOR )
+   if ( getCurrentState() == SEARCH_SENSOR )
    {
       // set the last measured value to an invalid one
       currentCentiCelsius = INVALID_VALUE;
@@ -111,8 +104,8 @@ void HmwDS1820::loop( uint8_t channel )
                }
                if ( config->id == currentId )
                {
-                  state = START_MEASUREMENT;
-                  nextActionDelay = 100;
+                  SET_STATE_L1( START_MEASUREMENT );
+                  enable( 100 );
                   return;
                }
 
@@ -125,27 +118,27 @@ void HmwDS1820::loop( uint8_t channel )
       }
       // no sensor found, stop channel
       DEBUG_H1( FSTR( " No sensor for this channel" ) );
-      nextActionDelay = 5000;
-      state = SEND_INVALID_VALUE;
+      SET_STATE_L1( SEND_INVALID_VALUE );
+      enable( 5000 );
    }
-   else if ( state == START_MEASUREMENT )
+   else if ( getCurrentState() == START_MEASUREMENT )
    {
       if ( startMeasurement() == OK )
       {
-         nextActionDelay = 1000;
-         state = SEND_FEEDBACK;
+         SET_STATE_L1( SEND_FEEDBACK );
+         enable( 1000 );
       }
       else
       {
          // retry after 250ms
-         nextActionDelay = 250;
+         enable( 250 );
       }
    }
-   else if ( state == SEND_FEEDBACK )
+   else if ( getCurrentState() == SEND_FEEDBACK )
    {
-      bool doSend = ( readMeasurement() == OK );	//TODO: handle CRC_FAILTURE (add error counter, then use "#define ERROR_TEMP -27314     // CRC or read error", for SEND_INVALID_VALUE)
+      bool doSend = ( readMeasurement() == OK );
 
-      doSend &= ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= ( config->maxInterval - config->minInterval ) ) )
+      doSend &= ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= config->maxInterval ) )
                 || ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
 
       if ( doSend ) //&& handleFeedback( SystemTime::S* config->minInterval ) )
@@ -156,9 +149,9 @@ void HmwDS1820::loop( uint8_t channel )
 		if ( sendPeer )
 		{
 			sendPeer = false;
-			if ( HmwDevice::sendInfoEvent( channel, data, 2 ) == IStream::SUCCESS)
+			if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS)
 			{
-				nextActionDelay = 500;	// at least one peer existed, so add some delay before sending InfoMessage
+				 enable( 500 );	// at least one peer existed, so add some delay before sending InfoMessage
 				return;
 			}
 		}
@@ -173,14 +166,15 @@ void HmwDS1820::loop( uint8_t channel )
       }
 
       // start next measurement after 5s
-      state = START_MEASUREMENT;
-      nextActionDelay = 5000;
+      SET_STATE_L1( START_MEASUREMENT );
+      enable( 5000 );
    }
-   else if ( state == SEND_INVALID_VALUE )
+   else if ( getCurrentState() == SEND_INVALID_VALUE )
    {
+    //TODO: add handle CRC_FAILTURE (add error counter, then use "#define ERROR_TEMP -27314     // CRC or read error", for SEND_INVALID_VALUE)
       // send the INVALID_VALUE one time
       uint8_t data[2];
-      HmwDevice::sendInfoMessage( channel, get( data ), data );
+      HmwDevice::sendInfoMessage( channelId, get( data ), data );
       disable();
    }
 
@@ -206,8 +200,8 @@ void HmwDS1820::checkConfig()
    }
 
    // maybe someone has changed the Ids, search the desired sensor now
-   state = SEARCH_SENSOR;
-   nextActionDelay = 500;
+   SET_STATE_L1( SEARCH_SENSOR );
+   enable( 500 );
    nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
 }
 
@@ -262,7 +256,7 @@ int16_t HmwDS1820::convertToCentiCelsius( uint8_t* scratchPad )
    if ( romCode.family == DS18S20_ID ) // 9 -> 12 bit if 18S20
    {
       // Extended measurements for DS18S20
-      measurement &= (uint16_t) 0xfffe; // Discard LSB , needed for later extended precicion calc
+      measurement &= (uint16_t) 0xfffe; // Discard LSB , needed for later extended precision calculation
       measurement <<= 3;// Convert to 12-bit , now degrees are in 1/16 degrees units
       measurement += ( 16 - scratchPad[6] ) - 4;// Add the compensation , and remember to subtract 0.25 degree (4/16)
    }

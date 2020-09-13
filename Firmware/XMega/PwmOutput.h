@@ -18,11 +18,11 @@ class PwmOutput : public DigitalOutput
    ////    Constructors and destructors    ////
 
    public:
-      inline PwmOutput( PortPin _portPin ) : DigitalOutput( _portPin )
+      inline PwmOutput( PortPin _portPin, bool config = true ) : DigitalOutput( _portPin, config )
       {
       }
 
-      inline PwmOutput( uint8_t _portNumber, uint8_t _pinNumber ) : DigitalOutput( _portNumber, _pinNumber )
+      inline PwmOutput( uint8_t _portNumber, uint8_t _pinNumber, bool config = true ) : DigitalOutput( _portNumber, _pinNumber, config )
       {
       }
 

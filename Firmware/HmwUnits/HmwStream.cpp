@@ -14,7 +14,11 @@ HmwStream::MessageVector HmwStream::outMessageVector;
 
 IStream::Status HmwStream::sendMessage( HmwMessageBase& msg )
 {
+   // if ACK is pending wait additional MIN_IDLE_TIME before sending next message
+   additionalMinIdleTime = ( rand() & 0xF ) + ( isAwaitingAck() ? MIN_IDLE_TIME : 0 );
+
    IStream::Status status = HmwStreamBase::sendMessage( msg );
+
    // make sure the message is back in LittleEndian format after sending
    msg.convertToLittleEndian();
    msg.notifySending();
@@ -35,12 +39,12 @@ IStream::Status HmwStream::sendMessage( HmwMessageBase& msg )
             }
             else
             {
-               ERROR_1( FSTR( "HmwStream::sendMessage() out of memory" ) );
+               LOG_ERROR( FSTR( "HmwStream::sendMessage() out of memory" ) );
             }
          }
          else
          {
-            ERROR_1( FSTR( "HmwStream::sendMessage() outMessageVector.isFull()" ) );
+            LOG_ERROR( FSTR( "HmwStream::sendMessage() outMessageVector.isFull()" ) );
          }
       }
    }

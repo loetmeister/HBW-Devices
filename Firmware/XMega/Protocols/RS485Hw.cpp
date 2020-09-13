@@ -14,13 +14,13 @@ const uint8_t RS485Hw::debugLevel( TRACE_PORT | DEBUG_LEVEL_OFF );
 
 enum TracePins
 {
-   RX_INT = Pin0,
-   RX_MSG = Pin1,
-   RX_ESC = Pin2,
-   RX_COLL = Pin3,
-   RX_READ = Pin4,
-   TX_MSG = Pin5,
-   TX_ERR = Pin6
+   RX_INT = Pin0Mask,
+   RX_MSG = Pin1Mask,
+   RX_ESC = Pin2Mask,
+   RX_COLL = Pin3Mask,
+   RX_READ = Pin4Mask,
+   TX_MSG = Pin5Mask,
+   TX_ERR = Pin6Mask
 
 };
 

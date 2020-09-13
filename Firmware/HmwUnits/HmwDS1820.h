@@ -35,7 +35,7 @@ class HmwDS1820 : public HmwChannel
          OUT_OF_MEMORY
       };
 
-      enum State
+      enum States
       {
          SEARCH_SENSOR,
          START_MEASUREMENT,
@@ -85,7 +85,7 @@ class HmwDS1820 : public HmwChannel
 
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
       virtual void checkConfig();
 
    private:
@@ -144,17 +144,13 @@ class HmwDS1820 : public HmwChannel
 
       Config* config;
 
-      State state;
-	  
-	  bool sendPeer;
+      bool sendPeer;
 
       OneWire::RomCode romCode;
 
       int16_t currentCentiCelsius;
 
       int16_t lastSentCentiCelsius;
-
-      Timestamp lastActionTime;
 
 };
 

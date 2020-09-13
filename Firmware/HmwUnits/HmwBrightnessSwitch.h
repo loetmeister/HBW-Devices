@@ -16,7 +16,7 @@
 #ifndef HmwBrightnessSwitch_H
 #define HmwBrightnessSwitch_H
 
-#include "HmwChannel.h"
+#include "HmwLed.h"
 #include <Time/Timestamp.h>
 #include <xEeprom.h>
 
@@ -69,7 +69,7 @@ class HmwBrightnessSwitch : public HmwChannel
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
 	  virtual void set( uint8_t length, uint8_t const* const data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
 	  virtual void checkConfig();
 
    private:

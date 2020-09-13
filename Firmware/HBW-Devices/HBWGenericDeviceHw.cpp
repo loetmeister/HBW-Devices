@@ -29,7 +29,7 @@ HBWGenericDeviceHw::HBWGenericDeviceHw()
    DigitalOutputTmpl<PortD, 7> txDebug;
    Usart::instance<PortD, 1>().init<115200>();
    Logger::instance().setStream( debug );
-   TRACE_PORT_INIT( Pin0 | Pin1 | Pin2 | Pin3 | Pin4 | Pin5 );
+   TRACE_PORT_INIT( Pin0Mask | Pin1Mask | Pin2Mask | Pin3Mask | Pin4Mask | Pin5Mask );
 #endif
 
    // setup the serial for HmwStream, the txEnable/rxEnable lines have to be set in the special HW version

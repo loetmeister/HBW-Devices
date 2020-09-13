@@ -8,8 +8,11 @@
 
 #include "HmwStreamBase.h"
 #include <DigitalOutput.h>
+#include <Tracing/Logger.h>
 
 HmwStreamHw* HmwStreamBase::hardware( NULL );
+
+uint8_t HmwStreamBase::additionalMinIdleTime( 0 );
 
 uint8_t HmwStreamBase::senderNum( 0 );
 
@@ -25,8 +28,9 @@ HmwMessageBase HmwStreamBase::inMessage;
 
 const uint8_t HmwStreamBase::debugLevel( DEBUG_LEVEL_OFF );
 
-#define RX_TRACE_PIN            Pin0
-#define RX_ERROR_TRACE_PIN      Pin1
+#define RX_TRACE_PIN            Pin0Mask
+#define RX_ERROR_TRACE_PIN      Pin1Mask
+#define TX_WAIT_BUSY_PIN        Pin2Mask
 
 
 IStream::Status HmwStreamBase::sendMessage( HmwMessageBase& msg )
@@ -37,9 +41,11 @@ IStream::Status HmwStreamBase::sendMessage( HmwMessageBase& msg )
    }
 
    // wait for bus to be idle, only ACKs are sent immediately
+   TRACE_PORT_SET( TX_WAIT_BUSY_PIN );
    while ( !isIdle() && !msg.isACK() )
    {
    }
+   TRACE_PORT_CLEAR( TX_WAIT_BUSY_PIN );
 
    uint8_t data;
    IStream::Status status = IStream::SUCCESS;
@@ -93,13 +99,13 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
    // Debug
    if ( data == HmwMessageBase::FRAME_STARTBYTE )
    {
-      DEBUG_M1( FSTR( "R: " ) );
+      DEBUG_M( FSTR( "R: " ) );
    }
    else
    {
-      DEBUG_L1( FSTR( ":" ) );
+      DEBUG_L( FSTR( ":" ) );
    }
-   DEBUG_L1( data );
+   DEBUG_L( data );
 
    if ( data == HmwMessageBase::ESCAPE_BYTE )
    {
@@ -145,7 +151,7 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
             if ( inMessage.getFrameDataLength() > HmwMessageBase::MAX_FRAME_LENGTH )               // check for max farme length
             {
                statusReceiving.transmitting = false;
-               ERROR_1( FSTR( "MsgTooLong" ) );
+               LOG_ERROR( FSTR( "MsgTooLong" ) );
                TRACE_PORT_TOGGLE( RX_ERROR_TRACE_PIN );
             }
          }
@@ -165,10 +171,10 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
             else
             {
                TRACE_PORT_TOGGLE( RX_ERROR_TRACE_PIN );
-               ERROR_1( FSTR( "CRC " ) );
+               LOG_ERROR( FSTR( "CRC " ) );
                for ( uint8_t i = 0; i < statusReceiving.dataIdx; i++ )
                {
-                  ERROR_DATA_2( inMessage.getRawByte( i ), ' ' )
+                  LOG_DATA( inMessage.getRawByte( i ) << ' ' )
                }
             }
          }
@@ -195,8 +201,8 @@ bool HmwStreamBase::getNextByteToSend( uint8_t& data )
       msg->convertToBigEndian();
       data = msg->isShort() ? HmwMessageBase::FRAME_STARTBYTE_SHORT : HmwMessageBase::FRAME_STARTBYTE;
       HmwMessageBase::crc16Shift( data, statusSending.crc16checksum );
-      DEBUG_M1( FSTR( "T: " ) );
-      DEBUG_L2( data, '|' );
+      DEBUG_M( FSTR( "T: " ) );
+      DEBUG_L( data << '|' );
       return true;
    }
    else if ( statusSending.transmitting )
@@ -234,7 +240,7 @@ bool HmwStreamBase::getNextByteToSend( uint8_t& data )
 
       if ( !statusSending.pendingEscape )
       {
-         DEBUG_L2( data, '|' );
+         DEBUG_L( data << '|' );
          HmwMessageBase::crc16Shift( data, statusSending.crc16checksum );
          if ( statusSending.dataIdx == ( HmwMessageBase::FRAME_HEADER_SIZE + msg->getFrameDataLength() ) )
          {

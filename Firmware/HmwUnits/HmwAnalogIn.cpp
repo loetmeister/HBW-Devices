@@ -42,7 +42,7 @@ uint8_t HmwAnalogIn::get( uint8_t* data )
    return 2;
 }
 
-void HmwAnalogIn::loop( uint8_t channel )
+void HmwAnalogIn::loop()
 {
    if ( !nextActionDelay )
    {
@@ -70,9 +70,11 @@ void HmwAnalogIn::loop( uint8_t channel )
    {
 	   // based on example from http://wa4bvy.com/xmega_doxy/adc_quickstart.html
 
-	   adc.setConversionParameter( false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc );	// unsigned, 12bit result, use internal 1 Volt ref.
-	   adc.setConversionTrigger( ADC_SWEEP_01_gc, ADC_EVSEL_0123_gc, ADC_EVACT_NONE_gc );
-	   adc.setClockRate( 200000UL );
+	   //adc.setConversionParameter( false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc );	// unsigned, 12bit result, use internal 1 Volt ref.
+	   adc.setConversionParameter<false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc>();	// unsigned, 12bit result, use internal 1 Volt ref.
+	   //adc.setConversionTrigger( ADC_SWEEP_01_gc, ADC_EVSEL_0123_gc, ADC_EVACT_NONE_gc );
+	   adc.setConversionTrigger<ADC_SWEEP_01_gc, ADC_EVSEL_0123_gc, ADC_EVACT_NONE_gc>();
+	   adc.setClockRate<200000UL>();
 
 	   AdcChannel.setupInput( ADC_CH_INPUTMODE_SINGLEENDED_gc, adcInputPin, false, ADC_CH_GAIN_1X_gc );	// input mode, posPin, negPin, gain
 

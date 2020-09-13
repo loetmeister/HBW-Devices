@@ -35,8 +35,9 @@ HmwSHT3x::HmwSHT3x( Twi& _hardware, Config* _config ) :
 {
    type = HmwChannel::HMW_SHT3x;
    config = _config;
-   lastActionTime = 0;
+   // lastActionTime = 0;
    SET_STATE_L1( CHECK_SENSOR );
+   enable( 500 );
 }
 
 
@@ -49,23 +50,21 @@ uint8_t HmwSHT3x::get( uint8_t* data )
    return sizeof( currentCentiCelsius ) + sizeof( currentHumidity );
 }
 
-void HmwSHT3x::loop( uint8_t channel )
+void HmwSHT3x::loop()
 {
-   if ( !nextActionDelay || ( lastActionTime.since() < nextActionDelay ) )
+   if ( !isNextActionPending() )
    {
       return;
    }
 
-   lastActionTime = Timestamp();   // at least last time of trying
-
-   switch ( state )
+   switch ( getCurrentState() )
    {
       case CHECK_SENSOR:
       {
          if ( checkSensorId() != OK )
          {
             // retry in 10s
-            nextActionDelay = 10000;
+            enable( 10000 );
             return;
          }
 		 readMeasurementErrorCounter = READ_ERR_COUNT;	// reset counter
@@ -76,13 +75,13 @@ void HmwSHT3x::loop( uint8_t channel )
          if ( startMeasurement() == OK )
          {
             // give some time for measuring before trying to read back the results
-            nextActionDelay = 20;
+            enable( 20 );
             SET_STATE_L1( READ_MEASUREMENT );
          }
          else
          {
             // retry after 1s
-            nextActionDelay = 1000;
+            enable( 1000 );
          }
          break;
       }
@@ -92,7 +91,7 @@ void HmwSHT3x::loop( uint8_t channel )
          if ( readMeasurement() != OK )
          {
             // retry after 1s
-            nextActionDelay = 1000;
+            enable( 1000 );
 			readMeasurementErrorCounter--;
 			if (!readMeasurementErrorCounter)
 			{
@@ -129,9 +128,9 @@ void HmwSHT3x::loop( uint8_t channel )
 			if ( sendPeer )
 			{
 				sendPeer = false;
-				if ( HmwDevice::sendInfoEvent( channel, data, 2 ) == IStream::SUCCESS)	//send temp only (length == 2)
+				if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS)	//send temp only (length == 2)
 				{
-					nextActionDelay = 500;	// at least one peer existed, so add some delay before sending InfoMessage
+					enable( 500 );	// at least one peer existed, so add some delay before sending InfoMessage
 					break;
 				}
 			}
@@ -155,7 +154,7 @@ void HmwSHT3x::loop( uint8_t channel )
 
          // start next measurement after 5s
          SET_STATE_L1( START_MEASUREMENT );
-         nextActionDelay = 5000;
+         enable( 5000 );
          break;
       }
 

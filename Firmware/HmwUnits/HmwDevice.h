@@ -158,21 +158,13 @@ class HmwDevice
 
       static inline IStream::Status sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress, bool keyPressed = false )
       {
-		 keyPressed = false; //TODO: fixme (overwrite to get back old behavior - which sends peering for long press, not only broadcasts)
-         IStream::Status status;
-         if ( keyPressed )
+         IStream::Status status = sendKeyEvent( srcChan, keyPressNum, longPress, 0xFFFFFFFF, 0 );
+         if ( status == IStream::SUCCESS )
          {
-            // normally only long press events
-            status = sendKeyEvent( srcChan, keyPressNum, longPress, 0xFFFFFFFF, 0 );
-         }
-         else
-         {
-            // short pressed or a released long press
-            status = sendKeyEvent( srcChan, keyPressNum, longPress, 0xFFFFFFFF, 0 );
-            if ( status == IStream::SUCCESS )
+            HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );
+            if ( !keyPressed )
             {
-               HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );
-               pendingActions.announce = true;
+               pendingActions.announce = true;   // TODO: check if announcement can only be send once, by key press (or every x key press?)
             }
          }
          return status;
@@ -183,39 +175,39 @@ class HmwDevice
          HmwMsgKeyEvent msg( ownAddress, targetAddr, srcChan, targetChan, keyPressNum, longPress );
          return HmwStream::sendMessage( msg );
       }
-#if defined(_Support_HBWLink_InfoEvent_)
-	/* direkt aufeinanderfolgendes senden funktioniert nicht richtig. Eventuell da beide Nachrichten ein ACK erwarten? */
-      /*static inline IStream::Status sendInfoMsgAndEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
+
+      static inline IStream::Status sendInfoMessage( uint8_t channel, uint8_t length, uint8_t const* const data, uint32_t target_address = 0 )
       {
+         HmwMsgInfo msg( ownAddress, target_address ? target_address : changeEndianness( basicConfig->centralAddress ), channel, data, length );
+         return HmwStream::sendMessage( msg );
+      }
+#if defined(_Support_HBWLink_InfoEvent_)
+       /* direkt aufeinanderfolgendes senden funktioniert nicht richtig. Eventuell da beide Nachrichten ein ACK erwarten? */
+      /*static inline IStream::Status sendInfoMsgAndEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )-      {
          //return HmwLinkSenderInfoEvent::notifyInfoEvent( srcChan, data, length );
-		 uint8_t status;
-		 //status = sendInfoMessage( srcChan, length, data );
-		 status = 0;
-		 if ( status == 0 )
-		 {
-			 length = 2;	// overwrite, to only send 2 bytes for temperature
-			 HmwLinkSenderInfoEvent::notifyInfoEvent( srcChan, data, length );
-			 return IStream::SUCCESS;
-		 }
-		 return IStream::ABORTED;
+                uint8_t status;
+                //status = sendInfoMessage( srcChan, length, data );
+                status = 0;
+                if ( status == 0 )
+                {
+                        length = 2;    // overwrite, to only send 2 bytes for temperature
+                        HmwLinkSenderInfoEvent::notifyInfoEvent( srcChan, data, length );
+                        return IStream::SUCCESS;
+                }
+                return IStream::ABORTED;
       }*/
-	  
-	  static inline IStream::Status sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
-	  {
-		return HmwLinkSenderInfoEvent::notifyInfoEvent( srcChan, data, length );
-	  }
-	  
+
+      static inline IStream::Status sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length )
+      {
+         return HmwLinkSenderInfoEvent::notifyInfoEvent( srcChan, data, length );
+      }
+
       static inline IStream::Status sendInfoEvent( uint8_t srcChan, uint8_t const* const data, uint8_t length, uint32_t targetAddr, uint8_t targetChan )
       {
          HmwMsgInfoEvent msg( ownAddress, targetAddr, srcChan, targetChan, data, length );
          return HmwStream::sendMessage( msg );
       }
 #endif
-      static inline uint8_t sendInfoMessage( uint8_t channel, uint8_t length, uint8_t const* const data, uint32_t target_address = 0 )
-      {
-         HmwMsgInfo msg( ownAddress, target_address ? target_address : changeEndianness( basicConfig->centralAddress ), channel, data, length );
-         return HmwStream::sendMessage( msg );
-      }
 
    protected:
 

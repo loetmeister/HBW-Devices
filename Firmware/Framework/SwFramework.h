@@ -82,41 +82,15 @@ class IStream;
 #define DEBUG_LEVEL_LOW      0x03
 
 #ifdef _DEBUG_
-#define DEBUG_H1( a1 )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1; }
-#define DEBUG_H2( a1, a2 )              if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1 << a2; }
-#define DEBUG_H3( a1, a2, a3 )          if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1 << a2 << a3; }
-#define DEBUG_H4( a1, a2, a3, a4 )      if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1 << a2 << a3 << a4; }
-#define DEBUG_H5( a1, a2, a3, a4, a5 )  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1 << a2 << a3 << a4 << a5; }
-#define DEBUG_M1( a1 )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << a1; }
-#define DEBUG_M2( a1, a2 )              if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << a1 << a2; }
-#define DEBUG_M3( a1, a2, a3 )          if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << a1 << a2 << a3; }
-#define DEBUG_M4( a1, a2, a3, a4 )      if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << a1 << a2 << a3 << a4; }
-#define DEBUG_M5( a1, a2, a3, a4, a5 )  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << a1 << a2 << a3 << a4 << a5; }
-#define DEBUG_L1( a1 )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << a1; }
-#define DEBUG_L2( a1, a2 )              if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << a1 << a2; }
-#define DEBUG_L3( a1, a2, a3 )          if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << a1 << a2 << a3; }
-#define DEBUG_L4( a1, a2, a3, a4 )      if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << a1 << a2 << a3 << a4; }
-#define DEBUG_L5( a1, a2, a3, a4, a5 )  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << a1 << a2 << a3 << a4 << a5; }
-#else
-#define DEBUG_H1( a1 )
-#define DEBUG_H2( a1, a2 )
-#define DEBUG_H3( a1, a2, a3 )
-#define DEBUG_H4( a1, a2, a3, a4 )
-#define DEBUG_H5( a1, a2, a3, a4, a5 )
-#define DEBUG_M1( a1 )
-#define DEBUG_M2( a1, a2 )
-#define DEBUG_M3( a1, a2, a3 )
-#define DEBUG_M4( a1, a2, a3, a4 )
-#define DEBUG_M5( a1, a2, a3, a4, a5 )
-#define DEBUG_L1( a1 )
-#define DEBUG_L2( a1, a2 )
-#define DEBUG_L3( a1, a2, a3 )
-#define DEBUG_L4( a1, a2, a3, a4 )
-#define DEBUG_L5( a1, a2, a3, a4, a5 )
-#endif
+#define DEBUG_H( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1; }
+#define DEBUG_M( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << arg; }
+#define DEBUG_L( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << arg; }
 
-
-#ifdef _DEBUG_
+#define IS_DEBUG_LEVEL( dl )            ( ( debugLevel & DEBUG_LEVEL_MASK ) == dl )
+#define LOG_INFO( arg )                 Logger::instance() << newTraceLine << "INFO> " << arg;
+#define LOG_WARNING( arg )              Logger::instance() << newTraceLine << "WARNING> " << arg;
+#define LOG_ERROR( arg )                Logger::instance() << newTraceLine << "ERROR> " << arg;
+#define LOG_DATA( arg )                 Logger::instance() << arg;
 #define ASSERT( expr )                                      \
    {                                                           \
       if ( !( expr ) )                                            \
@@ -125,25 +99,45 @@ class IStream;
          while ( 1 ) {; }                                              \
       }                                                         \
    }
-#define ERROR_1( a1 )                   Logger::instance() << newTraceLine << "ERROR> " << a1;
-#define ERROR_2( a1, a2 )               Logger::instance() << newTraceLine << "ERROR> " << a1 << a2;
-#define ERROR_3( a1, a2, a3 )           Logger::instance() << newTraceLine << "ERROR> " << a1 << a2 << a3;
-#define ERROR_4( a1, a2, a3, a4 )       Logger::instance() << newTraceLine << "ERROR> " << a1 << a2 << a3 << a4;
-#define ERROR_DATA_1( a1 )              Logger::instance() << a1;
-#define ERROR_DATA_2( a1, a2 )          Logger::instance() << a1 << a2;
-#define ERROR_DATA_3( a1, a2, a3 )      Logger::instance() << a1 << a2 << a3;
-#define ERROR_DATA_4( a1, a2, a3, a4 )  Logger::instance() << a1 << a2 << a3 << a4;
+
 #else
+
+#define DEBUG_H( arg )
+#define DEBUG_M( arg )
+#define DEBUG_L( arg )
+#define IS_DEBUG_LEVEL( dl )            false
+#define LOG_INFO( arg )
+#define LOG_WARNING( arg )
+#define LOG_ERROR( arg )
+#define LOG_DATA( arg )
 #define ASSERT( expr )
-#define ERROR_1( a1 )
-#define ERROR_2( a1, a2 )
-#define ERROR_3( a1, a2, a3 )
-#define ERROR_4( a1, a2, a3, a4 )
-#define ERROR_DATA_1( a1 )
-#define ERROR_DATA_2( a1, a2 )
-#define ERROR_DATA_3( a1, a2, a3 )
-#define ERROR_DATA_4( a1, a2, a3, a4 )
+
 #endif
+
+#define DEBUG_L1( a1 )                  DEBUG_L( a1 )
+#define DEBUG_L2( a1, a2 )              DEBUG_L( a1 << a2 )
+#define DEBUG_L3( a1, a2, a3 )          DEBUG_L( a1 << a2 << a3 )
+#define DEBUG_L4( a1, a2, a3, a4 )      DEBUG_L( a1 << a2 << a3 << a4 )
+#define DEBUG_L5( a1, a2, a3, a4, a5 )  DEBUG_L( a1 << a2 << a3 << a4 << a5 )
+#define DEBUG_M1( a1 )                  DEBUG_M( a1 )
+#define DEBUG_M2( a1, a2 )              DEBUG_M( a1 << a2 )
+#define DEBUG_M3( a1, a2, a3 )          DEBUG_M( a1 << a2 << a3 )
+#define DEBUG_M4( a1, a2, a3, a4 )      DEBUG_M( a1 << a2 << a3 << a4 )
+#define DEBUG_M5( a1, a2, a3, a4, a5 )  DEBUG_M( a1 << a2 << a3 << a4 << a5 )
+#define DEBUG_H1( a1 )                  DEBUG_H( a1 )
+#define DEBUG_H2( a1, a2 )              DEBUG_H( a1 << a2 )
+#define DEBUG_H3( a1, a2, a3 )          DEBUG_H( a1 << a2 << a3 )
+#define DEBUG_H4( a1, a2, a3, a4 )      DEBUG_H( a1 << a2 << a3 << a4 )
+#define DEBUG_H5( a1, a2, a3, a4, a5 )  DEBUG_H( a1 << a2 << a3 << a4 << a5 )
+
+#define ERROR_1( a1 )                   LOG_ERROR( a1 )
+#define ERROR_2( a1, a2 )               LOG_ERROR( a1 << a2 )
+#define ERROR_3( a1, a2, a3 )           LOG_ERROR( a1 << a2 << a3 )
+#define ERROR_4( a1, a2, a3, a4 )       LOG_ERROR( a1 << a2 << a3 << a4 )
+#define ERROR_DATA_1( a1 )              LOG_DATA( a1 )
+#define ERROR_DATA_2( a1, a2 )          LOG_DATA( a1 << a2 )
+#define ERROR_DATA_3( a1, a2, a3 )      LOG_DATA( a1 << a2 << a3 )
+#define ERROR_DATA_4( a1, a2, a3, a4 )  LOG_DATA( a1 << a2 << a3 << a4 )
 
 #define DEBUG_STATE_MASK     0x0C
 #define DEBUG_STATE_L1       0x04
@@ -282,8 +276,8 @@ template<typename T>
 inline T perCentOf( const uint8_t perCent, const T value )
 {
    T perCentValue = value * perCent / 100;
-   //T perCentValue = ( value * 5 ) >> 2;
-   //perCentValue = ( perCentValue * perCent ) >> 7;
+   // T perCentValue = ( value * 5 ) >> 2;
+   // perCentValue = ( perCentValue * perCent ) >> 7;
    return ( perCentValue ? perCentValue : 1 );
 }
 

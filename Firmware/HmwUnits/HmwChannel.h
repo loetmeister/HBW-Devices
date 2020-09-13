@@ -20,20 +20,16 @@ class HmwChannel
 {
 // variables
    public:
-      enum LedCommands
+
+      enum BlindActorCommands
       {
-         ON = 201,
-         OFF,
-         TOGGLE,
-         BLINK_ON,
-         BLINK_TOGGLE,
-         KEY_FEEDBACK_ON,
-         KEY_FEEDBACK_OFF,
+         STOP = 201,
       };
 
       enum GenericChannelCommands
       {
-
+         KEY_FEEDBACK_ON = 252,
+         KEY_FEEDBACK_OFF = 253,
          LINK_ACTION = 254,
          BROADCAST_LINK_ACTION = 255,
       };
@@ -46,14 +42,26 @@ class HmwChannel
          HMW_DIMMER,
          HMW_DS18X20,
          HMW_SHTC3,
+         HMW_SWITCH,
+         HMW_BLIND_ACTOR,
 		 HMW_SHT3x
       };
+
+      static const uint16_t ENDLESS_TIME = 0xC000;
+
+      static const uint16_t REPEAT_LONG_PRESS_TIME = 300;
+
+      static const uint16_t REPEAT_LONG_PRESS_TIMEOUT = 450;
+
+      static const uint8_t MAX_LEVEL = 200;
 
    protected:
 
       Type type;
       uint8_t channelId;
-      uint16_t nextActionDelay;
+      uint8_t currentState;
+      uint8_t nextState;
+      Timestamp nextActionTime;
       Timestamp nextFeedbackTime;
 
    private:
@@ -73,26 +81,61 @@ class HmwChannel
          return instances[channel];
       }
 
-      inline bool isOfType( Type _type )
+      inline bool isOfType( Type _type ) const
       {
          return type == _type;
       }
 
+      inline uint8_t getCurrentState() const
+      {
+         return currentState;
+      }
+
+      inline uint8_t getNextState() const
+      {
+         return nextState;
+      }
+
       inline void disable()
       {
-         nextActionDelay = 0;
+         nextActionTime.reset();
       }
 
-      inline void enable()
+      inline void enable( uint16_t _delay = 0 )
       {
-         nextActionDelay = 1;
+         nextActionTime = SystemTime::now() + _delay;
       }
 
-      uint32_t convertToTime( uint16_t value );
+      bool inline isValidActionTime( uint16_t time ) const
+      {
+         return ( time < ENDLESS_TIME );
+      }
+
+      inline const Timestamp& getNextActionTime() const
+      {
+         return nextActionTime;
+      }
+
+      inline const Timestamp& getNextFeedbackTime() const
+      {
+         return nextFeedbackTime;
+      }
+
+      inline bool isNextActionPending() const
+      {
+         return nextActionTime.isValid() && nextActionTime.since();
+      }
+
+      inline bool isWorkingState() const
+      {
+         return nextActionTime.isValid();
+      }
+
+      uint32_t convertToTime( uint16_t value ) const;
 
       virtual void set( uint8_t length, uint8_t const* const data );
       virtual uint8_t get( uint8_t* data );  // returns length, data must be big enough
-      virtual void loop( uint8_t channel );  // channel for feedbacks etc.
+      virtual void loop();
       virtual void checkConfig();
 
    protected:
@@ -100,6 +143,11 @@ class HmwChannel
       HmwChannel();
       void checkLogging( bool enabled );
       bool handleFeedback( uint32_t nextFeedbackDelay = 0 );
+
+      inline void setMainState( uint8_t _state )
+      {
+         currentState = _state;
+      }
 
    private:
 

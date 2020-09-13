@@ -9,6 +9,10 @@
 #include "HmwLed.h"
 #include "HmwDevice.h"
 
+#define getId() FSTR( "HmwLed." ) << channelId
+
+const uint8_t HmwLed::debugLevel( DEBUG_LEVEL_OFF ); // DEBUG_LEVEL_LOW | DEBUG_STATE_L3 );
+
 HmwLed::HmwLed( PortPin _portPin, Config* _config, bool _inverted, uint8_t _defaultPwmRange ) :
    pwmOutput( _portPin.getPortNumber(), _portPin.getPinNumber(), MAX_LEVEL_PERIOD ),
    defaultPwmRange( _defaultPwmRange )
@@ -16,16 +20,17 @@ HmwLed::HmwLed( PortPin _portPin, Config* _config, bool _inverted, uint8_t _defa
    type = HmwChannel::HMW_LED;
    config = _config;
    pwmOutput.setInverted( _inverted );
+   pwmOutput.DigitalOutput::clear();
    pwmOutput.clear();
    feedbackCmdActive = false;
-   logicalState = OFF;
+   currentState = OFF;
    currentLevel = 0;
    onLevel = MAX_LEVEL;
    offLevel = 0;
    blinkOnTime = 10;
    blinkOffTime = 10;
    blinkQuantity = 255;
-   nextBlinkTime.reset();
+   disable();
 }
 
 
@@ -34,8 +39,15 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
    if ( *data <= MAX_LEVEL )
    {
       currentLevel = *data;
-      nextBlinkTime.reset();
-      setLogicalState( *data ? ON : OFF );
+      disable();
+      if ( *data )
+      {
+         SET_STATE_L1( ON );
+      }
+      else
+      {
+         SET_STATE_L1( OFF );
+      }
    }
    else if ( isKeyFeedbackOnCmd( *data ) )
    {
@@ -58,20 +70,20 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
 
       if ( isBlinkOnCmd( *data ) )
       {
-         nextBlinkTime = Timestamp();
-         setLogicalState( BLINK_ON );
+         enable();
+         SET_STATE_L1( BLINK_ON );
       }
       else if ( isBlinkToggleCmd( *data ) )
       {
-         if ( logicalState != BLINK_ON )
+         if ( currentState != BLINK_ON )
          {
-            nextBlinkTime = Timestamp();
-            setLogicalState( BLINK_ON );
+            enable();
+            SET_STATE_L1( BLINK_ON );
          }
          else
          {
-            nextBlinkTime.reset();
-            setLogicalState( OFF );
+            disable();
+            SET_STATE_L1( OFF );
          }
       }
       else if ( isToggleCmd( *data ) )
@@ -79,14 +91,14 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
          if ( isLogicalOn() )
          {
             currentLevel = offLevel;
-            setLogicalState( OFF );
+            SET_STATE_L1( OFF );
          }
          else
          {
             currentLevel = onLevel;
-            setLogicalState( ON );
+            SET_STATE_L1( ON );
          }
-         nextBlinkTime.reset();
+         disable();
       }
    }
    else  // toggle
@@ -99,7 +111,7 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
       {
          currentLevel = MAX_LEVEL;
       }
-      nextBlinkTime.reset();
+      disable();
    }
 
    checkLogging( config->isLogging() );
@@ -108,20 +120,26 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
 
 uint8_t HmwLed::get( uint8_t* data )
 {
+   StateFlags stateFlags;
+   stateFlags.byte = 0;
+   stateFlags.flags.working = isWorkingState();
+   stateFlags.flags.state = getCurrentState() - ON;
+
    // map 0-100% to 0-200
-   ( *data ) = currentLevel;
-   return 1;
+   *data++ = currentLevel;   // TODO fix ? "*data++ = currentLevel;"
+   *data++ = stateFlags.byte;
+   return 2;
 }
 
-void HmwLed::loop( uint8_t channel )
+void HmwLed::loop()
 {
-   if ( nextBlinkTime.isValid() && nextBlinkTime.since() )
+   if ( isNextActionPending() )
    {
       // handle blinking
       if ( getLevel() == onLevel )
       {
          // is ON
-         nextBlinkTime += ( blinkOffTime * 100 );
+         nextActionTime += ( blinkOffTime * 100 );
          setLevel( offLevel );
       }
       else
@@ -129,7 +147,7 @@ void HmwLed::loop( uint8_t channel )
          // is OFF
          if ( blinkQuantity )
          {
-            nextBlinkTime += ( blinkOnTime * 100 );
+            nextActionTime += ( blinkOnTime * 100 );
             setLevel( onLevel );
 
             if ( blinkQuantity != 255 )
@@ -139,13 +157,19 @@ void HmwLed::loop( uint8_t channel )
          }
          else
          {
-            nextBlinkTime.reset();
-            setLogicalState( currentLevel == onLevel ? ON : OFF );
+            disable();
+            if ( currentLevel == onLevel )
+            {
+               SET_STATE_L1( ON );
+            }
+            else
+            {
+               SET_STATE_L1( OFF );
+            }
          }
       }
-
    }
-   if ( !feedbackCmdActive && !nextBlinkTime.isValid() )
+   if ( !feedbackCmdActive && !isWorkingState() )
    {
       // the default range is 0-200, this must be mapped to 0-100% duty cycle
       setLevel( currentLevel );

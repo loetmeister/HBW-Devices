@@ -18,7 +18,7 @@ HmwBrightnessKey::HmwBrightnessKey( HmwBrightnessSwitch& _linkedBrightnessSwitch
 }
 
 
-void HmwBrightnessKey::loop( uint8_t channel )
+void HmwBrightnessKey::loop()
 {
 	if ( linkedBrightnessSwitchChannel->currentValue == 255 )
 		return;	// channel "not used" value (disabled) - so quit
@@ -27,8 +27,8 @@ void HmwBrightnessKey::loop( uint8_t channel )
 	if ( linkedBrightnessSwitchChannel->triggered )
 	{
 		// if return value is 1, bus is not idle, retry next time
-		if ( HmwDevice::sendKeyEvent( channel, keyPressNum, false ) == IStream::SUCCESS )	//TODO?: allow short & long press? = (triggered >> 1)
-		//if ( HmwDevice::sendKeyEvent( channel, keyPressNum, (linkedBrightnessSwitchChannel->triggered >>1) ) == IStream::SUCCESS )
+		if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )	//TODO?: allow short & long press? = (triggered >> 1)
+		//if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, (linkedBrightnessSwitchChannel->triggered >>1) ) == IStream::SUCCESS )
 		{
 			keyPressNum++;
 			linkedBrightnessSwitchChannel->triggered = false;
@@ -38,7 +38,7 @@ void HmwBrightnessKey::loop( uint8_t channel )
 
 void HmwBrightnessKey::resetChannel()
 {
-   keyPressNum = 0;
+   keyPressNum = 1;
    linkedBrightnessSwitchChannel->triggered = false;
 }
 

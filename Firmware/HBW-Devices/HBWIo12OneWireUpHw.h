@@ -24,15 +24,24 @@ class HBWIo12OneWireUpHw : public HBWMultiKeySD6BaseHw
 
 // functions
    public:
-      inline HBWIo12OneWireUpHw() : HBWMultiKeySD6BaseHw( PortPin( PortR, 0 ), PortPin( PortR, 1 ), false )
+      inline HBWIo12OneWireUpHw() : HBWMultiKeySD6BaseHw( PortPin( PortR, 0 ), PortPin( PortR, 1 ), false, false )
       {
          // disable not available channels on this hardware
          //hbwOnboardBrightness.disable();
-         sht3x.disable();
+         //shtc3Temp.disable();
+		 sht3x.disable();
 
          // config specific IOs
          configLed.setInverted( true );
          configbutton.enablePullup();
+
+         for ( uint8_t i = 0; i < 12; i++ )
+         {
+            HmwKey* keyChannel = (HmwKey*)HmwChannel::getChannel( i );
+
+            // this hardware does not support pull down configuration
+            keyChannel->setPulldownSupport( false );
+         }
       }
 
       virtual inline bool isConfigButtonPressed()

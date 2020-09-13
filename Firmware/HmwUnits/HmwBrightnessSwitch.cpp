@@ -49,21 +49,21 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 		
 		switch ( data[0] )
 		{
-			case HmwChannel::TOGGLE:	// X LE COND_VALUE
+			case HmwLed::TOGGLE:	// X LE COND_VALUE
 				if ( currentValue <= data[2] )//actionParameter->onLevel )
 				{
 					triggered = true;
 					stateFlags.element.le = true;
 				}
 				break;
-			case HmwChannel::BLINK_ON:	// X GE COND_VALUE
+			case HmwLed::BLINK_ON:	// X GE COND_VALUE
 				if ( currentValue >= data[2] )//actionParameter->onLevel )
 				{
 					triggered = true;
 					stateFlags.element.le = false;
 				}
 				break;
-			//case HmwChannel::BLINK_TOGGLE:	// not used
+			//case HmwLed::BLINK_TOGGLE:	// not used
 				//break;
 		}
 		
@@ -83,7 +83,7 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 	}
 }
 
-void HmwBrightnessSwitch::loop( uint8_t channel )
+void HmwBrightnessSwitch::loop()
 {
    if ( !nextActionDelay )	// not used value, returns >100% (TODO: test if this is good solution...)
    {

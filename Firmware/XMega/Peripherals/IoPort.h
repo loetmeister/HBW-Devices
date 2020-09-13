@@ -179,9 +179,9 @@ class IoPort
          return 0;
       }
 
-      inline uint8_t isPinSet( uint8_t pin )
+      inline uint8_t isSet( uint8_t pinMask = 0xFF )
       {
-         return get() & pin;
+         return get() & pinMask;
       }
 
       inline void set( uint8_t value )

@@ -26,25 +26,20 @@ class HBWMultiKeySD6v0Hw : public HBWMultiKeySD6BaseHw
 
 // functions
    public:
-      inline HBWMultiKeySD6v0Hw() : HBWMultiKeySD6BaseHw( PortPin( PortE, 1 ), PortPin( PortD, 7 ), true )
+      inline HBWMultiKeySD6v0Hw() : HBWMultiKeySD6BaseHw( PortPin( PortE, 1 ), PortPin( PortD, 7 ), true, false )
       {
-         // set ledFeedback channels
+         // disable not available channels on this hardware
+         //hbwOnboardBrightness.disable();
+         //shtc3Temp.disable();
+		 sht3x.disable();
+
          for ( uint8_t i = 0; i < 12; i++ )
          {
-            ( (HmwKey*)HmwChannel::getChannel( i ) )->setFeedbackChannel( HmwChannel::getChannel( i + 12 ) );
+            HmwKey* keyChannel = (HmwKey*)HmwChannel::getChannel( i );
+
+            // set ledFeedback channels
+            keyChannel->setFeedbackChannel( HmwChannel::getChannel( i + 12 ) );
          }
-         hbwKey1.setNeedsPulldownIfInverted( true );
-         hbwKey2.setNeedsPulldownIfInverted( true );
-         hbwKey3.setNeedsPulldownIfInverted( true );
-         hbwKey4.setNeedsPulldownIfInverted( true );
-         hbwKey5.setNeedsPulldownIfInverted( true );
-         hbwKey6.setNeedsPulldownIfInverted( true );
-         extHbwKey1.setNeedsPulldownIfInverted( true );
-         extHbwKey2.setNeedsPulldownIfInverted( true );
-         extHbwKey3.setNeedsPulldownIfInverted( true );
-         extHbwKey4.setNeedsPulldownIfInverted( true );
-         extHbwKey5.setNeedsPulldownIfInverted( true );
-         extHbwKey6.setNeedsPulldownIfInverted( true );
       }
 
 

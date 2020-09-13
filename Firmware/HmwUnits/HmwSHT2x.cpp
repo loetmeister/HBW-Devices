@@ -44,7 +44,7 @@ uint8_t HmwSHT2x::get( uint8_t* data )
    return sizeof( currentCentiCelsius ) + sizeof( currentHumidity );
 }
 
-void HmwSHT2x::loop( uint8_t channel )
+void HmwSHT2x::loop()
 {
    if ( !nextActionDelay || ( lastActionTime.since() < nextActionDelay ) )
    {
@@ -117,7 +117,7 @@ void HmwSHT2x::loop( uint8_t channel )
          if ( doSend )
          {
             uint8_t data[3];get( data );
-            uint8_t errcode = HmwDevice::sendInfoMessage( channel, 3, data );
+            uint8_t errcode = HmwDevice::sendInfoMessage( channelId, 3, data );
 
             // sendInfoMessage returns 0 on success, 1 if bus busy, 2 if failed
             if ( errcode != IStream::SUCCESS )

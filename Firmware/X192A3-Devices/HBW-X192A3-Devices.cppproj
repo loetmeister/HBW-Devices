@@ -322,17 +322,53 @@
       <SubType>compile</SubType>
       <Link>HBW-Devices\HBWGenericDeviceHw.h</Link>
     </Compile>
-    <Compile Include="..\HBW-Devices\HBWLcDim8BaseHw.cpp">
+    <Compile Include="..\HBW-Devices\HBWLcBaseHw.h">
       <SubType>compile</SubType>
-      <Link>HBW-Devices\HBWLcDim8BaseHw.cpp</Link>
+      <Link>HBW-Devices\HBWLcBaseHw.h</Link>
     </Compile>
-    <Compile Include="..\HBW-Devices\HBWLcDim8BaseHw.h">
+    <Compile Include="..\HBW-Devices\HBWLcBl8Hw.cpp">
       <SubType>compile</SubType>
-      <Link>HBW-Devices\HBWLcDim8BaseHw.h</Link>
+      <Link>HBW-Devices\HBWLcBl8Hw.cpp</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcBl8Hw.h">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcBl8Hw.h</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcDim8Hw.cpp">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcDim8Hw.cpp</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcDim8Hw.h">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcDim8Hw.h</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcSw16Hw.cpp">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcSw16Hw.cpp</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcSw16Hw.h">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcSw16Hw.h</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcSw8Hw.cpp">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcSw8Hw.cpp</Link>
+    </Compile>
+    <Compile Include="..\HBW-Devices\HBWLcSw8Hw.h">
+      <SubType>compile</SubType>
+      <Link>HBW-Devices\HBWLcSw8Hw.h</Link>
     </Compile>
     <Compile Include="..\HBW-Devices\HBWX192A3DeviceFactory.cpp">
       <SubType>compile</SubType>
       <Link>HBW-Devices\HBWX192A3DeviceFactory.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwBlindActor.cpp">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwBlindActor.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwBlindActor.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwBlindActor.h</Link>
     </Compile>
     <Compile Include="..\HmwUnits\HmwBrightness.cpp">
       <SubType>compile</SubType>
@@ -378,6 +414,14 @@
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwDS1820.h</Link>
     </Compile>
+    <Compile Include="..\HmwUnits\HmwInternalActionKey.cpp">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwInternalActionKey.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwInternalActionKey.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwInternalActionKey.h</Link>
+    </Compile>
     <Compile Include="..\HmwUnits\HmwKey.cpp">
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwKey.cpp</Link>
@@ -393,6 +437,14 @@
     <Compile Include="..\HmwUnits\HmwLed.h">
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwLed.h</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwLinkBlindActor.cpp">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwLinkBlindActor.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwLinkBlindActor.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwLinkBlindActor.h</Link>
     </Compile>
     <Compile Include="..\HmwUnits\HmwLinkKey.cpp">
       <SubType>compile</SubType>
@@ -425,6 +477,14 @@
     <Compile Include="..\HmwUnits\HmwLinkSender.h">
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwLinkSender.h</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwLinkSwitch.cpp">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwLinkSwitch.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwLinkSwitch.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwLinkSwitch.h</Link>
     </Compile>
     <Compile Include="..\HmwUnits\HmwMessageBase.cpp">
       <SubType>compile</SubType>
@@ -541,6 +601,14 @@
     <Compile Include="..\HmwUnits\HmwSHTC3.h">
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwSHTC3.h</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwSwitch.cpp">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwSwitch.cpp</Link>
+    </Compile>
+    <Compile Include="..\HmwUnits\HmwSwitch.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwSwitch.h</Link>
     </Compile>
     <Compile Include="..\Release.h">
       <SubType>compile</SubType>

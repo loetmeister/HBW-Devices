@@ -24,12 +24,17 @@ class HBWMultiKeySD6v1Hw : public HBWMultiKeySD6BaseHw
 
 // functions
    public:
-      inline HBWMultiKeySD6v1Hw() : HBWMultiKeySD6BaseHw( PortPin( PortR, 0 ), PortPin( PortR, 1 ), false )
+      inline HBWMultiKeySD6v1Hw() : HBWMultiKeySD6BaseHw( PortPin( PortR, 0 ), PortPin( PortR, 1 ), false, true )
       {
-         // set ledFeedback channels
          for ( uint8_t i = 0; i < 12; i++ )
          {
-            ( (HmwKey*)HmwChannel::getChannel( i ) )->setFeedbackChannel( HmwChannel::getChannel( i + 12 ) );
+            HmwKey* keyChannel = (HmwKey*)HmwChannel::getChannel( i );
+
+            // set ledFeedback channels
+            keyChannel->setFeedbackChannel( HmwChannel::getChannel( i + 12 ) );
+
+            // this hardware does not support pull down configuration
+            keyChannel->setPulldownSupport( false );
          }
       }
 

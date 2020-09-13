@@ -90,7 +90,7 @@ class ModuleId
       uint8_t firmwareId;
 
       uint8_t checksum;
-};
+} __attribute__( ( packed ) );
 
 #endif
 

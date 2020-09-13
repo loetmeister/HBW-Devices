@@ -50,12 +50,12 @@ class Flash : public NvmController
 
       static uint16_t write( address_t address, void* pData, uint16_t length );
 
-      inline static uint8_t read( address_t& address )
+      inline static uint8_t read( address_t address )
       {
         #if ( FLASHEND > USHRT_MAX )
-         return pgm_read_byte_far( address++ );
+         return pgm_read_byte_far( address );
         #else
-         return pgm_read_byte( address++ );
+         return pgm_read_byte( address );
         #endif
       }
 

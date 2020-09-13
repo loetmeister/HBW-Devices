@@ -44,7 +44,7 @@ void HmwDevice::loop()
 {
    for ( uint8_t i = 0; i < HmwChannel::getNumChannels(); i++ )
    {
-      HmwChannel::getChannel( i )->loop( i );
+      HmwChannel::getChannel( i )->loop();
       handlePendingInMessages();
       HmwStream::handlePendingOutMessages();
    }
@@ -104,12 +104,12 @@ void HmwDevice::handlePendingActions()
    }
    if ( SystemTime::now() > FIRST_ANNOUNCEMENT_TIME )
    {
-      // if ( ResetSystem::getSources() )
-      // {
+      if ( ResetSystem::getSources() )
+      {
          // HmwMsgStartupReason msg( ownAddress, ResetSystem::getSources() );
          // HmwStream::sendMessage( msg );
-         // ResetSystem::clearSources();
-      // }
+         ResetSystem::clearSources();
+      }
       handleAnnouncement();
    }
 }
@@ -266,7 +266,7 @@ void HmwDevice::checkConfig()
       setOwnAddress( address );
       pendingActions.announce = true;
    }
-   if ( ( basicConfig->loggingTime < 50 ) || ( basicConfig->loggingTime > 250 ) )
+   if ( ( basicConfig->loggingTime < 1 ) || ( basicConfig->loggingTime > 250 ) )
    {
       basicConfig->loggingTime = 50;
    }

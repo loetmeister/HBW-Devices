@@ -47,12 +47,34 @@ class HmwLed : public HmwChannel
             }
       };
 
+      enum States
+      {
+         ON = 201,
+         OFF,
+         TOGGLE,
+         BLINK_ON,
+         BLINK_TOGGLE,
+      };
+
+      union StateFlags
+      {
+         struct
+         {
+            uint8_t notUsed : 4; // lowest 4 bit are not used, based on XML state_flag definition
+            uint8_t state   : 3; // enum States mapped to 0-5
+            uint8_t working : 1; // true, if blinking
+         } flags;
+
+         uint8_t byte;
+      };
+
       static const uint8_t MAX_LEVEL = 200;
       static const uint8_t NORMALIZE_LEVEL = 8;
       static const uint16_t MAX_LEVEL_PERIOD = MAX_LEVEL * 100 / NORMALIZE_LEVEL;
 
    protected:
    private:
+      static const uint8_t debugLevel;
       Config* config;
       PwmOutput pwmOutput;
       bool feedbackCmdActive;
@@ -62,8 +84,6 @@ class HmwLed : public HmwChannel
       uint8_t blinkOnTime;
       uint8_t blinkOffTime;
       uint8_t blinkQuantity;
-      Timestamp nextBlinkTime;
-      uint8_t logicalState;
 
       const uint8_t defaultPwmRange;
 
@@ -73,8 +93,8 @@ class HmwLed : public HmwChannel
 
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
       virtual void set( uint8_t length, uint8_t const* const data );
+      virtual void loop();
       virtual void checkConfig();
 
    protected:
@@ -111,12 +131,7 @@ class HmwLed : public HmwChannel
 
       inline bool isLogicalOn( void )
       {
-         return logicalState != OFF;
-      }
-
-      inline void setLogicalState( uint8_t state )
-      {
-         logicalState = state;
+         return currentState != OFF;
       }
 
 }; // HmwLed

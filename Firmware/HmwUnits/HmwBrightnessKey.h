@@ -39,7 +39,7 @@ class HmwBrightnessKey : public HmwChannel
       ////    Operations    ////
 
       // definition of needed functions from HBWChannel class
-      virtual void loop( uint8_t channel );
+      virtual void loop();
 	  virtual void checkConfig();
 
    private:

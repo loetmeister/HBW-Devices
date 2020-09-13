@@ -40,22 +40,25 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
       HmwLed extHbwLed1, extHbwLed2, extHbwLed3, extHbwLed4, extHbwLed5, extHbwLed6;
 
       OneWire ow;
+      // HmwDS1820 hbwTmp1, hbwTmp2, hbwTmp3, hbwTmp4, hbwTmp5;
       HmwDS1820 hbwTmp1, hbwTmp2, hbwTmp3, hbwTmp4, hbwTmp5, hbwTmp6;
 
-      //HmwBrightness hbwOnboardBrightness;
-	  HmwAnalogIn hbwAnIn1, hbwAnIn2;
-      
-	  HmwSHT3x sht3x;
-	  //HmwSHTC3 shtc3;
+      // HmwSHTC3 shtc3Temp;
+      HmwSHT3x sht3x;
+
+      // HmwBrightness hbwOnboardBrightness;
+      HmwAnalogIn hbwAnIn1, hbwAnIn2;
+
+      // HmwSHTC3::PassiveHumidity shtc3Humidity;
 
       HmwLinkKey linkSender;
 
       HmwLinkLed linkReceiver;
-	  
+      
       HmwLinkInfoEvent linkSenderTemp;
 	  
-	  HmwBrightnessSwitch hbwBrightnessSwitch1, hbwBrightnessSwitch2;
-	  HmwBrightnessKey hbwBrightnessKey1, hbwBrightnessKey2;
+      HmwBrightnessSwitch hbwBrightnessSwitch1, hbwBrightnessSwitch2;
+      HmwBrightnessKey hbwBrightnessKey1, hbwBrightnessKey2;
 
    private:
 
@@ -106,7 +109,7 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
             case FIRST_LONG_PRESS:
             {
-               uint8_t data[] = { HmwChannel::BLINK_ON, 0, HmwLed::MAX_LEVEL, 5, 5, 0xFF };
+               uint8_t data[] = { HmwLed::BLINK_ON, 0, HmwLed::MAX_LEVEL, 5, 5, 0xFF };
                hbwLed5.set( sizeof( data ), data );
                hbwLed6.set( sizeof( data ), data );
                break;
@@ -114,7 +117,7 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
             case SECOND_LONG_PRESS:
             {
-               uint8_t data[] = { HmwChannel::BLINK_ON, 0, HmwLed::MAX_LEVEL, 2, 2, 0xFF };
+               uint8_t data[] = { HmwLed::BLINK_ON, 0, HmwLed::MAX_LEVEL, 2, 2, 0xFF };
                hbwLed5.set( sizeof( data ), data );
                hbwLed6.set( sizeof( data ), data );
                break;
@@ -129,7 +132,7 @@ class HBWMultiKeySD6BaseHw : public HBWGenericDeviceHw
 
    protected:
 
-      HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, bool invertLed1To6 );
+      HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, bool invertLed1To6, bool configSHTC3 );
 
    private:
 

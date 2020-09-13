@@ -8,7 +8,7 @@
 */
 
 #include "HmwLinkLed.h"
-#include "HmwChannel.h"
+#include "HmwLed.h"
 #include "HmwDevice.h"
 
 
@@ -84,17 +84,17 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
             }
             case 3:   // -> TOGGLE
             {
-               cmdData[0] = HmwChannel::TOGGLE;
+               cmdData[0] = HmwLed::TOGGLE;
                break;
             }
             case 4:   // -> BLINK_ON
             {
-               cmdData[0] = HmwChannel::BLINK_ON;
+               cmdData[0] = HmwLed::BLINK_ON;
                break;
             }
             case 5:   // -> BLINK_TOGGLE
             {
-               cmdData[0] = HmwChannel::BLINK_TOGGLE;
+               cmdData[0] = HmwLed::BLINK_TOGGLE;
                break;
             }
 
@@ -124,17 +124,17 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
             }
             case 3:   // -> TOGGLE
             {
-               cmdData[0] = HmwChannel::TOGGLE;
+               cmdData[0] = HmwLed::TOGGLE;
                break;
             }
             case 4:   // -> BLINK_ON
             {
-               cmdData[0] = HmwChannel::BLINK_ON;
+               cmdData[0] = HmwLed::BLINK_ON;
                break;
             }
             case 5:   // -> BLINK_TOGGLE
             {
-               cmdData[0] = HmwChannel::BLINK_TOGGLE;
+               cmdData[0] = HmwLed::BLINK_TOGGLE;
                break;
             }
             case 2:   // -> INACTIVE

@@ -40,6 +40,11 @@ HBWLC4IN4DRHw::HBWLC4IN4DRHw( uint16_t additionalPeriodValue ) :
    configLed.setInverted( true );
    configbutton.enablePullup();
 
+   key1.setPulldownSupport( false );
+   key2.setPulldownSupport( false );
+   key3.setPulldownSupport( false );
+   key4.setPulldownSupport( false );
+
    TimerCounter& dimmerC = TimerCounter::instance( PortC, 0 );
    dimmerC.configWGM( TC_WGMODE_SS_gc );
    dimmerC.setPeriod( (uint16_t)HmwDimmer::MAX_LEVEL* NORMALIZE_LEVEL + additionalPeriodValue );

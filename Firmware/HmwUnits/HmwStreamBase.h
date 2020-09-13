@@ -16,11 +16,13 @@ class HmwStreamBase
 {
 // variables
    public:
-      static const uint8_t MIN_IDLE_TIME = 7;
+      static const uint8_t MIN_IDLE_TIME = 8;
 
    protected:
 
       static const uint8_t debugLevel;
+
+      static uint8_t additionalMinIdleTime;
 
       static uint8_t senderNum;
 
@@ -49,13 +51,12 @@ class HmwStreamBase
 
       static inline bool isIdle()
       {
-      #ifdef _BOOTER_
-         uint8_t randomDelay = MIN_IDLE_TIME;
-      #else
-         uint8_t randomDelay = ( rand() & 0xF ) + MIN_IDLE_TIME;
+         uint8_t minIdleTime = MIN_IDLE_TIME;
+      #ifndef _BOOTER_
+         minIdleTime += additionalMinIdleTime;
          CriticalSection doNotInterrupt;
       #endif
-         return lastReceivedTime.since() > randomDelay;
+         return lastReceivedTime.since() > minIdleTime;
       }
 
       static inline void notifyRxStartFromISR()

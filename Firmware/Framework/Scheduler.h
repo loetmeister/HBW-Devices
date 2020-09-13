@@ -37,6 +37,11 @@ class Scheduler
 
       ////    Additional operations    ////
 
+      inline static Reactive* getJob( uint8_t classId, uint8_t instanceId )
+      {
+         return getJob( ( classId << 8 ) | instanceId );
+      }
+
       inline static Reactive** getItsReactive()
       {
          return itsReactive;

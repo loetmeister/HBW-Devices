@@ -18,7 +18,7 @@ HmwLinkDimmer::HmwLinkDimmer( uint8_t _numLinks, Config* _links )
    links = _links;
 }
 
-// processKeyEvent wird aufgerufen, wenn ein Tastendruck empfangen wurde
+// processKeyEvent is called for each KEY event
 
 void HmwLinkDimmer::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t senderChannel, uint8_t targetChannel, bool longPress, uint8_t keyNum )
 {
@@ -31,8 +31,8 @@ void HmwLinkDimmer::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sen
          continue;
       }
 
-      // compare target channel
-      if ( links[i].ownChannel != targetChannel )
+      // compare target channel, ignore to match targetChannel if longPress is active
+      if ( ( links[i].ownChannel != targetChannel ) && !longPress )
       {
          continue;
       }
@@ -52,7 +52,7 @@ void HmwLinkDimmer::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sen
       cmd.keyNum = keyNum;
       cmd.actionParameter = ( longPress ? &links[i].longActionParameter : &links[i].shortActionParameter );
 
-      HmwDevice::set( targetChannel, sizeof( cmd ), (uint8_t*)&cmd );    // channel, data length, data
+      HmwDevice::set( links[i].ownChannel, sizeof( cmd ), (uint8_t*)&cmd );    // channel, data length, data
    }
 }
 

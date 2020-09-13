@@ -24,8 +24,7 @@ class ApplicationTable
 
       inline static uint8_t read( uint16_t offset )
       {
-         Flash::address_t address = APPTABLE_SECTION_START + _RULES_OFFSET_ + offset;
-         return Flash::read( address );
+         return Flash::read( APPTABLE_SECTION_START + _RULES_OFFSET_ + offset );
       }
 
       inline static uint16_t read( uint16_t offset, void* pData, uint16_t length )

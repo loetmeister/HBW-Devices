@@ -20,7 +20,7 @@ uint16_t Flash::read( Flash::address_t address, void* pData, uint16_t length )
    uint16_t len = length;
    while ( len-- )
    {
-      *destination++ = read( address );
+      *destination++ = read( address++ );
    }
 
    return length;

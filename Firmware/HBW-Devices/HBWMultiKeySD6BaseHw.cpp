@@ -13,26 +13,31 @@
 // this is the EEPROM layout used by one device
 struct hbw_config
 {
-   HmwDeviceHw::BasicConfig basicConfig;  // 0x0000 - 0x0009
-   uint8_tx reserved[6];                  // 0x000A - 0x000F
-   HmwKey::Config keycfg[12];             // 0x0010 - 0x0027
-   HmwLed::Config ledcfg[12];             // 0x0028 - 0x003F
+   HmwDeviceHw::BasicConfig basicConfig;                    // 0x0000 - 0x0009
+   uint8_tx reserved[6];                                    // 0x000A - 0x000F
+   HmwKey::Config keycfg[12];                               // 0x0010 - 0x0027
+   HmwLed::Config ledcfg[12];                               // 0x0028 - 0x003F
    HmwDS1820::Config ds1820cfg[6];        // 0x0040 - 0x0063
-   //HmwBrightness::Config brightnessCfg;   // 0x0064 - 0x0069
    HmwAnalogIn::Config analogInCfg[2];   // 0x0064 - 0x006F
    HmwSHT3x::Config sht3xConfig;          // 0x0070 - 0x0075  // alt 0x006A - 0x006F
-   HmwLinkInfoEvent::Config TempLinks[1]; // 0x0076 - 0x007B	// dummy address (always empty), will be skipped in XML
-   HmwLinkKey::Config keyLinks[40];       // 0x007C - 0x016B  // 0x0076 - 0x0165 //0x0070 - 0x015F	// used for all sensor peerings
-   HmwLinkLed::Config ledLinks[40];       // 0x016C - 0x03EB   // 0x0166 - 0x03E5 //0x0160 - 0x03..	// used for all actuator peerings
+   HmwLinkInfoEvent::Config TempLinks[1]; // 0x0076 - 0x007B   // dummy address (always empty), will be skipped in XML
+   HmwLinkKey::Config keyLinks[40];       // 0x007C - 0x016B  // 0x0076 - 0x0165 //0x0070 - 0x015F     // used for all sensor peerings
+   HmwLinkLed::Config ledLinks[40];       // 0x016C - 0x03EB   // 0x0166 - 0x03E5 //0x0160 - 0x03..    // used for all actuator peerings
    //HmwLinkInfoEvent::Config TempLinks[18];// 0x0340 - 0x03AC // FHEM (HM?) only allows one start address in XML for sensor and actor each
-   HmwBrightnessSwitch::Config brightnessSwCfg[2];	// 3EC - 3EF
-   HmwBrightnessKey::Config brightnessKeyCfg[2];	// 3F0 - 3F3
+   HmwBrightnessSwitch::Config brightnessSwCfg[2];     // 3EC - 3EF
+   HmwBrightnessKey::Config brightnessKeyCfg[2];       // 3F0 - 3F3
+   // HmwDS1820::Config ds1820cfg[5];                          // 0x0040 - 0x0063
+   // HmwSHTC3::Config shtc3TempConfig;                        // 0x005E - 0x0063
+   // HmwBrightness::Config brightnessCfg;                     // 0x0064 - 0x0069
+   // HmwSHTC3::PassiveHumidity::Config shtc3HumidityConfig;   // 0x006A - 0x006F
+   // HmwLinkKey::Config keyLinks[40];                         // 0x0070 - 0x015F
+   // HmwLinkLed::Config ledLinks[40];                         // 0x0160 - 0x03DF
 };
 
 static hbw_config& config = *reinterpret_cast<hbw_config*>( MAPPED_EEPROM_START );
 
 // default constructor
-HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, bool invertLed1To6 ) :
+HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, bool invertLed1To6, bool configSHTC3 ) :
    hbwKey1( PortPin( PortA, 0 ), &( config.keycfg[0] ) ),
    hbwKey2( PortPin( PortA, 1 ), &( config.keycfg[1] ) ),
    hbwKey3( PortPin( PortA, 2 ), &( config.keycfg[2] ) ),
@@ -77,20 +82,21 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
    hbwTmp4( ow, &config.ds1820cfg[3] ),
    hbwTmp5( ow, &config.ds1820cfg[4] ),
    hbwTmp6( ow, &config.ds1820cfg[5] ),
+   // shtc3Temp( Twi::instance<PortE>(), &config.shtc3TempConfig ),
+   sht3x( Twi::instance<PortE>(), &config.sht3xConfig ),
 
-   //hbwOnboardBrightness( PortPin( PortA, 6 ), TimerCounterChannel( &TimerCounter::instance( PortE, 0 ), TimerCounter::A ), &config.brightnessCfg ),
+   // hbwOnboardBrightness( PortPin( PortA, 6 ), TimerCounterChannel( &TimerCounter::instance( PortE, 0 ), TimerCounter::A ), &config.brightnessCfg ),
+   // shtc3Humidity( &config.shtc3HumidityConfig ),
    hbwAnIn1( PortA, 6, &config.analogInCfg[0] ),
    hbwAnIn2( PortA, 7, &config.analogInCfg[1] ),
-   sht3x( Twi::instance<PortE>(), &config.sht3xConfig ),
 
    linkSender( sizeof( config.keyLinks ) / sizeof( config.keyLinks[0] ), config.keyLinks ),
    linkReceiver( sizeof( config.ledLinks ) / sizeof( config.ledLinks[0] ), config.ledLinks ),
-   //linkSenderTemp( sizeof( config.TempLinks ) / sizeof( config.TempLinks[0] ), config.TempLinks ),
    linkSenderTemp( (sizeof( config.keyLinks ) / sizeof( config.keyLinks[0])+1 ), config.TempLinks ),
    
    hbwBrightnessSwitch1( hbwAnIn1, &config.brightnessSwCfg[0] ),
    hbwBrightnessSwitch2( hbwAnIn2, &config.brightnessSwCfg[1] ),
-
+   
    hbwBrightnessKey1( hbwBrightnessSwitch1, &config.brightnessKeyCfg[0] ),
    hbwBrightnessKey2( hbwBrightnessSwitch2, &config.brightnessKeyCfg[1] ),
 
@@ -107,12 +113,18 @@ HBWMultiKeySD6BaseHw::HBWMultiKeySD6BaseHw( PortPin txEnablePin, PortPin owPin, 
    t.configClockSource( TC_CLKSEL_DIV1024_gc );
    t.configInputCapture( TC_EVSEL_CH0_gc );
 
-   // setup TWI needed by SHTC3 sensor
+   if ( configSHTC3 )
+   {
+      // setup TWI needed by SHTC3 sensor
 
-   // enable pullup for TWI
-   PORTCFG.MPCMASK = Pin0 | Pin1;
-   PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
-   Twi::instance<PortE>().init<true, 100000, TWI_MASTER_INTLVL_OFF_gc, TWI_SLAVE_INTLVL_OFF_gc>();
+      // enable pullup for TWI
+      PORTCFG.MPCMASK = Pin0Mask | Pin1Mask;
+      PORTE.PIN0CTRL = PORT_OPC_PULLUP_gc;
+      Twi::instance<PortE>().init<true, 100000, TWI_MASTER_INTLVL_OFF_gc, TWI_SLAVE_INTLVL_OFF_gc>();
+
+      // connect SHTC3 channels
+      // shtc3Temp.setPassiveHumidityChannel( &shtc3Humidity );
+   }
 
 } // HmwMultiKeySD6BaseHw
 

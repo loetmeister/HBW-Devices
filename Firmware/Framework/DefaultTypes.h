@@ -14,18 +14,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum Pin
+enum PinMask
 {
-   NoPin = 0x00,
-   Pin0 = 0x01,
-   Pin1 = 0x02,
-   Pin2 = 0x04,
-   Pin3 = 0x08,
-   Pin4 = 0x10,
-   Pin5 = 0x20,
-   Pin6 = 0x40,
-   Pin7 = 0x80,
-   AllPins = 0xFF
+   NoPinMask = 0x00,
+   Pin0Mask = 0x01,
+   Pin1Mask = 0x02,
+   Pin2Mask = 0x04,
+   Pin3Mask = 0x08,
+   Pin4Mask = 0x10,
+   Pin5Mask = 0x20,
+   Pin6Mask = 0x40,
+   Pin7Mask = 0x80,
+   AllPinsMask = 0xFF
+};
+
+enum PinId
+{
+   Pin0,
+   Pin1,
+   Pin2,
+   Pin3,
+   Pin4,
+   Pin5,
+   Pin6,
+   Pin7,
+   PinMax
 };
 
 enum Port

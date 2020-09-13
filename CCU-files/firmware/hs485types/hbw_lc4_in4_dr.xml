@@ -9,6 +9,10 @@
 		<parameter const_value="0xB3" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
 	</type>		
+	<type priority="2" id="HBW-LC4-IN4-DR" name="Haus-Bus.de LightController (0-10V)">
+		<parameter const_value="0xB3" size="1" index="0"/>
+		<parameter const_value="2" size="1" index="1"/>
+	</type>		
 </supported_types>
 
 <paramset id="HBW-LC4-IN4-DR_dev_master" type="MASTER">
@@ -58,8 +62,11 @@
 	<frame id="LEVEL_GET" direction="to_device" type="#S" channel_field="10"/>
 	<frame id="INFO_LEVEL" direction="from_device" event="true" type="#i" channel_field="10">
 		<parameter type="integer" index="11.0" size="1.0" param="LEVEL"/>
-		<parameter type="integer" index="12.4" size="0.3" param="STATE_FLAGS"/>
+		<parameter type="integer" index="12.4" size="0.3" param="STATE_FLAGS"/>		
 	</frame>
+	<frame id="INFO_STATE" direction="from_device" event="true" type="#i" channel_field="10">
+		<parameter type="integer" index="11.0" size="1.0" param="STATE"/>
+	</frame>	
 	<frame id="KEY_EVENT_SHORT" direction="from_device" event="true" type="#K" channel_field="10">
 		<parameter type="integer" index="12.0" size="0.1" const_value="0"/>
 		<parameter type="integer" index="12.2" size="0.6" param="COUNTER"/>
@@ -111,8 +118,8 @@
 		<paramset id="hmw_input_ch_master" type="MASTER" address_step="2" address_start="0x10">
 			<parameter id="INPUT_TYPE">
 				<logical type="option">
-					<option id="PUSHBUTTON" default="true"/>
 					<option id="SWITCH"/>
+					<option id="PUSHBUTTON" default="true"/>
 				</logical>
 				<physical size="0.3" type="integer" interface="eeprom">
 					<address index="+0.0"/>
@@ -125,14 +132,25 @@
 				</physical>
 				<conversion type="boolean_integer" invert="true"/>
 			</parameter>
-			<parameter id="ACTIVE_LOW">
-				<logical type="boolean" default="true"/>
+			<parameter id="PULL" hidden="false">
+				<logical type="option">
+					<option id="DOWN"/>
+					<option id="UP" default="true"/>
+				</logical>
 				<physical size="0.1" type="integer" interface="eeprom">
-					<address index="+0.4"/>
+					<address index="+0.4"/>			
 				</physical>
-				<conversion type="boolean_integer"/>
 			</parameter>
-			<parameter id="REPEAT_ON_LONG_PRESS">
+			<parameter id="LOGIC" hidden="false">
+				<logical type="option">
+					<option id="INVERTED"/>
+					<option id="NORMAL" default="true"/>
+				</logical>
+				<physical size="0.1" type="integer" interface="eeprom">
+					<address index="+0.5"/>			
+				</physical>
+			</parameter>
+			<parameter id="REPEAT_ON_LONG_PRESS" hidden="true">
 				<logical type="boolean" default="true"/>
 				<physical size="0.1" type="integer" interface="eeprom">
 					<address index="+0.6"/>
@@ -186,6 +204,22 @@
 				</physical>
 				<conversion type="action_key_counter" counter_size="6" sim_counter="SIM_COUNTER"/>
 			</parameter>
+			<parameter id="SENSOR" operations="read,event" control="DOOR_SENSOR.STATE">
+				<logical type="boolean" default="false"/>
+				<physical type="integer" interface="command" value_id="STATE">
+					<get request="LEVEL_GET" response="INFO_STATE"/>
+					<event frame="INFO_STATE" auth_violate_policy="reject"/>
+				</physical>
+				<conversion type="boolean_integer" threshold="1" false="0" true="200"/>
+			</parameter>
+			<parameter id="INSTALL_TEST" operations="event" ui_flags="internal">
+				<logical type="action"/>
+				<physical type="integer" interface="command" value_id="TEST_COUNTER">
+					<event frame="KEY_EVENT_SHORT"/>
+					<event frame="KEY_EVENT_LONG"/>
+					<event frame="INFO_STATE"/>
+				</physical>
+			</parameter>				
 		</paramset>
 	</channel>	
 
@@ -205,7 +239,7 @@
 					<address index="+0.0"/>
 				</physical>
 			</parameter>	
-		<parameter id="PWM_RANGE_START" hidden=true>
+		<parameter id="PWM_RANGE_START">
 			<logical type="option">
 				<option id="30%"/>
 				<option id="20%"/>
@@ -216,7 +250,7 @@
 				<address index="+0.2"/>
 			</physical>
 		</parameter>	
-		<parameter id="PWM_RANGE_END" hidden=true>
+		<parameter id="PWM_RANGE_END">
 			<logical type="option">
 				<option id="70%"/>
 				<option id="80%"/>

@@ -24,8 +24,8 @@ class HmwBrightness : public HmwChannel
       {
          uint16_tx minInterval;
          uint8_tx minDeltaPercent;
-         uint8_tx scale;
-         uint16_tx offset;
+         uint8_tx potency;
+         uint16_tx factor;
       };
 
       enum HwStatus
@@ -35,7 +35,7 @@ class HmwBrightness : public HmwChannel
          NO_RESPONSE
       };
 
-      enum State
+      enum States
       {
          START_MEASUREMENT,
          WAIT_MEASUREMENT_RESULT,
@@ -69,7 +69,7 @@ class HmwBrightness : public HmwChannel
 
       // definition of needed functions from HBWChannel class
       virtual uint8_t get( uint8_t* data );
-      virtual void loop( uint8_t channel );
+      virtual void loop();
       virtual void checkConfig();
 
       inline bool isDisabled()
@@ -90,6 +90,8 @@ class HmwBrightness : public HmwChannel
 
       void prepareNextMeasurement();
 
+      void notifyNewMeasuredValue( uint16_t lux );
+
       ////    Attributes    ////
 
    public:
@@ -101,8 +103,6 @@ class HmwBrightness : public HmwChannel
       DigitalOutput measurePin;
 
       TimerCounterChannel tcChannel;
-
-      State state;
 
       uint8_t rangeParamsSet;
 
@@ -116,7 +116,7 @@ class HmwBrightness : public HmwChannel
 
       uint32_t filterHelper;
 
-      Timestamp lastActionTime;
+      Timestamp lastMeasurementStartTime;
 
 }; // HmwBrightness
 
