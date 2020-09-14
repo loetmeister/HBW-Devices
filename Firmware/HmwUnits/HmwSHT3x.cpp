@@ -20,7 +20,7 @@
 #define getId() FSTR( "HmwSHT3x " )
 
 #define INVALID_VALUE -27315
-#define READ_ERR_COUNT 10 // allow 10 consecutive failures before going to error state (retry frequency is 1 second)
+#define MAX_READ_ERROR_COUNT 10 // allow 10 consecutive failures before going to error state (retry frequency is 1 second)
 
 const uint8_t HmwSHT3x::debugLevel( DEBUG_LEVEL_OFF );
 
@@ -31,11 +31,10 @@ HmwSHT3x::HmwSHT3x( Twi& _hardware, Config* _config ) :
    currentHumidity( 0 ),
    lastSentHumidity( 0 ),
    currentCentiCelsius( INVALID_VALUE ),
-   lastSentCentiCelsius( INVALID_VALUE )
+   lastSentCentiCelsius( INVALID_VALUE ),
+   config( _config )
 {
    type = HmwChannel::HMW_SHT3x;
-   config = _config;
-   // lastActionTime = 0;
    SET_STATE_L1( CHECK_SENSOR );
    enable( 500 );
 }
@@ -67,7 +66,7 @@ void HmwSHT3x::loop()
             enable( 10000 );
             return;
          }
-		 readMeasurementErrorCounter = READ_ERR_COUNT;	// reset counter
+		 readMeasurementErrorCounter = MAX_READ_ERROR_COUNT;	// reset counter
          SET_STATE_L1( START_MEASUREMENT );
       }
       case START_MEASUREMENT:
@@ -107,7 +106,7 @@ void HmwSHT3x::loop()
 			}
             return;
          }
-		 readMeasurementErrorCounter = READ_ERR_COUNT;	// reset counter
+		 readMeasurementErrorCounter = MAX_READ_ERROR_COUNT;	// reset counter
          SET_STATE_L1( SEND_FEEDBACK );
       }
 
@@ -122,11 +121,11 @@ void HmwSHT3x::loop()
 
          if ( doSend )
          {
-            uint8_t data[3];
-			get( data );
 		#if defined(_Support_HBWLink_InfoEvent_)
 			if ( sendPeer )
 			{
+				uint8_t data[3];
+				get( data );
 				sendPeer = false;
 				if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS)	//send temp only (length == 2)
 				{

@@ -86,11 +86,6 @@ class HmwSHT3x : public HmwChannel
 
    private:
 
-      // inline void setMainState( States _state )
-      // {
-         // state = _state;
-      // }
-
       HwStatus sendCommand( Commands cmd );
 
       // HwStatus sleep();
@@ -125,22 +120,14 @@ class HmwSHT3x : public HmwChannel
 	  uint8_t readMeasurementErrorCounter;
 	  
 	  bool sendPeer;
-	  
-      // States state;
 
       uint8_t currentHumidity;
 
       uint8_t lastSentHumidity;
 
-      // uint16_t nextActionDelay;
-
       int16_t currentCentiCelsius;
 
       int16_t lastSentCentiCelsius;
-
-      // Timestamp lastActionTime;
-
-      //Timestamp lastSentTime;
 
       Config* config;
 };

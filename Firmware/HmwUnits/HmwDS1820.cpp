@@ -50,7 +50,7 @@ bool HmwDS1820::isSensor( uint8_t familiyCode )
 uint8_t HmwDS1820::get( uint8_t* data )
 {
    // MSB first
-   *data++ = ( currentCentiCelsius >> 8 ) & 0xFF;
+   *data++ = ( currentCentiCelsius >> 8 );
    *data = currentCentiCelsius & 0xFF;
    return 2;
 }
@@ -143,11 +143,11 @@ void HmwDS1820::loop()
 
       if ( doSend ) //&& handleFeedback( SystemTime::S* config->minInterval ) )
       {
-         uint8_t data[2];
-		 get( data );
 	#if defined(_Support_HBWLink_InfoEvent_)
 		if ( sendPeer )
 		{
+			uint8_t data[2];
+			get( data );
 			sendPeer = false;
 			if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS)
 			{
@@ -237,6 +237,7 @@ HmwDS1820::HwStatus HmwDS1820::readMeasurement()
    for ( uint8_t i = 0; i < SCRATCHPAD_SIZE; i++ )
    {
       sp[i] = hardware->read();
+	  // TODO: check ifAllIsZero?
    }
    if ( Crc8::hasError( sp, SCRATCHPAD_SIZE ) )
    {

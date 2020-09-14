@@ -11,8 +11,8 @@
 
 #include "HmwStreamHw.h"
 #include "HmwLinkSender.h"
-#include "HmwLinkSenderInfoEvent.h"	// TODO: remove here?
 #include "HmwLinkReceiver.h"
+#include "HmwLinkSenderInfoEvent.h"
 
 #include <xEeprom.h>
 

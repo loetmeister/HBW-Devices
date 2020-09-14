@@ -340,10 +340,10 @@ class Adc
       {
          switch ( channel )
          {
-            case 7:
+            case 6:
                return *reinterpret_cast<Adc::Channel*>( &reg.CH0 );
 
-            case 6:
+            case 7:
                return *reinterpret_cast<Adc::Channel*>( &reg.CH1 );
 
             case 2:

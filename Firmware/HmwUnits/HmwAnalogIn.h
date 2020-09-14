@@ -19,7 +19,7 @@ class HmwAnalogIn : public HmwChannel
 {
    public:
 
-      enum State
+      enum States
       {
          INIT_ADC,
          START_MEASUREMENT,
@@ -80,15 +80,11 @@ class HmwAnalogIn : public HmwChannel
 
       Config* config;
 
-      State state;
-
       uint16_t nextActionDelay;
 
       //uint16_t currentValue;
 
       uint16_t lastSentValue;
-
-      Timestamp lastActionTime;
 
       uint16_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0 };//, 0, 0 };
       uint8_t nextIndex;

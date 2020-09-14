@@ -162,9 +162,10 @@ class HmwDevice
          if ( status == IStream::SUCCESS )
          {
             HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );
-            if ( !keyPressed )
+            //if ( !keyPressed )
+            if ( !keyPressed && keyPressNum < 2 )
             {
-               pendingActions.announce = true;   // TODO: check if announcement can only be send once, by key press (or every x key press?)
+               pendingActions.announce = true;   // TODO: check if announcement can only be send once? (e.g. keyPressNum < 2 ?), or add global counter?
             }
          }
          return status;

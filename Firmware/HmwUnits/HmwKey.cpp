@@ -5,7 +5,7 @@
 HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
    unlocked( true ),
    pulldownSupported( true ),
-   keyPressNum( 1 ),
+   keyPressNum( 0 ),
    config( _config ),
    feedbackChannel( _feedbackChannel ),
    digitalIn( _pin )
@@ -42,6 +42,7 @@ void HmwKey::loop()
 
 void HmwKey::handleSwitchSignal()
 {
+   if ( (keyPressNum & 0x3F) == 0 ) keyPressNum = 1;
    if ( !isPressed() )
    {
       if ( lastSentLong.isValid() )
@@ -101,11 +102,11 @@ void HmwKey::handlePushButtonSignal()
             if ( !lastSentLong.isValid() )
             {
                // noch kein "long" gesendet, fuer kurzes druecken keyPressNum erhoehen
-            HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
                keyPressNum++;
+            //HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
             }
             // auch beim loslassen nach einem langen Tastendruck ein weiteres Event senden
-//            HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
+            HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
          }
          keyPressedTimestamp.reset();
          if ( feedbackChannel && config->isFeedbackEnabled() )
@@ -136,8 +137,8 @@ void HmwKey::handlePushButtonSignal()
          else if ( keyPressedTimestamp.since() >= long(config->getLongPressTime() ) * 100 )
          {
             // erstes LONG
-            HmwDevice::sendKeyEvent( channelId, keyPressNum, true, true );                    // long press
             keyPressNum++;
+            HmwDevice::sendKeyEvent( channelId, keyPressNum, true, true );                    // long press
             lastSentLong = Timestamp();
          }
       }
@@ -179,10 +180,11 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
       }
       else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
       {
+         if ( (keyPressNum & 0x3F) == 0 ) keyPressNum = 1;
          // if return value is 1, bus is not idle, retry next time
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {
-            keyPressNum++;   // increment only on success
+			keyPressNum++;   // increment only on success
             lastSentLong = Timestamp();
          }
       }
@@ -214,7 +216,7 @@ void HmwKey::resetChannel()
 
    keyPressedTimestamp.reset();
    lastSentLong.reset();
-   keyPressNum = 1;
+   keyPressNum = 0;
 }
 
 void HmwKey::checkConfig()
