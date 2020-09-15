@@ -184,7 +184,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
          // if return value is 1, bus is not idle, retry next time
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {
-			keyPressNum++;   // increment only on success
+            keyPressNum++;   // increment only on success
             lastSentLong = Timestamp();
          }
       }

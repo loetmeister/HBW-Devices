@@ -63,6 +63,7 @@ class HmwChannel
       uint8_t nextState;
       Timestamp nextActionTime;
       Timestamp nextFeedbackTime;
+      bool inhibitActive;  // disables all peerings, if true (only applicable for actor channels)
 
    private:
       static uint8_t numChannels;
@@ -137,6 +138,8 @@ class HmwChannel
       virtual uint8_t get( uint8_t* data );  // returns length, data must be big enough
       virtual void loop();
       virtual void checkConfig();
+      void setLock(bool inhibit);
+      bool getLock();
 
    protected:
 

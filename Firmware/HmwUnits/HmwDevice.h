@@ -142,6 +142,10 @@ class HmwDevice
       static void checkConfig();
 
       static void factoryReset();
+	  
+	  static void setLock( uint8_t channel, bool inhibit );
+	  
+	  static bool getLock( uint8_t channel );
 
       static bool processMessage( HmwMessageBase& msg );
 
@@ -153,7 +157,10 @@ class HmwDevice
 
       static inline void receiveKeyEvent( const uint32_t& senderAddress, uint8_t srcChan, uint8_t dstChan, bool longPress, uint8_t keyPressNum )
       {
-         HmwLinkReceiver::notifyKeyEvent( senderAddress, srcChan, dstChan, longPress, keyPressNum );
+		  if ( !getLock( dstChan ) )   // check if channel is locked
+          {
+             HmwLinkReceiver::notifyKeyEvent( senderAddress, srcChan, dstChan, longPress, keyPressNum );
+		  }
       }
 
       static inline IStream::Status sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress, bool keyPressed = false )
@@ -165,7 +172,7 @@ class HmwDevice
             //if ( !keyPressed )
             if ( !keyPressed && keyPressNum < 2 )
             {
-               pendingActions.announce = true;   // TODO: check if announcement can only be send once? (e.g. keyPressNum < 2 ?), or add global counter?
+               pendingActions.announce = true;   // send announcement only for keyPressNum == 1
             }
          }
          return status;

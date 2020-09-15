@@ -545,6 +545,10 @@
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwMsgSetLevel.h</Link>
     </Compile>
+    <Compile Include="..\HmwUnits\HmwMsgSetLock.h">
+      <SubType>compile</SubType>
+      <Link>HmwUnits\HmwMsgSetLock.h</Link>
+    </Compile>
     <Compile Include="..\HmwUnits\HmwMsgStartupReason.h">
       <SubType>compile</SubType>
       <Link>HmwUnits\HmwMsgStartupReason.h</Link>

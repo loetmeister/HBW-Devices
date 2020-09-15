@@ -18,7 +18,8 @@ HmwChannel::HmwChannel() :
    currentState( 0 ),
    nextState( 0 ),
    nextActionTime( 0 ),
-   nextFeedbackTime( 0 )
+   nextFeedbackTime( 0 ),
+   inhibitActive( false )
 {
    instances[numChannels++] = this;
 }
@@ -96,3 +97,11 @@ bool HmwChannel::handleFeedback( uint32_t nextFeedbackDelay )
    }
    return false;
 }
+
+void HmwChannel::setLock(bool inhibit) {
+	inhibitActive = inhibit;
+};
+
+bool HmwChannel::getLock() {
+	return inhibitActive;
+};

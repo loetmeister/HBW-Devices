@@ -17,6 +17,7 @@
 #include "HmwMsgGetSerial.h"
 #include "HmwMsgWriteEeprom.h"
 #include "HmwMsgSetLevel.h"
+#include "HmwMsgSetLock.h"
 #include "HmwMsgResetWifi.h"
 #include "HmwMsgGetPacketSize.h"
 #include "HmwMsgReadFlash.h"
@@ -376,6 +377,12 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       ( (HmwMsgGetHwVersion*)&msg )->setupResponse( HmwDevice::deviceType, basicConfig->hwVersion );
       ackOnly = false;
    }
+   else if ( msg.isCommand( HmwMessageBase::SET_LOCK ) )
+   {
+      DEBUG_M1( FSTR( "C: SET_LOCK" ) );	// set lock, also known as "inhibit"
+      HmwMsgSetLock* msgSetLock = (HmwMsgSetLock*)&msg;
+      setLock( msgSetLock->getChannel(), msgSetLock->getData() );
+   }
    else if ( msg.isCommand( HmwMessageBase::GET_EEPROM_MAP ) )
    {
       DEBUG_M1( FSTR( "C: GET_EEPROM_MAP" ) );
@@ -391,7 +398,8 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       if ( !( !event->isLongPress() && msg.isBroadcast() ) )
       {
          DEBUG_L1( FSTR( "->LinkReceiver" ) )
-         HmwLinkReceiver::notifyKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
+         //HmwLinkReceiver::notifyKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
+         receiveKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
       }
    }
    else if ( msg.isCommand( HmwMessageBase::GET_LEVEL ) )
@@ -507,3 +515,25 @@ void HmwDevice::set( uint8_t channel, uint8_t length, uint8_t const* const data 
    }
 }
 
+bool HmwDevice::getLock( uint8_t channel )
+{
+	// to avoid crashes, return locked / inhibit active for channels, which do not exist
+	if ( channel >= HmwChannel::getNumChannels() )
+	{
+		return true;
+	}
+	return HmwChannel::getChannel( channel )->getLock();
+}
+
+void HmwDevice::setLock( uint8_t channel, bool inhibit )
+{
+   // lock (inihibit) a channel (disables all peerings to that channel)
+   DEBUG_M3( FSTR( "SetLockC:" ), channel, ':' );
+   DEBUG_L2( ' ', inhibit );
+
+   // to avoid crashes, do not try to set any channels, which do not exist
+   if ( channel < HmwChannel::getNumChannels() )
+   {
+      HmwChannel::getChannel( channel )->setLock( inhibit );
+   }
+}

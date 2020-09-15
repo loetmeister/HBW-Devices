@@ -435,6 +435,12 @@
 					<value_map device_value="0x0F" parameter_value="5" />	
 				</conversion>
 			</parameter>
+			<parameter id="INHIBIT" operations="read,write,event" loopback="true" control="NONE">
+				<logical type="boolean" default="false"/>
+				<physical type="integer" interface="command" value_id="INHIBIT">
+					<set request="SET_LOCK"/>
+				</physical>
+			</parameter>
 		</paramset>		
 	</channel>	
 
@@ -947,6 +953,12 @@
 					<value_map device_value="0x06" parameter_value="6"/>
 					<value_map device_value="0x07" parameter_value="7"/>
 				</conversion>
+			</parameter>
+			<parameter id="INHIBIT" operations="read,write,event" loopback="true" control="NONE">
+				<logical type="boolean" default="false"/>
+				<physical type="integer" interface="command" value_id="INHIBIT">
+					<set request="SET_LOCK"/>
+				</physical>
 			</parameter>
 		</paramset>
 	</channel>
