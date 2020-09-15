@@ -30,6 +30,7 @@ HmwLed::HmwLed( PortPin _portPin, Config* _config, bool _inverted, uint8_t _defa
    blinkOnTime = 10;
    blinkOffTime = 10;
    blinkQuantity = 255;
+   lastKeyNum = -1;
    disable();
 }
 
@@ -62,6 +63,8 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
    }
    else if ( length >= 6 )
    {
+      if ( lastKeyNum != data[6] ) {
+	  lastKeyNum = data[6];
       offLevel = data[1];
       onLevel = data[2];
       blinkOnTime = data[3];
@@ -100,6 +103,7 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
          }
          disable();
       }
+	  }
    }
    else  // toggle
    {

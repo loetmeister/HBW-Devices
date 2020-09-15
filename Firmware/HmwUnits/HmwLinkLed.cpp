@@ -22,16 +22,6 @@ HmwLinkLed::HmwLinkLed( uint8_t _numLinks, Config* _links )
 
 void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t senderChannel, uint8_t targetChannel, bool longPress, uint8_t keyPressNum )
 {
-   static uint8_t lastKeyPressNum = -1;
-
-   // broadcast events are sent repeated for long press
-   if ( lastKeyPressNum == keyPressNum )
-   {
-      return;
-   }
-
-   lastKeyPressNum = keyPressNum;
-
    // read what to do from EEPROM
    for ( uint8_t i = 0; i < numLinks; i++ )
    {
@@ -60,7 +50,7 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
 
       // ok, we have found a match
       // differs for short and long
-      uint8_t cmdData[] = { 255, links[i].shortOffLevel, links[i].shortOnLevel, links[i].blinkOnTime, links[i].blinkOffTime, links[i].blinkQuantity };
+      uint8_t cmdData[] = { 255, links[i].shortOffLevel, links[i].shortOnLevel, links[i].blinkOnTime, links[i].blinkOffTime, links[i].blinkQuantity, keyPressNum };
       uint8_t length = sizeof( cmdData );
       if ( longPress )
       {

@@ -84,6 +84,7 @@ class HmwLed : public HmwChannel
       uint8_t blinkOnTime;
       uint8_t blinkOffTime;
       uint8_t blinkQuantity;
+	  uint8_t lastKeyNum;
 
       const uint8_t defaultPwmRange;
 
