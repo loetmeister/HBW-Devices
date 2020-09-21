@@ -529,7 +529,7 @@ void HmwDevice::setLock( uint8_t channel, bool inhibit )
 {
    // lock (inihibit) a channel (disables all peerings to that channel)
    DEBUG_M3( FSTR( "SetLockC:" ), channel, ':' );
-   DEBUG_L2( ' ', inhibit );
+   DEBUG_L2( ' ', (uint8_t) inhibit );
 
    // to avoid crashes, do not try to set any channels, which do not exist
    if ( channel < HmwChannel::getNumChannels() )

@@ -12,6 +12,10 @@
 #include "Peripherals/Adc.h"
 
 
+#define getId() FSTR( "HmwAnalogIn " )
+
+const uint8_t HmwAnalogIn::debugLevel( DEBUG_LEVEL_OFF );
+
 #define ADC_CH0      (1U << 0)                 /**< ADC channel 0. */
 #define ADC_CH1      (1U << 1)                 /**< ADC channel 1. */
 
@@ -31,7 +35,6 @@ HmwAnalogIn::HmwAnalogIn( uint8_t _adcInputPort, uint8_t _adcInputPin, Config* _
    enable ( MEASUREMET_CYCLE /2 );	// some start delay
    currentValue = 0;
 }
-
 
 uint8_t HmwAnalogIn::get( uint8_t* data )
 {

@@ -82,7 +82,7 @@ class IStream;
 #define DEBUG_LEVEL_LOW      0x03
 
 #ifdef _DEBUG_
-#define DEBUG_H( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << a1; }
+#define DEBUG_H( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_OFF ) { Logger::instance() << newTraceLine << getId() << arg; }
 #define DEBUG_M( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_HIGH ) { Logger::instance() << newTraceLine << '-' << arg; }
 #define DEBUG_L( arg )                  if ( ( debugLevel & DEBUG_LEVEL_MASK ) > DEBUG_LEVEL_MIDDLE ) { Logger::instance() << arg; }
 

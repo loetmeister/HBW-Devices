@@ -50,6 +50,7 @@ class HmwAnalogIn : public HmwChannel
 
    private:
 
+     static const uint8_t debugLevel;
 
       ////    Additional operations    ////
 
