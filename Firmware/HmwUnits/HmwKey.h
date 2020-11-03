@@ -160,6 +160,14 @@ class HmwKey : public HmwChannel
 
       virtual void checkConfig();
 
+      void setFeedbackChannel( uint8_t cmd )
+	  {
+		  if ( feedbackChannel && config->isFeedbackEnabled() )
+		  {
+			  feedbackChannel->set( 1, &cmd );
+		  }
+	  }
+
    protected:
 
       void resetChannel();

@@ -17,7 +17,7 @@ HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
 uint8_t HmwKey::get( uint8_t* data )
 {
    *data++ = ( isPressed() ? MAX_LEVEL : 0 );
-   *data++ = 0; // state flags not used   // TODO: why alway 0? fix?
+   *data++ = 0; // state flags not used
    return 2;
 }
 
@@ -56,11 +56,7 @@ void HmwKey::handleSwitchSignal()
          }
       }
       keyPressedTimestamp.reset();
-      if ( feedbackChannel && config->isFeedbackEnabled() )
-      {
-         uint8_t cmd = KEY_FEEDBACK_OFF;
-         feedbackChannel->set( 1, &cmd );
-      }
+	  setFeedbackChannel( KEY_FEEDBACK_OFF );
    }
    else
    {
@@ -79,11 +75,7 @@ void HmwKey::handleSwitchSignal()
             lastSentLong = Timestamp();
          }
       }
-      if ( feedbackChannel && config->isFeedbackEnabled() )
-      {
-         uint8_t cmd = KEY_FEEDBACK_ON;
-         feedbackChannel->set( 1, &cmd );
-      }
+	  setFeedbackChannel( KEY_FEEDBACK_ON );
    }
 }
 
@@ -109,11 +101,7 @@ void HmwKey::handlePushButtonSignal()
             HmwDevice::sendKeyEvent( channelId, keyPressNum, lastSentLong.isValid() );
          }
          keyPressedTimestamp.reset();
-         if ( feedbackChannel && config->isFeedbackEnabled() )
-         {
-            uint8_t cmd = KEY_FEEDBACK_OFF;
-            feedbackChannel->set( 1, &cmd );
-         }
+		 setFeedbackChannel( KEY_FEEDBACK_OFF );
       }
    }
    else
@@ -147,11 +135,7 @@ void HmwKey::handlePushButtonSignal()
          // Taste war vorher nicht gedrueckt
          keyPressedTimestamp = Timestamp();
          lastSentLong.reset();
-         if ( feedbackChannel && config->isFeedbackEnabled() )
-         {
-            uint8_t cmd = KEY_FEEDBACK_ON;
-            feedbackChannel->set( 1, &cmd );
-         }
+		 setFeedbackChannel( KEY_FEEDBACK_ON );
       }
    }
 }
@@ -165,11 +149,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
          lastSentLong.reset();
       }
       keyPressedTimestamp.reset();
-      if ( feedbackChannel && config->isFeedbackEnabled() )
-      {
-         uint8_t cmd = KEY_FEEDBACK_OFF;
-         feedbackChannel->set( 1, &cmd );
-      }
+	  setFeedbackChannel( KEY_FEEDBACK_OFF );
    }
    else
    {
@@ -188,16 +168,13 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
             lastSentLong = Timestamp();
          }
       }
-      if ( feedbackChannel && config->isFeedbackEnabled() )
-      {
-         uint8_t cmd = KEY_FEEDBACK_ON;
-         feedbackChannel->set( 1, &cmd );
-      }
+	  setFeedbackChannel( KEY_FEEDBACK_ON );
    }
 }
 
 void HmwKey::resetChannel()
 {
+   // check if pulldown is supported and enabled
    if ( pulldownSupported )
    {
       config->isPullUp() ? digitalIn.enablePullup() : digitalIn.enablePulldown();
@@ -205,18 +182,14 @@ void HmwKey::resetChannel()
    else
    {
       digitalIn.enablePullup();
+	  //TODO: sync this setting to EEPROM? (forcing pullup when pulldown is not supported)
    }
-   // backward compatibility to prevent endless key events
-   if ( config->isPushButton() )
-   {
-      config->setInverted( !config->isPullUp() && pulldownSupported );
-   }
-
+   
    digitalIn.setInverted( config->isInverted() );
 
    keyPressedTimestamp.reset();
    lastSentLong.reset();
-   keyPressNum = 0;
+   setFeedbackChannel( isPressed() ? KEY_FEEDBACK_ON : KEY_FEEDBACK_OFF );
 }
 
 void HmwKey::checkConfig()
