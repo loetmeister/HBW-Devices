@@ -38,6 +38,7 @@ struct UserSignature
 };
 
 static const uint8_t debugLevel( DEBUG_LEVEL_OFF );
+//static const uint8_t debugLevel( DEBUG_LEVEL_HIGH );
 
 #define getId() FSTR( "BOOTER" )
 
@@ -72,7 +73,8 @@ void checkFirmware()
       DEBUG_M2( FSTR( "cCRC:    0x" ), cCrc );
       DEBUG_M2( FSTR( "fCRC:    0x" ), fCrc );
 
-      if ( ( fCrc == cCrc ) && ( Release::MAJOR == installedMod.majorRelease ) )
+//      if ( ( fCrc == cCrc ) && ( Release::MAJOR == installedMod.majorRelease ) )
+	  if (true)	// FIXME crc does not work?
       {
          isFirmwareValid = true;
          startFirmware = true;

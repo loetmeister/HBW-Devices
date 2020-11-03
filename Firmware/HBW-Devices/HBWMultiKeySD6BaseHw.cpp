@@ -20,7 +20,7 @@ struct hbw_config
    HmwDS1820::Config ds1820cfg[6];        // 0x0040 - 0x0063
    HmwAnalogIn::Config analogInCfg[2];   // 0x0064 - 0x006F
    HmwSHT3x::Config sht3xConfig;          // 0x0070 - 0x0075  // alt 0x006A - 0x006F
-   HmwLinkInfoEvent::Config TempLinks[1]; // 0x0076 - 0x007B   // dummy address (always empty), will be skipped in XML
+   HmwLinkInfoEvent::Config TempLinks[1]; // 0x0076 - 0x007B   // dummy address (always empty, as not defined in XML - but used by Link event class to search for peerings)
    HmwLinkKey::Config keyLinks[40];       // 0x007C - 0x016B  // 0x0076 - 0x0165 //0x0070 - 0x015F     // used for all sensor peerings
    HmwLinkLed::Config ledLinks[40];       // 0x016C - 0x03EB   // 0x0166 - 0x03E5 //0x0160 - 0x03..    // used for all actuator peerings
    //HmwLinkInfoEvent::Config TempLinks[18];// 0x0340 - 0x03AC // FHEM (HM?) only allows one start address in XML for sensor and actor each

@@ -18,7 +18,7 @@
 #include "HmwMsgWriteEeprom.h"
 #include "HmwMsgSetLevel.h"
 #include "HmwMsgSetLock.h"
-#include "HmwMsgResetWifi.h"
+//#include "HmwMsgResetWifi.h"
 #include "HmwMsgGetPacketSize.h"
 #include "HmwMsgReadFlash.h"
 #include "HmwMsgStartupReason.h"
@@ -97,12 +97,12 @@ void HmwDevice::handlePendingActions()
       {
       }
    }
-   if ( pendingActions.resetWifiConnection )
-   {
-      HmwMsgResetWifi msg( ownAddress, 2 );
-      HmwStream::sendMessage( msg );
-      pendingActions.resetWifiConnection = false;
-   }
+   //if ( pendingActions.resetWifiConnection )
+   //{
+      //HmwMsgResetWifi msg( ownAddress, 2 );
+      //HmwStream::sendMessage( msg );
+      //pendingActions.resetWifiConnection = false;
+   //}
    if ( SystemTime::now() > FIRST_ANNOUNCEMENT_TIME )
    {
       if ( ResetSystem::getSources() )
@@ -140,6 +140,7 @@ void HmwDevice::factoryReset()
 
    // reset the system after factory reset
    pendingActions.resetSystem = true;
+   pendingActions.readConfig = true;
 }
 
 void HmwDevice::handleConfigButton()
@@ -196,7 +197,7 @@ void HmwDevice::handleConfigButton()
          {  // button released
             buttonState = HmwDeviceHw::WAIT_SECOND_PRESS;
             lastTime = Timestamp();
-            pendingActions.resetWifiConnection = true;
+           // pendingActions.resetWifiConnection = true;
          }
          break;
       }
@@ -427,6 +428,7 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
             data++;
             length--;
          }
+		 // TODO: also add blocker for address 0x06 to 0x09, that stores the own device address
          Eeprom::write( offset, data, length );
       }
       else
