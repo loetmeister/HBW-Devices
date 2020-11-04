@@ -420,15 +420,18 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
          uint8_t length = msgWriteEeprom->getLength();
          uint8_t* data = msgWriteEeprom->getData();
 
-         // at offset 0 the HW_REV is stored to share between BOOTER and FW
-         // it is not allowed to change it with external WRITE_EEPROM command
          if ( offset == 0 )
          {
-            offset++;
-            data++;
-            length--;
+	         // at offset 0 the HW_REV is stored to share between BOOTER and FW
+	         // it is not allowed to change it with external WRITE_EEPROM command
+	         data[0] = basicConfig->hwVersion;
+
+	         // detect an erase on the ownAddress position and restore device address before writing to EEPROM
+	         if ( ( length > 6 ) && ( data[6] == 0xFF ) )
+	         {
+		         memcpy( &data[6], &basicConfig->ownAddress, sizeof( basicConfig->ownAddress ) );
+	         }
          }
-		 // TODO: also add blocker for address 0x06 to 0x09, that stores the own device address
          Eeprom::write( offset, data, length );
       }
       else
