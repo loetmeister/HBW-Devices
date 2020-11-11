@@ -131,7 +131,7 @@ uint8_t HmwLed::get( uint8_t* data )
 
    // map 0-100% to 0-200
    *data++ = currentLevel;
-   *data++ = stateFlags.byte;
+   *data = stateFlags.byte;
    return 2;
 }
 
