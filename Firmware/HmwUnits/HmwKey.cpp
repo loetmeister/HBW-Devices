@@ -16,9 +16,9 @@ HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
 
 uint8_t HmwKey::get( uint8_t* data )
 {
-   *data++ = ( isPressed() ? MAX_LEVEL : 0 );
-   *data++ = 0; // state flags not used
-   return 2;
+   *data = ( isPressed() ? MAX_LEVEL : 0 );
+   //*data++ = 0; // state flags not used
+   return 1;
 }
 
 void HmwKey::loop()
@@ -47,8 +47,8 @@ void HmwKey::handleSwitchSignal()
    {
       if ( lastSentLong.isValid() )
       {
-         uint8_t data[8];
-         HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         //uint8_t data[8];
+         //HmwDevice::sendInfoMessage( channelId, get( data ), data );
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
@@ -67,8 +67,8 @@ void HmwKey::handleSwitchSignal()
       }
       else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
-         uint8_t data[8];
-         HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         //uint8_t data[8];
+         //HmwDevice::sendInfoMessage( channelId, get( data ), data );
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
