@@ -7,6 +7,7 @@
 
 
 #include "HmwStream.h"
+#include "HmwDevice.h"
 
 HmwStream::MessageQueue HmwStream::inMessageQueue;
 
@@ -14,6 +15,11 @@ HmwStream::MessageVector HmwStream::outMessageVector;
 
 IStream::Status HmwStream::sendMessage( HmwMessageBase& msg )
 {
+	// do not send any messages if zeroCommunication is active
+	// Building a queue is not useful, as this state might take long (e.g. other devices on the bus get firmware updates)
+	// TODO: check if it's ok to return with LOCKED state here
+	if ( HmwDevice::pendingActions.zeroCommunicationActive ) return IStream::LOCKED;
+	
    // if ACK is pending wait additional MIN_IDLE_TIME before sending next message
    additionalMinIdleTime = ( rand() & 0xF ) + ( isAwaitingAck() ? MIN_IDLE_TIME : 0 );
 
