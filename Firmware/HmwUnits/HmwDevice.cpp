@@ -427,7 +427,7 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
 	         data[0] = basicConfig->hwVersion;
 
 	         // detect an erase on the ownAddress position and restore device address before writing to EEPROM
-	         if ( ( length > 6 ) && ( data[6] == 0xFF ) )
+	         if ( ( length >= 6 + sizeof( basicConfig->ownAddress ) ) && ( data[6] == 0xFF ) )
 	         {
 		         memcpy( &data[6], &basicConfig->ownAddress, sizeof( basicConfig->ownAddress ) );
 	         }
