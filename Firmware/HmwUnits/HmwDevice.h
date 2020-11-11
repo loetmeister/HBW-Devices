@@ -172,7 +172,7 @@ class HmwDevice
             //if ( !keyPressed )
             if ( !keyPressed && keyPressNum < 2 )
             {
-               pendingActions.announce = true;   // send announcement only for keyPressNum == 1
+               pendingActions.announce = true;   // send announcement only for keyPressNum == 1 (on released key state)
             }
          }
          return status;
