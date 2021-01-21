@@ -67,15 +67,15 @@
     <avrtoolinterfaceclock>0</avrtoolinterfaceclock>
     <AsfFrameworkConfig>
       <framework-data>
-        <options />
-        <configurations />
-        <files />
-        <documentation help="" />
-        <offline-documentation help="" />
-        <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.39.0" />
-        </dependencies>
-      </framework-data>
+  <options />
+  <configurations />
+  <files />
+  <documentation help="" />
+  <offline-documentation help="" />
+  <dependencies>
+    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.42.0" />
+  </dependencies>
+</framework-data>
     </AsfFrameworkConfig>
     <Name>HBW-X32A4-Booter</Name>
     <ResetRule>0</ResetRule>
@@ -94,7 +94,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'HBW-SD6-v0' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
+        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
         <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
         <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
         <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
@@ -110,7 +110,7 @@
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../src</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
@@ -135,7 +135,7 @@
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../..</Value>
             <Value>../../Framework</Value>
             <Value>../../XMega</Value>
@@ -167,7 +167,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
+        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
         <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
         <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
         <avrgcc.common.outputfiles.eep>False</avrgcc.common.outputfiles.eep>
@@ -183,7 +183,7 @@
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
         <avrgcc.compiler.optimization.OtherFlags>-fdata-sections</avrgcc.compiler.optimization.OtherFlags>
@@ -207,7 +207,7 @@
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../..</Value>
             <Value>../../Framework</Value>
             <Value>../../XMega</Value>
@@ -240,7 +240,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'HBW-SD6-v1' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
+        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
         <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
         <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
         <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
@@ -255,7 +255,7 @@
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../src</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
@@ -281,7 +281,7 @@
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../..</Value>
             <Value>../../Framework</Value>
             <Value>../../XMega</Value>
@@ -318,7 +318,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'HBW-IO12-1W-UP' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
+        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
         <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
         <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
         <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
@@ -334,7 +334,7 @@
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../src</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
@@ -359,7 +359,7 @@
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../..</Value>
             <Value>../../Framework</Value>
             <Value>../../XMega</Value>
@@ -392,7 +392,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'HBW-LC4-IN4-DR' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
+        <avrgcc.common.Device>-mmcu=atxmega32a4u -B "%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\gcc\dev\atxmega32a4u"</avrgcc.common.Device>
         <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
         <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
         <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
@@ -408,7 +408,7 @@
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../src</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
@@ -433,7 +433,7 @@
         </avrgcccpp.compiler.symbols.DefSymbols>
         <avrgcccpp.compiler.directories.IncludePaths>
           <ListValues>
-            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.0.36\include</Value>
+            <Value>%24(PackRepoDir)\atmel\XMEGAA_DFP\1.2.141\include</Value>
             <Value>../..</Value>
             <Value>../../Framework</Value>
             <Value>../../XMega</Value>

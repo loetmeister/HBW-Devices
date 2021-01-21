@@ -18,6 +18,7 @@
 #include "HmwMsgWriteEeprom.h"
 #include "HmwMsgSetLevel.h"
 #include "HmwMsgSetLock.h"
+#include "HmwMsgReset.h"
 //#include "HmwMsgResetWifi.h"
 #include "HmwMsgGetPacketSize.h"
 #include "HmwMsgReadFlash.h"
@@ -449,7 +450,9 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
    else if ( msg.isCommand( HmwMessageBase::RESET ) )
    {
       DEBUG_M1( FSTR( "C: RESET" ) );
-      pendingActions.resetSystem = true;
+	  HmwMsgReset* msgReset = (HmwMsgReset*)&msg;
+      if ( msgReset->isReset() )
+	     pendingActions.resetSystem = true;
    }
    else if ( msg.isCommand( HmwMessageBase::INFO_LEVEL ) )
    {
