@@ -15,6 +15,7 @@
 #define getId() FSTR( "HmwDS1820 " )
 
 #define INVALID_VALUE -27315
+#define ERROR_VALUE -27314
 
 const uint8_t HmwDS1820::debugLevel( DEBUG_LEVEL_OFF );
 
@@ -22,21 +23,20 @@ bool HmwDS1820::selfPowered( true );
 
 HmwDS1820::HmwDS1820( OneWire& _hardware, Config* _config ) :
    hardware( &_hardware ),
-   sendPeer( true )
+   errorCounter( 0 ),
+   sendPeer( true ),
+   currentCentiCelsius( INVALID_VALUE ),
+   lastSentCentiCelsius( 0 )
 {
    type = HmwChannel::HMW_DS18X20;
    config = _config;
-   SET_STATE_L1( SEARCH_SENSOR );
-   enable( 500 );
 }
 
 bool HmwDS1820::isSelfPowered()
 {
    hardware->reset();
-   hardware->sendCommand( READ_POWER_SUPPLY, (uint8_t*) &romCode );
-
+   hardware->sendCommand( READ_POWER_SUPPLY, ( uint8_t* ) &romCode );
    selfPowered = ( hardware->sendReceiveBit( 1 ) ? true : false );
-
    hardware->reset();
    return selfPowered;
 }
@@ -57,16 +57,13 @@ uint8_t HmwDS1820::get( uint8_t* data )
 
 void HmwDS1820::loop()
 {
-   if ( !isNextActionPending() || ( ( config->id == 0 ) && ( getCurrentState() != SEND_INVALID_VALUE ) ) )
+   if ( !isNextActionPending() )
    {
       return;
    }
 
    if ( getCurrentState() == SEARCH_SENSOR )
    {
-      // set the last measured value to an invalid one
-      currentCentiCelsius = INVALID_VALUE;
-
       // search for a special sensor
       uint8_t diff = OneWire::SEARCH_FIRST;
       DEBUG_H2( FSTR( " searching for 0x" ), config->id );
@@ -75,7 +72,8 @@ void HmwDS1820::loop()
       while ( diff != OneWire::LAST_DEVICE )
       {
          uint8_t currentId = 0;
-         diff = hardware->searchROM( diff, (uint8_t*) &romCode );
+         diff = hardware->searchROM( diff, ( uint8_t* ) &romCode );
+
          if ( diff == OneWire::PRESENCE_ERROR )
          {
             DEBUG_H1( FSTR( " No devices found" ) );
@@ -89,26 +87,29 @@ void HmwDS1820::loop()
          else
          {
             DEBUG_H1( FSTR( " 0x" ) );
+
             for ( uint8_t i = 0; i < OneWire::ROMCODE_SIZE; i++ )
             {
-               DEBUG_L1( ( (uint8_t* )&romCode )[i] );
-               currentId += ( (uint8_t* )&romCode )[i];
+               DEBUG_L1( ( ( uint8_t* )&romCode )[i] );
+               currentId += ( ( uint8_t* )&romCode )[i];
             }
 
             if ( isSensor( romCode.family ) )
             {
                DEBUG_L2( FSTR( "->DS18X20, ID:0x" ), currentId );
+
                if ( ( config->id == 0xFF ) && !isUsed( currentId ) )
                {
                   config->id = currentId;
                }
+
                if ( config->id == currentId )
                {
                   SET_STATE_L1( START_MEASUREMENT );
-                  enable( 100 );
+                  enable( channelId * 100 );
+                  errorCounter = 0;
                   return;
                }
-
             }
             else
             {
@@ -116,68 +117,88 @@ void HmwDS1820::loop()
             }
          }
       }
+
       // no sensor found, stop channel
       DEBUG_H1( FSTR( " No sensor for this channel" ) );
-      SET_STATE_L1( SEND_INVALID_VALUE );
-      enable( 5000 );
+
+      if ( errorCounter >= MAX_ERROR_COUNT ) {
+         disable();
+      } else {
+         setupNextRetry( 5000 );
+      }
+
+	  return;	// don't continue (don't send any messages for disabled channels or channels with no sensor)
    }
    else if ( getCurrentState() == START_MEASUREMENT )
    {
+	   startMeasurement();	// allSensors = true, so we can only detect error on the entire bus, not the current sensor
+	   SET_STATE_L1( READ_MEASUREMENT );
+	   enable( 1000 ); // needs about one second to do the measurement
+	   
+	  // TODO: change to allSensors = false to keep below logic?
+	  /*
       if ( startMeasurement() == OK )
       {
-         SET_STATE_L1( SEND_FEEDBACK );
-         enable( 1000 );
+         SET_STATE_L1( READ_MEASUREMENT );
+         enable( 1000 ); // needs at least one second to do the measurement
+         errorCounter = 0;
       }
       else
       {
-         // retry after 250ms
-         enable( 250 );
+         setupNextRetry( 1000 );
       }
+	  */
    }
-   else if ( getCurrentState() == SEND_FEEDBACK )
+   else if ( getCurrentState() == READ_MEASUREMENT )
    {
-      bool doSend = ( readMeasurement() == OK );
-
-      doSend &= ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= config->maxInterval ) )
-                || ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
-
-      if ( doSend ) //&& handleFeedback( SystemTime::S* config->minInterval ) )
-      {
-	#if defined(_Support_HBWLink_InfoEvent_)
-		if ( sendPeer )
-		{
-			uint8_t data[2];
-			get( data );
-			sendPeer = false;
-			if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS)
-			{
-				 enable( 500 );	// at least one peer existed, so add some delay before sending InfoMessage
-				return;
-			}
-		}
-	#endif
-		if ( handleFeedback( SystemTime::S* config->minInterval ) )
-		{
-	#if defined(_Support_HBWLink_InfoEvent_)
-		 	sendPeer = true;	// InfoMessage was send, try sendInfoEvent next time "doSend"
-	#endif
-	 		lastSentCentiCelsius = currentCentiCelsius;
-		 }
-      }
-
+      if ( readMeasurement() != OK ) {
+	     setupNextRetry( 1000 );  // increase errorCounter
+	  } else {
+		  errorCounter = 0;
+		  enable( 5000 );
+	  }
       // start next measurement after 5s
       SET_STATE_L1( START_MEASUREMENT );
-      enable( 5000 );
+
+      if ( errorCounter == MAX_ERROR_COUNT )
+      {
+         currentCentiCelsius = ERROR_VALUE;
+      }
    }
-   else if ( getCurrentState() == SEND_INVALID_VALUE )
+//TODO: as channel loop is only activated when next action is due (isNextActionPending) - the send interval (max-/minInterval) is not accurate - some seconds off... no need to fix?
+
+   bool doSend = ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= config->maxInterval ) )
+                   || ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
+
+   if ( doSend ) //&& handleFeedback( SystemTime::S* config->minInterval ) )
    {
-    //TODO: add handle CRC_FAILTURE (add error counter, then use "#define ERROR_TEMP -27314     // CRC or read error", for SEND_INVALID_VALUE)
-      // send the INVALID_VALUE one time
-      uint8_t data[2];
-      HmwDevice::sendInfoMessage( channelId, get( data ), data );
-      disable();
+  #if defined(_Support_HBWLink_InfoEvent_)
+   if ( sendPeer )
+      {
+         uint8_t data[2];
+         get( data );
+         sendPeer = false;
+		 HmwDevice::sendInfoEvent( channelId, data, 2 );
+      }
+	#endif
+      if ( handleFeedback( SystemTime::S* config->minInterval ) )  // sendInfoMessage
+      {
+  #if defined(_Support_HBWLink_InfoEvent_)
+         sendPeer = true;	// feedback (InfoMessage) was send successfully, start with sendInfoEvent again next time "doSend"
+	#endif
+         lastSentCentiCelsius = currentCentiCelsius;
+      }
+   }
+}
+
+void HmwDS1820::setupNextRetry( uint16_t delay )
+{
+   if ( errorCounter < MAX_ERROR_COUNT )
+   {
+      errorCounter++;
    }
 
+   enable( delay * errorCounter ); // each retry makes the wait time longer
 }
 
 void HmwDS1820::checkConfig()
@@ -200,23 +221,32 @@ void HmwDS1820::checkConfig()
    }
 
    // maybe someone has changed the Ids, search the desired sensor now
-   SET_STATE_L1( SEARCH_SENSOR );
-   enable( 500 );
-   nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
+   if ( config->id != 0 )	// 0 == manually disabled
+   {
+      SET_STATE_L1( SEARCH_SENSOR );
+      nextFeedbackTime = SystemTime::now();
+      errorCounter = 0;
+      enable( 500 );
+   }
+   else
+   {
+      disable();
+   }
 }
 
 
 HmwDS1820::HwStatus HmwDS1820::startMeasurement( bool allSensors )
 {
-   hardware->reset();
+   if ( ( hardware->reset() == hardware->NO_ERROR ) && hardware->isIdle() )
+   {
+      // only send if bus is "idle" = high
+      hardware->sendCommand( CONVERT_T, allSensors ? 0 : ( uint8_t* ) &romCode );
 
-   if ( hardware->isIdle() )
-   { // only send if bus is "idle" = high
-      hardware->sendCommand( CONVERT_T, allSensors ? 0 : (uint8_t*) &romCode );
       if ( !selfPowered )
       {
          hardware->enableParasite();
       }
+
       return OK;
    }
    else
@@ -228,23 +258,24 @@ HmwDS1820::HwStatus HmwDS1820::startMeasurement( bool allSensors )
 
 HmwDS1820::HwStatus HmwDS1820::readMeasurement()
 {
-
    uint8_t sp[SCRATCHPAD_SIZE];
+   uint8_t isAllZeros = true;
 
    hardware->reset();
-   hardware->sendCommand( READ, (uint8_t*) &romCode );
+   hardware->sendCommand( READ, ( uint8_t* ) &romCode );
 
    for ( uint8_t i = 0; i < SCRATCHPAD_SIZE; i++ )
    {
       sp[i] = hardware->read();
-	  // TODO: check ifAllIsZero?
+	  if ( sp[i] != 0 ) isAllZeros = false;
    }
-   if ( Crc8::hasError( sp, SCRATCHPAD_SIZE ) )
-   {
-      return CRC_FAILTURE;
-   }
-   currentCentiCelsius = convertToCentiCelsius( sp );
 
+   if ( Crc8::hasError( sp, SCRATCHPAD_SIZE ) || isAllZeros )  // CRC or read error
+   {
+      return CRC_FAILURE;
+   }
+
+   currentCentiCelsius = convertToCentiCelsius( sp );
    return OK;
 }
 
@@ -278,13 +309,14 @@ int16_t HmwDS1820::convertToCentiCelsius( uint8_t* scratchPad )
          measurement &= ~( DS18B20_10_BIT_UNDF );
       }
       else
-      { // if ( (i & DS18B20_9_BIT) == DS18B20_9_BIT ) {
+      {
+         // if ( (i & DS18B20_9_BIT) == DS18B20_9_BIT ) {
          measurement &= ~( DS18B20_9_BIT_UNDF );
       }
    }
 
    int16_t centiCelsius = static_cast<int8_t>( measurement >> 4 ) * 100;
-   uint8_t fracture = (uint8_t) ( measurement & 0x000F );
+   uint8_t fracture = (uint8_t)( measurement & 0x000F );
    if ( fracture & 0x8 )
    {
       centiCelsius += 50;
@@ -311,14 +343,17 @@ bool HmwDS1820::isUsed( uint8_t id )
    for ( uint8_t i = 0; i < HmwChannel::getNumChannels(); i++ )
    {
       HmwChannel* channel = HmwChannel::getChannel( i );
+
       if ( channel->isOfType( HmwChannel::HMW_DS18X20 ) )
       {
          HmwDS1820* sensor = reinterpret_cast<HmwDS1820*>( channel );
+
          if ( sensor->getConfigId() == id )
          {
             return true;
          }
       }
    }
+
    return false;
 }

@@ -30,8 +30,8 @@ class HmwDS1820 : public HmwChannel
       {
          OK,
          START_FAIL,
-         FAILTURE,
-         CRC_FAILTURE,
+         FAILURE,
+         CRC_FAILURE,
          OUT_OF_MEMORY
       };
 
@@ -39,8 +39,8 @@ class HmwDS1820 : public HmwChannel
       {
          SEARCH_SENSOR,
          START_MEASUREMENT,
-         SEND_FEEDBACK,
-         SEND_INVALID_VALUE
+         READ_MEASUREMENT,
+         SEND_FEEDBACK
       };
 
       struct Config
@@ -68,6 +68,8 @@ class HmwDS1820 : public HmwChannel
       // family ids
       static const uint8_t DS18S20_ID = 0x10;
       static const uint8_t DS18B20_ID = 0x28;
+
+      static const uint8_t MAX_ERROR_COUNT = 10;
 
       ////    Constructors and destructors    ////
 
@@ -120,6 +122,8 @@ class HmwDS1820 : public HmwChannel
 
    private:
 
+      void setupNextRetry( uint16_t delay );
+
       inline OneWire::RomCode getRomCode() const
       {
          return romCode;
@@ -141,6 +145,8 @@ class HmwDS1820 : public HmwChannel
    private:
 
       static const uint8_t debugLevel;
+
+      uint8_t errorCounter;
 
       Config* config;
 
