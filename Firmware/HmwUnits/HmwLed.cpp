@@ -30,7 +30,7 @@ HmwLed::HmwLed( PortPin _portPin, Config* _config, bool _inverted, uint8_t _defa
    blinkOnTime = 10;
    blinkOffTime = 10;
    blinkQuantity = 255;
-   lastKeyNum = -1;
+   lastKeyNum = 255;
    disable();
 }
 

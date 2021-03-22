@@ -5,6 +5,7 @@
 HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
    unlocked( true ),
    pulldownSupported( true ),
+   isStartUp( true ),
    keyPressNum( 0 ),
    config( _config ),
    feedbackChannel( _feedbackChannel ),
@@ -42,7 +43,6 @@ void HmwKey::loop()
 
 void HmwKey::handleSwitchSignal()
 {
-   if ( (keyPressNum & 0x3F) == 0 ) keyPressNum = 1;
    if ( !isPressed() )
    {
       if ( lastSentLong.isValid() )
@@ -142,6 +142,12 @@ void HmwKey::handlePushButtonSignal()
 
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
+   if ( SystemTime::now() < MOTION_SENSOR_STARTUP_BLOCKING_TIME && isStartUp && isPressed() ) {	// block sensors with "active" startup state for fixed delay
+      return;
+   } else {
+      isStartUp = false;
+   }
+   
    if ( !isPressed() )
    {
       if ( lastSentLong.isValid() )
@@ -158,9 +164,8 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
          // Taste war vorher nicht gedrueckt
          keyPressedTimestamp = Timestamp();
       }
-      else if ( ( keyPressedTimestamp.since() >= 100 ) && !lastSentLong.isValid() )
+      else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME_MOTION_SENSOR ) && !lastSentLong.isValid() )
       {
-         if ( (keyPressNum & 0x3F) == 0 ) keyPressNum = 1;
          // if return value is 1, bus is not idle, retry next time
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {

@@ -23,7 +23,7 @@ HmwDimmer::HmwDimmer( PortPin _portPin, PortPin _enablePin, Config* _config, uin
    config( _config ),
    actionParameter( NULL ),
    timeMode( TIME_MODE_ABSOLUTE ),
-   lastKeyNum( 0 ),
+   lastKeyNum( 255 ),
    dimTargetLevel( 0 )
 {
    type = HmwChannel::HMW_DIMMER;

@@ -38,7 +38,7 @@ void HmwBrightnessKey::loop()
 
 void HmwBrightnessKey::resetChannel()
 {
-   keyPressNum = 1;
+   keyPressNum = 0;
    linkedBrightnessSwitchChannel->triggered = false;
 }
 
