@@ -142,7 +142,8 @@ void HmwKey::handlePushButtonSignal()
 
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
-   if ( SystemTime::now() < MOTION_SENSOR_STARTUP_BLOCKING_TIME && isStartUp && isPressed() ) {	// block sensors with "active" startup state for fixed delay
+   // consider motion sensor continuously active since startup only active after this time (4...50 sec) -> LongPressTime 0.4 == 4 seconds
+   if ( SystemTime::now() < long(config->getLongPressTime() ) * 1000 && isStartUp && isPressed() ) {
       return;
    } else {
       isStartUp = false;

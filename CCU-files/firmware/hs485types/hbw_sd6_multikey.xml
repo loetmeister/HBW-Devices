@@ -9,12 +9,12 @@
 		<parameter const_value="0xB1" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
 		<parameter const_value="0x0246" size="2" cond_op="GE" index="2"/><!--Min. FIRMWARE_VERSION-->
-	</type>	
-	<!--<type priority="2" id="HBW-IO-12-1W-UP" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AL)">
+	</type>
+	<type priority="2" id="HBW-IO-12-1W-UP" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AL)">
 		<parameter const_value="0xB2" size="1" index="0"/>
 		<parameter const_value="0" size="1" index="1"/>
-	</type>	
-	<type priority="2" id="HBW-IO-12-1W-UP-v1" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AH)">
+	</type>
+	<!--<type priority="2" id="HBW-IO-12-1W-UP-v1" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AH)">
 		<parameter const_value="0xB2" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
 	</type>-->
@@ -174,8 +174,8 @@
 					<address index="+0.7"/>
 				</physical>
 			</parameter>
-			<parameter id="LONG_PRESS_TIME">
-				<logical type="float" unit="s" default="1.0" max="5.0" min="0.4"/>
+			<parameter id="LONG_PRESS_TIME"> <!--used as blocking time when INPUT_TYPE is MOTIONSENSOR, LongPressTime 0.4 == 4 seconds, (4...50 sec) -->
+				<logical type="float" unit="s" default="0.4" max="5.0" min="0.4"/>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+1"/>
 				</physical>
@@ -450,7 +450,7 @@
 		</link_roles>
 	    <paramset type="MASTER" id="hmw_temp_ch_master" address_step="6" address_start="0x40">
 			<parameter id="SENSOR_ID">
-			   <logical type="integer" default="255" max="254" min="1">
+			   <logical type="integer" default="255" max="254" min="0" unit="0=disabled">
 			       <!--<special_value id="NOT_USED" value="0"/> FHEM does not display two special_values-->
 			       <special_value id="AUTO" value="255"/>
 			   </logical>	   

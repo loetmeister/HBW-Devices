@@ -170,9 +170,9 @@ class HmwDevice
          {
             HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );
             //if ( !keyPressed )
-            if ( !keyPressed && keyPressNum < 2 )
+            if ( !keyPressed && keyPressNum == 0 )
             {
-               pendingActions.announce = true;   // send announcement only for keyPressNum == 0 or 1 (on released key state)
+               pendingActions.announce = true;   // send announcement at first press/released key state (repeated every 64 key presses, when counter rolls over)
             }
          }
          return status;

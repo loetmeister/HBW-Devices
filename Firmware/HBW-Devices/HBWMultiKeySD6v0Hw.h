@@ -31,7 +31,7 @@ class HBWMultiKeySD6v0Hw : public HBWMultiKeySD6BaseHw
          // disable not available channels on this hardware
          //hbwOnboardBrightness.disable();
          //shtc3Temp.disable();
-		 sht3x.disable();
+		 //sht3x.disable();
 
          for ( uint8_t i = 0; i < 12; i++ )
          {

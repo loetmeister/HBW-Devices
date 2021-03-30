@@ -28,6 +28,8 @@ class HBWIo12OneWireUpHw : public HBWMultiKeySD6BaseHw
       {
          // disable not available channels on this hardware
          //hbwOnboardBrightness.disable();
+		 hbwAnIn1.disable();
+		 hbwAnIn2.disable();
          //shtc3Temp.disable();
 		 sht3x.disable();
 
@@ -38,6 +40,10 @@ class HBWIo12OneWireUpHw : public HBWMultiKeySD6BaseHw
          for ( uint8_t i = 0; i < 12; i++ )
          {
             HmwKey* keyChannel = (HmwKey*)HmwChannel::getChannel( i );
+
+//TODO: useful to add feedback channels? Possible to disable by default?
+            // set ledFeedback channels
+            //keyChannel->setFeedbackChannel( HmwChannel::getChannel( i + 12 ) );
 
             // this hardware does not support pull down configuration
             keyChannel->setPulldownSupport( false );

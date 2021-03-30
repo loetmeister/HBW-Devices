@@ -198,9 +198,7 @@ class HmwKey : public HmwChannel
       Timestamp keyPressedTimestamp;   // Zeit, zu der die Taste gedrueckt wurde (fuer's Entprellen)
 
       Timestamp lastSentLong;          // Zeit, zu der das letzte Mal longPress gesendet wurde
-	  
-   private:
-	  static const SystemTime::time_t MOTION_SENSOR_STARTUP_BLOCKING_TIME = 58000;	// consider motion sensor continuously active since startup as really active after this time (58 seconds)
+
 };
 
 #endif
