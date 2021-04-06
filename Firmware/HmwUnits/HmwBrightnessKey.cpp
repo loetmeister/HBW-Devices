@@ -12,7 +12,8 @@
 
 HmwBrightnessKey::HmwBrightnessKey( HmwBrightnessSwitch& _linkedBrightnessSwitchChannel, Config* _config ) :
    config( _config ),
-   linkedBrightnessSwitchChannel( &_linkedBrightnessSwitchChannel )
+   linkedBrightnessSwitchChannel( &_linkedBrightnessSwitchChannel ),
+   keyPressNum ( 0 )
 {
    resetChannel();
 }
@@ -38,7 +39,6 @@ void HmwBrightnessKey::loop()
 
 void HmwBrightnessKey::resetChannel()
 {
-   keyPressNum = 0;
    linkedBrightnessSwitchChannel->triggered = false;
 }
 

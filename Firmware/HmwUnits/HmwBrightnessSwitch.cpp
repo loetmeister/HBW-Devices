@@ -71,9 +71,9 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 		{
 			stateFlags.element.active = true;
 			
-			if ( data[5] )//actionParameter->blockingTime )	//TODO: block re-trigger? or just pause brightness calculation??
+			if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )	//TODO: block re-trigger? or just pause brightness calculation??
 			{
-				nextActionDelay = data[5] *100;//actionParameter->blockingTime *100;
+				nextActionDelay = (uint16_t)data[5] *1000;  // max 255 seconds
 				stateFlags.element.blockingTimeActive = true;
 			}
 			else {
@@ -101,22 +101,23 @@ void HmwBrightnessSwitch::loop()
    if ( stateFlags.element.blockingTimeActive )
    {
 	   stateFlags.element.blockingTimeActive = false;
-	   nextActionDelay = config->interval* 1000;	// restore configured value
+	   nextActionDelay = (uint16_t)config->interval* 1000;	// restore configured value
    }
-   
-// TODO: add option to block channel for some seconds? to not send high bigness and allow re-trigger?
+
 
    uint8_t reading;
    reading = linkedAnalogChannel->currentValue / 20;
    if (reading > 200) reading = 200;	// limit to 100% (200 / 2 = 100%)
-	
-   /* calculate the average of the last n results */
+   
+   //TODO: option to use lowest sample, rather than average?
+   
+   /* calculate the (moving) average of the last n results */
    result_sum -= buffer[index];  // subtract old value
    buffer[index] = reading;  // update buffer with current reading
    result_sum += buffer[index];  // add new value
    index++;
    index = index % MAX_SAMPLES; // reset when last array element was processed
-   if (count < MAX_SAMPLES) count++;
+   if (count < MAX_SAMPLES) count++;  // avoid to calculate the average on array elements that have not been updated with a reading
    
    if (result_sum > 0)
 	currentValue = result_sum / count;  // calculate average
@@ -127,7 +128,9 @@ void HmwBrightnessSwitch::loop()
 void HmwBrightnessSwitch::checkConfig()
 {
    // start next calculation after x seconds
-   // min. 10s (larger than analogIn sample interval), up to 45 seconds (gives 1 hour with 8 samples)
-   nextActionDelay = config->interval* 1000;
+   // min. 10s (larger than analogIn sample interval), up to 450 seconds (gives 1 hour with 8 samples)
+   if (config->interval == 255) config->interval = 14;  // factor 10! default 140 seconds
+   
+   nextActionDelay = (uint16_t)config->interval* 10000;
    stateFlags.byte = 0;
 }
