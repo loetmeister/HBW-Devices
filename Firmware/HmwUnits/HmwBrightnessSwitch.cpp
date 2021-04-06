@@ -101,7 +101,7 @@ void HmwBrightnessSwitch::loop()
    if ( stateFlags.element.blockingTimeActive )
    {
 	   stateFlags.element.blockingTimeActive = false;
-	   nextActionDelay = (uint16_t)config->interval* 1000;	// restore configured value
+	   nextActionDelay = (uint16_t)config->interval* 10000;	// restore configured value
    }
 
 
