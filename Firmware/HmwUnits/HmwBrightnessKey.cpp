@@ -1,5 +1,5 @@
 /*
- * HmwBrightness.cpp
+ * HmwBrightnessKey.cpp
  *
  *  Created on: 07.06.2018
  *      Author: loetmeister.de
@@ -22,7 +22,7 @@ HmwBrightnessKey::HmwBrightnessKey( HmwBrightnessSwitch& _linkedBrightnessSwitch
 void HmwBrightnessKey::loop()
 {
 	if ( linkedBrightnessSwitchChannel->currentValue == 255 )
-		return;	// channel "not used" value (disabled) - so quit
+		return;	// BrightnessSwitch channel "not used" value (disabled) - so quit
 	
 	// every transition from not triggered to triggered will cause a key event
 	if ( linkedBrightnessSwitchChannel->triggered )
@@ -44,8 +44,5 @@ void HmwBrightnessKey::resetChannel()
 
 void HmwBrightnessKey::checkConfig()
 {
-	//if ( config->triggerLevel == 255 )
-		//config->triggerLevel = DEFAULT_TRIGGER_LEVEL;
-   
    resetChannel();
 }

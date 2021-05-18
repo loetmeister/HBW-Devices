@@ -1,5 +1,5 @@
 /*
- * HmwBrightness.h
+ * HmwBrightnessSwitch.h
  *
  * This is a 'virtual' channel, reading an analog 12bit value from the
  * linked HmwAnalogIn channel and creating an moving average.
@@ -87,7 +87,7 @@ class HmwBrightnessSwitch : public HmwChannel
 
    public:
 
-	  uint8_t triggered;
+	  uint8_t triggered;	// read and cleared by linked HmwBrightnessKey
 	  
 	  uint8_t currentValue;
 
@@ -110,10 +110,11 @@ class HmwBrightnessSwitch : public HmwChannel
 	  
 	  union tag_state_flags {
 		struct state_flags {
-			uint8_t notUsed :4; // lowest 6 bit are not used, based on XML state_flag definition (index="12.4" size="0.3")
+			uint8_t notUsed :4; // lowest 4 bit are not used, based on XML state_flag definition (index="12.4" size="0.4")
 			uint8_t active  :1; // condition is currently met
 			uint8_t le  :1; // less or equals (false: ge, greater or equals)
-			uint8_t blockingTimeActive  :1; 
+			uint8_t blockingTimeActive  :1;
+			uint8_t unused  :1;
 		} element;
 		uint8_t byte:8;
 	  } stateFlags;

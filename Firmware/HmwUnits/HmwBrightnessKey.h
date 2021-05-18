@@ -1,5 +1,5 @@
 /*
- * HmwBrightness.h
+ * HmwBrightnessKey.h
  *
  * This is a 'virtual' channel, triggered by HmwBrightnessSwitch.
  * The current brightness read from HmwBrightnessSwitch defines if

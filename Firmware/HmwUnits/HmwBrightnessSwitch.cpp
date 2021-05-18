@@ -1,5 +1,5 @@
 /*
- * HmwBrightness.cpp
+ * HmwBrightnessSwitch.cpp
  *
  *  Created on: 07.06.2018
  *      Author: loetmeister.de
@@ -19,9 +19,8 @@ HmwBrightnessSwitch::HmwBrightnessSwitch( HmwAnalogIn& _linkedAnalogChannel, Con
    index( 0 ),
    count( 0 )
 {
-   //nextActionDelay = 1800;	// don't start before analog sampling (->HmwAnalogIn)
+   nextActionDelay = 180;	// 18 seconds delay (allow time for analog sampling)
    currentValue = 0;
-   triggered = false;
    stateFlags.byte = 0;
 }
 
@@ -36,7 +35,7 @@ uint8_t HmwBrightnessSwitch::get( uint8_t* data )
 	
 void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 {
-	// will be set by peered key channel (motion sensor)
+	// will be called by peered key channel (motion sensor)
 	
 	//if ( length == sizeof( LinkCommand ) )  //TOD: ... HBWLinkLed works differently to dimmer...
 	if ( count && length >= 6 )
@@ -71,9 +70,9 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 		{
 			stateFlags.element.active = true;
 			
-			if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )	//TODO: block re-trigger? or just pause brightness calculation??
+			if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )	// pause brightness calculation. A trigger received during this time would restart the blocking time and send a key event
 			{
-				nextActionDelay = (uint16_t)data[5] *1000;  // max 255 seconds
+				nextActionDelay = (uint16_t)data[5] *100;  // 10 - 2550 seconds (nextActionDelay * 100 in main loop!)
 				stateFlags.element.blockingTimeActive = true;
 			}
 			else {
@@ -91,7 +90,7 @@ void HmwBrightnessSwitch::loop()
       return;
    }
 
-   if ( lastActionTime.since() < nextActionDelay *10 )
+   if ( lastActionTime.since() < (uint32_t)nextActionDelay *100 )
    {
       return;
    }
@@ -101,7 +100,7 @@ void HmwBrightnessSwitch::loop()
    if ( stateFlags.element.blockingTimeActive )
    {
 	   stateFlags.element.blockingTimeActive = false;
-	   nextActionDelay = (uint16_t)config->interval* 10000;	// restore configured value
+	   nextActionDelay = (uint16_t)config->interval* 100;	// restore configured measurement interval
    }
 
 
@@ -131,6 +130,5 @@ void HmwBrightnessSwitch::checkConfig()
    // min. 10s (larger than analogIn sample interval), up to 450 seconds (gives 1 hour with 8 samples)
    if (config->interval == 255) config->interval = 14;  // factor 10! default 140 seconds
    
-   nextActionDelay = (uint16_t)config->interval* 10000;
-   stateFlags.byte = 0;
+   nextActionDelay = (uint16_t)config->interval* 100;	// nextActionDelay * 100 in main loop!
 }

@@ -140,7 +140,7 @@
 				</physical>
 				<conversion type="boolean_integer" invert="true"/>
 			</parameter>
-			<parameter id="PULL" hidden="false">
+			<parameter id="PULL" hidden="true"><!-- not supported in SD6 or IO-12 device -->
 				<logical type="option">
 					<option id="DOWN"/>
 					<option id="UP" default="true"/>
@@ -181,7 +181,7 @@
 				</physical>
 				<conversion type="float_integer_scale" factor="10"/>
 				<conversion type="integer_integer_map">
-					<value_map to_device="false" from_device="true" parameter_value="10" device_value="0xff"/>
+					<value_map to_device="false" from_device="true" parameter_value="4" device_value="0xff"/>
 				</conversion>
 			</parameter>
 		</paramset>
@@ -496,7 +496,7 @@
 		<paramset type="VALUES" id="hmw_temp_input_values">
 			<parameter id="TEMPERATURE" operations="read,event">
 				<logical type="float" min="-273.15" max="327.67" unit="&#x2103;">
-				  <special_value id="NOT_USED" value="-273.15"/>
+				 <!-- <special_value id="NOT_USED" value="-273.15"/> -->
 				</logical>
 				<physical type="integer" interface="command" value_id="TEMPERATURE">
 					<get request="LEVEL_GET" response="TEMP_EVENT"/>
@@ -587,7 +587,7 @@
 		
 		<paramset type="VALUES" id="hmw_sht3x_ch_values">
 			<parameter id="TEMPERATURE" operations="read,event">
-				<logical type="float" min="-40.0" max="80.0" unit="&#x2103;"/>
+				<logical type="float" min="-273.15" max="327.67" unit="&#x2103;"/>
 				<physical type="integer" interface="command" value_id="TEMPERATURE">
 					<event frame="WEATHER_EVENT"/>
 				</physical>
@@ -716,7 +716,7 @@
 				</physical>
 				<conversion type="float_configtime" factors="10" value_size="1"/>
 				<conversion type="integer_integer_map">
-					<value_map device_value="0xff" parameter_value="0xff" mask="0x00"/>
+					<value_map device_value="0xff" parameter_value="14" mask="0x00"/>
 				</conversion>
 			</parameter>
 		</paramset>
@@ -833,7 +833,8 @@
                     <address index="+6.3"/>
                 </physical>
             </parameter>
-			<parameter id="SHORT_ON_LEVEL"><!--X_COND_VALUE-->
+			<parameter id="SHORT_ON_LEVEL">
+			<!-- X_COND_VALUE (comparison value) -->
                 <logical type="float" unit="%" default="100" max="100" min="0"/>
                 <conversion type="float_integer_scale" factor="2"/>
                 <physical size="1.0" type="integer" interface="eeprom">
@@ -881,7 +882,8 @@
 					<value_map to_device="false" from_device="true" parameter_value="10" device_value="0xff"/>
 				</conversion>
 			</parameter>
-			<parameter id="BLINK_QUANTITY"><!--BLOCKING_TIME-->
+			<parameter id="BLINK_QUANTITY">
+			<!-- BLOCKING_TIME 1 == 10 seconds -->
 			   <logical type="integer" default="0" min="1" max="255">
 			     <special_value id="NOT_USED" value="0"/>
 			   </logical>	   
@@ -921,22 +923,30 @@
 					<value_map device_value="0x01" parameter_value="1"/>
 					<value_map device_value="0x02" parameter_value="2"/>
 					<value_map device_value="0x03" parameter_value="3"/>
-					<value_map device_value="0x04" parameter_value="4"/>
-					<value_map device_value="0x05" parameter_value="5"/>
-					<value_map device_value="0x06" parameter_value="6"/>
-					<value_map device_value="0x07" parameter_value="7"/>
+					<value_map device_value="0x04" parameter_value="0"/>
+					<value_map device_value="0x05" parameter_value="1"/>
+					<value_map device_value="0x06" parameter_value="2"/>
+					<value_map device_value="0x07" parameter_value="3"/>
+					<value_map device_value="0x08" parameter_value="0"/>
+					<value_map device_value="0x09" parameter_value="1"/>
+					<value_map device_value="0x0A" parameter_value="2"/>
+					<value_map device_value="0x0B" parameter_value="3"/>
+					<value_map device_value="0x0C" parameter_value="0"/>
+					<value_map device_value="0x0D" parameter_value="1"/>
+					<value_map device_value="0x0E" parameter_value="2"/>
+					<value_map device_value="0x0F" parameter_value="3"/>
 				</conversion>
 			</parameter>
-			<parameter id="MODE" operations="read,event" ui_flags="internal"><!--BLOCKING_TIME active: brightness calculation paused-->
+			<parameter id="CALCULATION" operations="read,event" ui_flags="internal"><!--BLOCKING_TIME active: brightness calculation paused-->
 				<logical type="option">
-					<option id="NORMAL" default="true"/>
-					<option id="NOT_BLOCKED"/>
-					<option id="NORMAL"/>
-					<option id="NOT_BLOCKED"/>
-					<option id="NORMAL"/>
-					<option id="BLOCKED"/>
-					<option id="NORMAL"/>
-					<option id="BLOCKED"/>
+					<option id="RUNNING" default="true"/>
+					<option id="RUNNING"/>
+					<option id="RUNNING"/>
+					<option id="RUNNING"/>
+					<option id="RUNNING"/>
+					<option id="PAUSED"/>
+					<option id="PAUSED"/>
+					<option id="PAUSED"/>
 				</logical>
 				<physical type="integer" interface="command" value_id="STATE_FLAGS">
 					<get request="LEVEL_GET" response="INFO_LEVEL"/>
@@ -952,6 +962,14 @@
 					<value_map device_value="0x05" parameter_value="5"/>
 					<value_map device_value="0x06" parameter_value="6"/>
 					<value_map device_value="0x07" parameter_value="7"/>
+					<value_map device_value="0x08" parameter_value="0"/>
+					<value_map device_value="0x09" parameter_value="1"/>
+					<value_map device_value="0x0A" parameter_value="2"/>
+					<value_map device_value="0x0B" parameter_value="3"/>
+					<value_map device_value="0x0C" parameter_value="4"/>
+					<value_map device_value="0x0D" parameter_value="5"/>
+					<value_map device_value="0x0E" parameter_value="6"/>
+					<value_map device_value="0x0F" parameter_value="7"/>
 				</conversion>
 			</parameter>
 			<parameter id="INHIBIT" operations="read,write,event" loopback="true" control="NONE">
@@ -1004,11 +1022,12 @@
 				<logical type="action"/>
 				<physical type="integer" interface="command" value_id="COUNTER">
 					<event frame="KEY_EVENT_SHORT"/>
+					<set request="KEY_SIM_SHORT"/>
 				</physical>
 				<conversion type="action_key_counter" counter_size="6" sim_counter="SIM_COUNTER"/>
-			</parameter>		
+			</parameter>
 		</paramset>
-	</channel>	
+	</channel>
 	
 </channels>
 
