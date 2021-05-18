@@ -73,6 +73,7 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 			if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )	// pause brightness calculation. A trigger received during this time would restart the blocking time and send a key event
 			{
 				nextActionDelay = (uint16_t)data[5] *100;  // 10 - 2550 seconds (nextActionDelay * 100 in main loop!)
+				lastActionTime = Timestamp();
 				stateFlags.element.blockingTimeActive = true;
 			}
 			else {
