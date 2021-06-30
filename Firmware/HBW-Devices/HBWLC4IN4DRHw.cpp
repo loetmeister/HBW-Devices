@@ -87,7 +87,7 @@ void HBWLC4IN4DRHw::notifyConfigButtonState( ConfigButtonState state )
          if ( lastLEDtime.since() > 500 )
          {
             configLed.toggle();
-            lastLEDtime = Timestamp();
+            lastLEDtime.setNow();
          }
          break;
       }
@@ -97,7 +97,7 @@ void HBWLC4IN4DRHw::notifyConfigButtonState( ConfigButtonState state )
          if ( lastLEDtime.since() > 200 )
          {
             configLed.toggle();
-            lastLEDtime = Timestamp();
+            lastLEDtime.setNow();
          }
          break;
       }

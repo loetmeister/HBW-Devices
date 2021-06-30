@@ -70,10 +70,11 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 		{
 			stateFlags.element.active = true;
 			
-			if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )	// pause brightness calculation. A trigger received during this time would restart the blocking time and send a key event
+			if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )
 			{
+			// pause brightness calculation. A trigger received during this time would restart the blocking time and send a key event (by HmwBrightnessKey)
 				nextActionDelay = (uint16_t)data[5] *100;  // 10 - 2550 seconds (nextActionDelay * 100 in main loop!)
-				lastActionTime = Timestamp();
+				lastActionTime.setNow();
 				stateFlags.element.blockingTimeActive = true;
 			}
 			else {
@@ -96,7 +97,7 @@ void HmwBrightnessSwitch::loop()
       return;
    }
 
-   lastActionTime = Timestamp();
+   lastActionTime.setNow();
    
    if ( stateFlags.element.blockingTimeActive )
    {
@@ -105,8 +106,7 @@ void HmwBrightnessSwitch::loop()
    }
 
 
-   uint8_t reading;
-   reading = linkedAnalogChannel->currentValue / 20;
+   uint8_t reading = linkedAnalogChannel->currentValue / 20;
    if (reading > 200) reading = 200;	// limit to 100% (200 / 2 = 100%)
    
    //TODO: option to use lowest sample, rather than average?

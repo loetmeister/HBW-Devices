@@ -63,7 +63,7 @@ void HmwKey::handleSwitchSignal()
       if ( !keyPressedTimestamp.isValid() )
       {
          // Taste war vorher nicht gedrueckt
-         keyPressedTimestamp = Timestamp();
+         keyPressedTimestamp.setNow();
       }
       else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
@@ -72,7 +72,7 @@ void HmwKey::handleSwitchSignal()
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
-            lastSentLong = Timestamp();
+            lastSentLong.setNow();
          }
       }
 	  setFeedbackChannel( KEY_FEEDBACK_ON );
@@ -119,21 +119,21 @@ void HmwKey::handlePushButtonSignal()
                // alle 300ms wiederholen
                // keyPressNum nicht erhoehen
                HmwDevice::sendKeyEvent( channelId, keyPressNum, true, true );                  // long press
-               lastSentLong = Timestamp();
+               lastSentLong.setNow();
             }
          }
-         else if ( keyPressedTimestamp.since() >= long(config->getLongPressTime() ) * 100 )
+         else if ( keyPressedTimestamp.since() >= (unsigned long)config->getLongPressTime() * 100 )
          {
             // erstes LONG
             keyPressNum++;
             HmwDevice::sendKeyEvent( channelId, keyPressNum, true, true );                    // long press
-            lastSentLong = Timestamp();
+            lastSentLong.setNow();
          }
       }
       else
       {
          // Taste war vorher nicht gedrueckt
-         keyPressedTimestamp = Timestamp();
+         keyPressedTimestamp.setNow();
          lastSentLong.reset();
 		 setFeedbackChannel( KEY_FEEDBACK_ON );
       }
@@ -143,7 +143,7 @@ void HmwKey::handlePushButtonSignal()
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
    // consider motion sensor continuously active since startup only active after this time (4...50 sec) -> LongPressTime 0.4 == 4 seconds
-   if ( SystemTime::now() < long(config->getLongPressTime() ) * 1000 && isStartUp && isPressed() ) {
+   if ( SystemTime::now() < (unsigned long)config->getLongPressTime() * 1000 && isStartUp && isPressed() ) {
       return;
    } else {
       isStartUp = false;
@@ -163,7 +163,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
       if ( !keyPressedTimestamp.isValid() )
       {
          // Taste war vorher nicht gedrueckt
-         keyPressedTimestamp = Timestamp();
+         keyPressedTimestamp.setNow();
       }
       else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME_MOTION_SENSOR ) && !lastSentLong.isValid() )
       {
@@ -171,7 +171,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {
             keyPressNum++;   // increment only on success
-            lastSentLong = Timestamp();
+            lastSentLong.setNow();
          }
       }
 	  setFeedbackChannel( KEY_FEEDBACK_ON );

@@ -106,7 +106,7 @@ void HmwBrightness::loop()
       tcChannel.enable();
       measurePin.configInput();
       enable( 1 );
-      lastMeasurementStartTime = Timestamp();
+      lastMeasurementStartTime.setNow();
       SET_STATE_L1( WAIT_MEASUREMENT_RESULT );
    }
    else if ( getCurrentState() == WAIT_MEASUREMENT_RESULT )

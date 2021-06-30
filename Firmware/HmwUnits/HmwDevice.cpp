@@ -157,7 +157,6 @@ void HmwDevice::handleConfigButton()
 
    static Timestamp lastTime;
    static HmwDeviceHw::ConfigButtonState buttonState = HmwDeviceHw::IDLE;
-
    bool buttonPressed = hardware->isConfigButtonPressed();
 
    switch ( buttonState )
@@ -168,7 +167,7 @@ void HmwDevice::handleConfigButton()
          {
             buttonState = HmwDeviceHw::FIRST_PRESS;
          }
-         lastTime = Timestamp();
+         lastTime.setNow();
          break;
       }
 
@@ -197,7 +196,7 @@ void HmwDevice::handleConfigButton()
          if ( !buttonPressed )
          {  // button released
             buttonState = HmwDeviceHw::WAIT_SECOND_PRESS;
-            lastTime = Timestamp();
+            lastTime.setNow();
            // pendingActions.resetWifiConnection = true;
          }
          break;
@@ -213,7 +212,7 @@ void HmwDevice::handleConfigButton()
          if ( buttonPressed )
          {  // second button press
             buttonState = HmwDeviceHw::SECOND_PRESS;
-            lastTime = Timestamp();
+            lastTime.setNow();
          }
          else
          {  // if second button press does not occur within 5s, continue with normal operation
@@ -263,6 +262,7 @@ void HmwDevice::handleConfigButton()
 void HmwDevice::checkConfig()
 {
    uint32_t address = changeEndianness( basicConfig->ownAddress );
+
    if ( ownAddress != address )
    {
       // address was changed, update and send new announce message
@@ -423,15 +423,15 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
 
          if ( offset == 0 )
          {
-	         // at offset 0 the HW_REV is stored to share between BOOTER and FW
-	         // it is not allowed to change it with external WRITE_EEPROM command
-	         data[0] = basicConfig->hwVersion;
+            // at offset 0 the HW_REV is stored to share between BOOTER and FW
+            // it is not allowed to change it with external WRITE_EEPROM command
+            data[0] = basicConfig->hwVersion;
 
-	         // detect an erase on the ownAddress position and restore device address before writing to EEPROM
-	         if ( ( length >= 6 + sizeof( basicConfig->ownAddress ) ) && ( data[6] == 0xFF ) )
-	         {
-		         memcpy( &data[6], &basicConfig->ownAddress, sizeof( basicConfig->ownAddress ) );
-	         }
+            // detect an erase on the ownAddress position and restore device address before writing to EEPROM
+            if ( ( length >= 6 + sizeof( basicConfig->ownAddress ) ) && ( data[6] == 0xFF ) )
+            {
+               memcpy( &data[6], &basicConfig->ownAddress, sizeof( basicConfig->ownAddress ) );
+            }
          }
          Eeprom::write( offset, data, length );
       }
@@ -450,9 +450,9 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
    else if ( msg.isCommand( HmwMessageBase::RESET ) )
    {
       DEBUG_M1( FSTR( "C: RESET" ) );
-	  HmwMsgReset* msgReset = (HmwMsgReset*)&msg;
+      HmwMsgReset* msgReset = (HmwMsgReset*)&msg;
       if ( msgReset->isReset() )
-	     pendingActions.resetSystem = true;
+         pendingActions.resetSystem = true;
    }
    else if ( msg.isCommand( HmwMessageBase::INFO_LEVEL ) )
    {
@@ -510,10 +510,10 @@ uint8_t HmwDevice::get( uint8_t channel, uint8_t* data )
 
 void HmwDevice::set( uint8_t channel, uint8_t length, uint8_t const* const data )
 {
-   DEBUG_M3( FSTR( "SetC:" ), channel, ':' );
+   DEBUG_M( FSTR( "SetC:" ) << channel << ':' );
    for ( uint8_t i = 0; i < length; i++ )
    {
-      DEBUG_L2( ' ', data[i] );
+      DEBUG_L( ' ' << data[i] );
    }
 
    // to avoid crashes, do not try to set any channels, which do not exist
@@ -535,9 +535,9 @@ bool HmwDevice::getLock( uint8_t channel )
 
 void HmwDevice::setLock( uint8_t channel, bool inhibit )
 {
-   // lock (inihibit) a channel (disables all peerings to that channel)
-   DEBUG_M3( FSTR( "SetLockC:" ), channel, ':' );
-   DEBUG_L2( ' ', (uint8_t) inhibit );
+   // lock (inhibit) a channel (disables all peerings to that channel)
+   DEBUG_M( FSTR( "SetLockC:" ) << channel << ':' );
+   DEBUG_L( ' ' << (uint8_t) inhibit );
 
    // to avoid crashes, do not try to set any channels, which do not exist
    if ( channel < HmwChannel::getNumChannels() )

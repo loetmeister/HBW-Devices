@@ -94,7 +94,7 @@ class HmwStream : public HmwStreamBase
          {
             if ( !msg->isFromMe() )
             {
-               HmwMessageBase* newMsg = inMessage.copy();
+               HmwMessageBase* newMsg = msg->copy();
                if ( newMsg )
                {
                   inMessageQueue.push( newMsg );

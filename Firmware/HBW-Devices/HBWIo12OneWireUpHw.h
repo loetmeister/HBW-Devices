@@ -80,7 +80,7 @@ class HBWIo12OneWireUpHw : public HBWMultiKeySD6BaseHw
                if ( lastLEDtime.since() > 500 )
                {
                   configLed.toggle();
-                  lastLEDtime = Timestamp();
+                  lastLEDtime.setNow();
                }
                break;
             }
@@ -90,7 +90,7 @@ class HBWIo12OneWireUpHw : public HBWMultiKeySD6BaseHw
                if ( lastLEDtime.since() > 200 )
                {
                   configLed.toggle();
-                  lastLEDtime = Timestamp();
+                  lastLEDtime.setNow();
                }
                break;
             }
