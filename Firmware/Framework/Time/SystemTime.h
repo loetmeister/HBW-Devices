@@ -31,10 +31,10 @@ class SystemTime
       typedef SYSTEM_TIME_TYPE time_t;
 
       static const uint8_t MS = 1;
-      static const uint16_t S = 1024 * MS;
-      static const uint16_t MIN = 60 * S;
-      static const uint32_t H = 60 * MIN;
-      static const uint32_t D = 24 * H;
+      static const uint16_t S = 1024;
+      static const uint32_t MIN = 1024UL * 60;
+      static const uint32_t H = 1024UL * 60 * 60;
+      static const uint32_t D = 1024UL * 24 * 60 * 60;
 
       static int8_t ticksPerSecondAdjustment;
 
