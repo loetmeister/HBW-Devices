@@ -21,7 +21,10 @@ HmwChannel::HmwChannel() :
    nextFeedbackTime( 0 ),
    inhibitActive( false )
 {
-   instances[numChannels++] = this;
+   if ( numChannels < MAX_CHANNELS )
+   {
+      instances[numChannels++] = this;
+   }
 }
 
 uint32_t HmwChannel::convertToTime( uint16_t timeValue ) const
@@ -76,6 +79,7 @@ bool HmwChannel::handleFeedback( uint32_t nextFeedbackDelay )
    if ( nextFeedbackTime.isValid() && nextFeedbackTime.since() )
    {
       uint8_t data[32];
+
       if ( HmwDevice::sendInfoMessage( channelId, get( data ), data ) == IStream::SUCCESS )
       {
          // prepare nextFeedbackTime if needed
@@ -87,6 +91,7 @@ bool HmwChannel::handleFeedback( uint32_t nextFeedbackDelay )
          {
             nextFeedbackTime.reset();
          }
+
          return true;
       }
       else
@@ -95,13 +100,6 @@ bool HmwChannel::handleFeedback( uint32_t nextFeedbackDelay )
          nextFeedbackTime += 250;
       }
    }
+
    return false;
 }
-
-void HmwChannel::setLock(bool inhibit) {
-	inhibitActive = inhibit;
-};
-
-bool HmwChannel::getLock() {
-	return inhibitActive;
-};

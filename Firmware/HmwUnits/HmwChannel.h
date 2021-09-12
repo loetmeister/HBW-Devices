@@ -132,14 +132,22 @@ class HmwChannel
          return nextActionTime.isValid();
       }
 
+      bool isLocked() const
+      {
+         return inhibitActive;
+      };
+
+      void setLock( bool inhibit )
+      {
+         inhibitActive = inhibit;
+      }
+
       uint32_t convertToTime( uint16_t value ) const;
 
       virtual void set( uint8_t length, uint8_t const* const data );
       virtual uint8_t get( uint8_t* data );  // returns length, data must be big enough
       virtual void loop();
       virtual void checkConfig();
-      void setLock(bool inhibit);
-      bool getLock();
 
    protected:
 

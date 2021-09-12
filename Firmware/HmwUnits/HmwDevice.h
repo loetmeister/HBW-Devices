@@ -59,7 +59,7 @@ class HmwDevice
 
       static const uint32_t DEFAULT_ADDRESS = MIN_ADDRESS;
 
-      static const SystemTime::time_t FIRST_ANNOUNCEMENT_TIME = 1500;
+      static const uint32_t FIRST_ANNOUNCEMENT_TIME = 1500;
 
 
 // functions
@@ -95,11 +95,11 @@ class HmwDevice
       static inline IStream::Status announce( uint8_t channel = 0 )
       {
          HmwMsgAnnounce msg( channel, ownAddress, deviceType, basicConfig->hwVersion, ( Release::MAJOR << 8 ) | Release::MINOR );
-      #ifdef _BOOTER_
+#ifdef _BOOTER_
          return HmwStreamBase::sendMessage( msg );
-      #else
+#else
          return HmwStream::sendMessage( msg );
-      #endif
+#endif
       }
 
       static inline bool isReadConfigPending()
@@ -142,10 +142,6 @@ class HmwDevice
       static void checkConfig();
 
       static void factoryReset();
-	  
-	  static void setLock( uint8_t channel, bool inhibit );
-	  
-	  static bool getLock( uint8_t channel );
 
       static bool processMessage( HmwMessageBase& msg );
 
@@ -155,17 +151,12 @@ class HmwDevice
 
       static void set( uint8_t channel, uint8_t length, uint8_t const* const data );
 
-      static inline void receiveKeyEvent( const uint32_t& senderAddress, uint8_t srcChan, uint8_t dstChan, bool longPress, uint8_t keyPressNum )
-      {
-		  if ( !getLock( dstChan ) )   // check if channel is locked
-          {
-             HmwLinkReceiver::notifyKeyEvent( senderAddress, srcChan, dstChan, longPress, keyPressNum );
-		  }
-      }
+      static void receiveKeyEvent( const uint32_t& senderAddress, uint8_t srcChan, uint8_t dstChan, bool longPress, uint8_t keyPressNum );
 
       static inline IStream::Status sendKeyEvent( uint8_t srcChan, uint8_t keyPressNum, bool longPress, bool keyPressed = false )
       {
          IStream::Status status = sendKeyEvent( srcChan, keyPressNum, longPress, 0xFFFFFFFF, 0 );
+
          if ( status == IStream::SUCCESS )
          {
             HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );

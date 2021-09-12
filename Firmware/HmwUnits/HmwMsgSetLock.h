@@ -2,7 +2,7 @@
  * HmwMsgSetLock.h
  *
  * Created: 15.09.2020
- * Author:
+ * Author: loetmeister.de
  */
 
 
@@ -20,12 +20,12 @@ class HmwMsgSetLock : public HmwMessageBase
 
 // functions
    public:
-      inline uint8_t getChannel()
+      inline uint8_t getChannel() const
       {
          return frameData[2];
       }
 
-      inline bool getData()
+      inline bool getData() const
       {
          return (frameData[3] & 0x01);
       }

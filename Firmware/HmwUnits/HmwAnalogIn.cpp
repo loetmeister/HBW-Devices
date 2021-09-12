@@ -19,8 +19,8 @@ const uint8_t HmwAnalogIn::debugLevel( DEBUG_LEVEL_OFF );
 #define ADC_CH0      (1U << 0)                 /**< ADC channel 0. */
 #define ADC_CH1      (1U << 1)                 /**< ADC channel 1. */
 
-#define SAMPLE_INTERVAL_ADC 380	 // 380 ms *4 samples // sample every 1510 ms (6 samples * 1.51 = 9s for a full reading)
-#define MEASUREMET_CYCLE 5000
+#define SAMPLE_INTERVAL_ADC 380	 // 380 ms *4 samples
+#define MEASUREMET_CYCLE 5000  // pause after all samples had been taken (and currentValue was updated)
 
 
 HmwAnalogIn::HmwAnalogIn( uint8_t _adcInputPort, uint8_t _adcInputPin, Config* _config ) :
@@ -87,7 +87,7 @@ void HmwAnalogIn::loop()
 		 adc.clearInterrupts( adcChannelMask );
 		 buffer[nextIndex++] =  AdcChannel.getResult();
          SET_STATE_L1( START_MEASUREMENT );
-	// TODO: change to moving average? or keep AnalogIn fast? (4 samples in 1.x second? - then pause 5 (10?) seconds) Brightness channel could create avg 6 (11?) seconds
+
          if ( nextIndex >= MAX_SAMPLES )
          {
             nextIndex = 0;
@@ -122,7 +122,7 @@ void HmwAnalogIn::loop()
    }
 }
 
-void HmwAnalogIn::checkConfig() // TODO: check config in eeprom and simplify!
+void HmwAnalogIn::checkConfig()
 {
 	if ( config->minDelta > 250 )
 	{

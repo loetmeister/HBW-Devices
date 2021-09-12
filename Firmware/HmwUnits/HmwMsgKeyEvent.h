@@ -37,22 +37,22 @@ class HmwMsgKeyEvent : public HmwMessageBase
          frameDataLength = 0x04;
       }
 
-      inline uint8_t getSourceChannel()
+      inline uint8_t getSourceChannel() const
       {
          return frameData[1];
       }
 
-      inline uint8_t getDestinationChannel()
+      inline uint8_t getDestinationChannel() const
       {
          return frameData[2];
       }
 
-      inline bool isLongPress()
+      inline bool isLongPress() const
       {
          return ( frameData[3] & PRESS_MASK ) == PRESS_LONG;
       }
 
-      inline uint8_t getKeyPressNum()
+      inline uint8_t getKeyPressNum() const
       {
          return ( frameData[3] >> 2 );
       }

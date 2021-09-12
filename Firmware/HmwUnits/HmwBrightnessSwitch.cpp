@@ -14,7 +14,6 @@ HmwBrightnessSwitch::HmwBrightnessSwitch( HmwAnalogIn& _linkedAnalogChannel, Con
    config( _config ),
    linkedAnalogChannel( &_linkedAnalogChannel ),
    lastActionTime( 0 ),
-   //actionParameter( NULL ),
    result_sum( 0 ),
    index( 0 ),
    count( 0 )
@@ -37,12 +36,8 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
 {
 	// will be called by peered key channel (motion sensor)
 	
-	//if ( length == sizeof( LinkCommand ) )  //TOD: ... HBWLinkLed works differently to dimmer...
 	if ( count && length >= 6 )
 	{
-		//LinkCommand const* cmd = (LinkCommand const*)data;
-		//actionParameter = cmd->actionParameter;
-		
 		triggered = false;
 		stateFlags.element.active = false;
 		
@@ -88,7 +83,7 @@ void HmwBrightnessSwitch::loop()
 {
    if ( !nextActionDelay )	// not used value, returns >100% (TODO: test if this is good solution...)
    {
-	  currentValue = 255;
+      currentValue = 255;  // also used to tell HmwBrightnessKey this channel is disabled
       return;
    }
 
@@ -101,8 +96,9 @@ void HmwBrightnessSwitch::loop()
    
    if ( stateFlags.element.blockingTimeActive )
    {
-	   stateFlags.element.blockingTimeActive = false;
-	   nextActionDelay = (uint16_t)config->interval* 100;	// restore configured measurement interval
+      stateFlags.element.blockingTimeActive = false;
+      nextActionDelay = (uint16_t)config->interval* 100;	// restore configured measurement interval
+      return;
    }
 
 

@@ -165,8 +165,10 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
          // Taste war vorher nicht gedrueckt
          keyPressedTimestamp.setNow();
       }
-      else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME_MOTION_SENSOR ) && !lastSentLong.isValid() )
+      else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
+         keyPressedTimestamp.setNow();
+
          // if return value is 1, bus is not idle, retry next time
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {

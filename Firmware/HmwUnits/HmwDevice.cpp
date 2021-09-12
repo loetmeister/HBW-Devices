@@ -58,15 +58,18 @@ void HmwDevice::loop()
 void HmwDevice::handlePendingInMessages()
 {
    HmwMessageBase* request = HmwStream::getMessage();
+
    if ( request )
    {
       if ( request->isOnlyForMe() && ( request->isACK() || request->isInfoLevel() ) )
       {
          HmwStream::notifyReceivedAckOrInfoLevel( *request );
       }
+
       if ( !request->isACK() )
       {
          HmwMessageBase answer( *request );
+
          if ( processMessage( answer ) )
          {
             HmwStream::sendMessage( answer );
@@ -383,7 +386,11 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
    {
       DEBUG_M1( FSTR( "C: SET_LOCK" ) );	// set lock, also known as "inhibit"
       HmwMsgSetLock* msgSetLock = (HmwMsgSetLock*)&msg;
-      setLock( msgSetLock->getChannel(), msgSetLock->getData() );
+
+      if ( msgSetLock->getChannel() < HmwChannel::getNumChannels() )
+      {
+         HmwChannel::getChannel( msgSetLock->getChannel() )->setLock( msgSetLock->getData() );
+      }
    }
    else if ( msg.isCommand( HmwMessageBase::GET_EEPROM_MAP ) )
    {
@@ -400,7 +407,6 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       if ( !( !event->isLongPress() && msg.isBroadcast() ) )
       {
          DEBUG_L1( FSTR( "->LinkReceiver" ) )
-         //HmwLinkReceiver::notifyKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
          receiveKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
       }
    }
@@ -523,25 +529,13 @@ void HmwDevice::set( uint8_t channel, uint8_t length, uint8_t const* const data 
    }
 }
 
-bool HmwDevice::getLock( uint8_t channel )
+void HmwDevice::receiveKeyEvent( const uint32_t& senderAddress, uint8_t srcChan, uint8_t dstChan, bool longPress, uint8_t keyPressNum )
 {
-	// to avoid crashes, return locked / inhibit active for channels, which do not exist
-	if ( channel >= HmwChannel::getNumChannels() )
-	{
-		return true;
-	}
-	return HmwChannel::getChannel( channel )->getLock();
-}
-
-void HmwDevice::setLock( uint8_t channel, bool inhibit )
-{
-   // lock (inhibit) a channel (disables all peerings to that channel)
-   DEBUG_M( FSTR( "SetLockC:" ) << channel << ':' );
-   DEBUG_L( ' ' << (uint8_t) inhibit );
-
-   // to avoid crashes, do not try to set any channels, which do not exist
-   if ( channel < HmwChannel::getNumChannels() )
+   if ( dstChan < HmwChannel::getNumChannels() )
    {
-      HmwChannel::getChannel( channel )->setLock( inhibit );
+      if ( !HmwChannel::getChannel( dstChan )->isLocked() )   // check if channel is locked
+      {
+         HmwLinkReceiver::notifyKeyEvent( senderAddress, srcChan, dstChan, longPress, keyPressNum );
+      }
    }
 }

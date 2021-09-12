@@ -30,6 +30,7 @@ class HmwBrightnessSwitch : public HmwChannel
       struct Config
       {
          uint8_tx unused;
+		 // TODO: add uint8_tx behaviour:2;  // 3=lowest sample; 2=moving average; 1=last sample; 0=oldest sample? highest value?
          uint8_tx interval;
       };
 
@@ -89,7 +90,7 @@ class HmwBrightnessSwitch : public HmwChannel
 
 	  uint8_t triggered;	// read and cleared by linked HmwBrightnessKey
 	  
-	  uint8_t currentValue;
+	  uint8_t currentValue;	// read by linked HmwBrightnessKey
 
    private:
 
@@ -112,7 +113,7 @@ class HmwBrightnessSwitch : public HmwChannel
 		struct state_flags {
 			uint8_t notUsed :4; // lowest 4 bit are not used, based on XML state_flag definition (index="12.4" size="0.4")
 			uint8_t active  :1; // condition is currently met
-			uint8_t le  :1; // less or equals (false: ge, greater or equals)
+			uint8_t le  :1; // less or equals [le] (false: greater or equals [ge])
 			uint8_t blockingTimeActive  :1;
 			uint8_t unused  :1;
 		} element;

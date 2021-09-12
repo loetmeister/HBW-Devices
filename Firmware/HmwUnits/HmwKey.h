@@ -13,7 +13,6 @@ class HmwKey : public HmwChannel
    public:
 
       static const uint8_t DEBOUNCE_TIME = 100;
-	  static const uint16_t DEBOUNCE_TIME_MOTION_SENSOR = 330;
 
       class Config
       {
