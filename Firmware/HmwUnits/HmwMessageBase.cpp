@@ -28,31 +28,45 @@ bool HmwMessageBase::isOnlyForMe() const
 
 bool HmwMessageBase::isFromMe() const
 {
-   return ( senderAddress == HmwDevice::ownAddress );
+   return hasSenderAddress() && ( senderAddress == HmwDevice::ownAddress );
+}
+
+bool HmwMessageBase::isDiscoveryMatch() const
+{
+   if ( isDiscovery() )
+   {
+      return ( controlByte.discovery.getAdressMask() & HmwDevice::ownAddress ) == targetAddress;
+   }
+
+   return false;
 }
 
 void HmwMessageBase::operator delete( void* obj, size_t size )
 {
    CriticalSection cs;
-   delete (uint8_t*) obj;
+   delete reinterpret_cast<uint8_t*>( obj );
+
    if ( messagesInUse )
    {
       messagesInUse--;
    }
-   DEBUG_M4( FSTR( "del " ), (uintptr_t ) obj, FSTR( " use " ), messagesInUse );
+
+   DEBUG_M( FSTR( "del " ) << ( uintptr_t ) obj << FSTR( " use " ) << messagesInUse );
 }
 
 HmwMessageBase* HmwMessageBase::copy() const
 {
    CriticalSection doNotInterrupt;
    uint8_t completeLength = getObjectSize();
-   HmwMessageBase* newMsg = (HmwMessageBase*) new uint8_t[( completeLength + 7 ) & 0xFFF8];
+   HmwMessageBase* newMsg = reinterpret_cast< HmwMessageBase*>( new uint8_t[( completeLength + 7 ) & 0xFFF8] );
+
    if ( newMsg )
    {
-      memcpy( (uint8_t*) newMsg, this, completeLength );
+      memcpy( newMsg, this, completeLength );
       messagesInUse++;
-      DEBUG_M4( FSTR( "new " ), (uintptr_t ) newMsg, FSTR( " use " ), messagesInUse );
+      DEBUG_M( FSTR( "new " ) << ( uintptr_t ) newMsg << FSTR( " use " ) << messagesInUse );
    }
+
    return newMsg;
 }
 
@@ -71,15 +85,19 @@ void HmwMessageBase::crc16Shift( uint8_t newByte, uint16_t& crc )
       {
          stat = 0;
       }
+
       crc <<= 1;
+
       if ( newByte & 0x80 )
       {
          crc |= 1;
       }
+
       if ( stat )
       {
          crc ^= CRC16_POLYNOM;
       }
+
       newByte = newByte << 1;
    }
 }  // crc16Shift

@@ -17,7 +17,7 @@
 
 class HmwStream : public HmwStreamBase
 {
-// variables
+      // variables
    public:
 
       static const uint8_t MESSAGE_QUEUE_SIZE = 8;
@@ -29,7 +29,9 @@ class HmwStream : public HmwStreamBase
    protected:
    private:
 
-// functions
+      // static Timestamp lastReceivedMsgTime;
+
+      // functions
    public:
 
       static inline void setHardware( HmwStreamHw* _hardware )
@@ -44,11 +46,13 @@ class HmwStream : public HmwStreamBase
       static inline HmwMessageBase* getMessage()
       {
          HmwMessageBase* msg = NULL;
+
          if ( !inMessageQueue.isEmpty() )
          {
             CriticalSection doNotInterrupt;
             inMessageQueue.pop( msg );
          }
+
          return msg;
       }
 
@@ -58,15 +62,18 @@ class HmwStream : public HmwStreamBase
          {
             HmwMessageBase* outMsg = outMessageVector.getElement( i );
             const Timestamp& nextSendTime = outMsg->getNextSendTime();
+
             if ( nextSendTime.isValid() && nextSendTime.since() )
             {
                sendMessage( *outMsg );
+
                if ( !outMsg->hasSendingTriesLeft() )
                {
                   // all retires were done, remove message from vector
                   outMessageVector.remove( outMsg );
                   delete outMsg;
                }
+
                return;
             }
          }
@@ -77,6 +84,7 @@ class HmwStream : public HmwStreamBase
          for ( uint8_t i = 0; i < outMessageVector.size(); i++ )
          {
             HmwMessageBase* outMsg = outMessageVector.getElement( i );
+
             if ( outMsg->isAcknowledgedBy( inMsg ) )
             {
                outMessageVector.remove( outMsg );
@@ -90,20 +98,41 @@ class HmwStream : public HmwStreamBase
       {
          // this function is not secured because it should be called from ISR only
          HmwMessageBase* msg = nextByteReceived( data );
+
          if ( msg )
          {
             if ( !msg->isFromMe() )
             {
+               // lastReceivedMsgTime.setNow();
+
+               if ( msg->isDiscovery() )
+               {
+                  if ( msg->isDiscoveryMatch() )
+                  {
+                     sendDiscoveryReply();
+                  }
+
+                  return false;
+               }
+
                HmwMessageBase* newMsg = msg->copy();
+
                if ( newMsg )
                {
                   inMessageQueue.push( newMsg );
                }
             }
+
             return true;
          }
+
          return false;
       }
+
+      // static inline const Timestamp& getLastReceivedMessageTime()
+      // {
+         // return lastReceivedMsgTime;
+      // }
 
    protected:
 

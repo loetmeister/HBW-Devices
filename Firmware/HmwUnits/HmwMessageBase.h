@@ -18,7 +18,7 @@
 
 class HmwMessageBase
 {
-// variables
+      // variables
    public:
 
       enum Consts
@@ -26,6 +26,7 @@ class HmwMessageBase
          FRAME_STARTBYTE = 0xFD,
          FRAME_STARTBYTE_SHORT = 0xFE,
          ESCAPE_BYTE = 0xFC,
+         DISCOVERY_REPLY = 0xF8,
          MAX_PACKET_SIZE = 64,
          MAX_FRAME_LENGTH = 72,
          ADDRESS_SIZE = 4,
@@ -75,6 +76,9 @@ class HmwMessageBase
          GET_FW_VERSION = 'v',
          WRITE_FLASH = 'w',
          SET_LEVEL = 'x',
+
+         READ_FLASH_X = 0x80 + 'r',
+         WRITE_FLASH_X = 0x80 + 'w',
          KEY_SIM = 0xCB, // 'Ë'
          STARTUP_REASON = 0xFF
       };
@@ -105,6 +109,11 @@ class HmwMessageBase
          {
             uint8_t discoveryID : 3; // should be always 3
             uint8_t addressMask : 5;
+
+            uint32_t getAdressMask() const
+            {
+               return ( UINT32_MAX << ( 31 - addressMask ) );
+            }
          } discovery;
 
          inline bool isInfo() const
@@ -159,7 +168,7 @@ class HmwMessageBase
       static uint8_t messagesInUse;
 
 
-// functions
+      // functions
    public:
       inline HmwMessageBase()
       {
@@ -185,17 +194,17 @@ class HmwMessageBase
 
       inline uint8_t getRawByte( uint8_t idx ) const
       {
-         return ( (uint8_t*)&targetAddress )[idx];
+         return *( reinterpret_cast<const uint8_t*>( &targetAddress ) + idx );
       }
 
       inline void setRawByte( uint8_t idx, uint8_t data )
       {
-         ( (uint8_t*)&targetAddress )[idx] = data;
+         *( reinterpret_cast<uint8_t*>( &targetAddress ) + idx ) = data;
       }
 
       inline Command getCommand() const
       {
-         return valid ? (Command)frameData[0] : INVALID;
+         return valid ? ( Command )frameData[0] : INVALID;
       }
 
       inline bool isCommand( Command cmd ) const
@@ -212,6 +221,8 @@ class HmwMessageBase
       {
          return controlByte.isDiscovery();
       }
+
+      bool isDiscoveryMatch() const;
 
       inline bool isInfo() const
       {
@@ -249,12 +260,13 @@ class HmwMessageBase
          buffer[0] = 'H';
          buffer[1] = 'B';
          buffer[2] = 'W';
-
          // string has max 7 digits
          uint8_t* pEnd = &buffer[9];
+
          while ( pEnd != &buffer[2] )
          {
             *pEnd-- = '0' + ( address % 10 );
+
             if ( address )
             {
                address /= 10;
@@ -298,11 +310,14 @@ class HmwMessageBase
          {
             controlByte = 0x98;
          }
+
          controlByte.info.receiverNum = tmp;
+
          if ( !hadSenderAddress )
          {
             controlByte.info.hasSenderAddr = false;
          }
+
          shortMsg = !hadSenderAddress;
       }
 
@@ -316,7 +331,7 @@ class HmwMessageBase
          return senderAddress;
       }
 
-      inline void setTargetAddress( uint32_t& _address )
+      inline void setTargetAddress( const uint32_t& _address )
       {
          targetAddress = _address;
       }
@@ -365,7 +380,7 @@ class HmwMessageBase
 
       inline uint8_t getObjectSize() const
       {
-         return (uint8_t*)&targetAddress - (uint8_t*)this + FRAME_HEADER_SIZE + sizeof( frameDataLength ) + frameDataLength;
+         return reinterpret_cast<const uint8_t*>( &targetAddress ) - reinterpret_cast<const uint8_t*>( this ) + FRAME_HEADER_SIZE + sizeof( frameDataLength ) + frameDataLength;
       }
 
       inline bool isKeyEvent() const
@@ -381,13 +396,14 @@ class HmwMessageBase
       inline bool isAcknowledgedBy( const HmwMessageBase& ackMsg ) const
       {
          if ( ( isInfo() && ackMsg.isACK() )              // generic INFO messages are acknowledged by ACK
-            || ( isKeyEvent() && ackMsg.isInfoLevel() ) ) // KeyEvents are acknowledged by INFO_LEVEL
+               || ( isKeyEvent() && ackMsg.isInfoLevel() ) ) // KeyEvents are acknowledged by INFO_LEVEL
          {
             bool isAcked = ( senderAddress == ackMsg.getTargetAddress() );
             isAcked &= ( targetAddress == ackMsg.getSenderAddress() );
             isAcked &= getSenderNum() == ackMsg.getReceiverNum();
             return isAcked;
          }
+
          return false;
       }
 
@@ -415,6 +431,12 @@ class HmwMessageBase
       static void crc16Shift( uint8_t newByte, uint16_t& crc );
 
    protected:
+
+      inline static const uint8_t getDebugLevel()
+      {
+         return debugLevel;
+      }
+
    private:
 
 }; // HmwMessage

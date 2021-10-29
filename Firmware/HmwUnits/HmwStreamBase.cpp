@@ -32,6 +32,26 @@ const uint8_t HmwStreamBase::debugLevel( DEBUG_LEVEL_OFF );
 #define RX_ERROR_TRACE_PIN      Pin1Mask
 #define TX_WAIT_BUSY_PIN        Pin2Mask
 
+IStream::Status HmwStreamBase::sendDiscoveryReply()
+{
+   if ( !hardware )
+   {
+      return IStream::LOCKED;
+   }
+
+   uint8_t data = HmwMessageBase::DISCOVERY_REPLY;
+   IStream::Status status = IStream::SUCCESS;
+   hardware->enableTranceiver( true );
+
+   if ( !hardware->serial->write( data ) )
+   {
+      status = IStream::ABORTED;
+   }
+
+   hardware->serial->waitUntilTransferCompleted();
+   hardware->enableTranceiver( false );
+   return status;
+}
 
 IStream::Status HmwStreamBase::sendMessage( HmwMessageBase& msg )
 {
@@ -42,14 +62,14 @@ IStream::Status HmwStreamBase::sendMessage( HmwMessageBase& msg )
 
    // wait for bus to be idle, only ACKs are sent immediately
    TRACE_PORT_SET( TX_WAIT_BUSY_PIN );
+
    while ( !isIdle() && !msg.isACK() )
    {
    }
-   TRACE_PORT_CLEAR( TX_WAIT_BUSY_PIN );
 
+   TRACE_PORT_CLEAR( TX_WAIT_BUSY_PIN );
    uint8_t data;
    IStream::Status status = IStream::SUCCESS;
-
    statusSending.msg = &msg;
    statusSending.dataIdx = 0;
    statusSending.transmitting = false;
@@ -60,6 +80,7 @@ IStream::Status HmwStreamBase::sendMessage( HmwMessageBase& msg )
    }
 
    hardware->enableTranceiver( true );
+
    while ( getNextByteToSend( data ) )
    {
       if ( !hardware->serial->write( data ) )
@@ -67,6 +88,7 @@ IStream::Status HmwStreamBase::sendMessage( HmwMessageBase& msg )
          status = IStream::ABORTED;
       }
    }
+
    hardware->serial->waitUntilTransferCompleted();
    hardware->enableTranceiver( false );
 
@@ -83,18 +105,20 @@ HmwMessageBase* HmwStreamBase::pollMessageReceived()
    if ( hardware && hardware->serial->isReceiveCompleted() )
    {
       uint8_t data;
+
       if ( hardware->serial->read( data ) )
       {
          return nextByteReceived( data );
       }
    }
+
    return NULL;
 }
 
 HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
 {
    TRACE_PORT_SET( RX_TRACE_PIN );
-   lastReceivedTime = Timestamp();
+   lastReceivedTime.setNow();
 
    // Debug
    if ( data == HmwMessageBase::FRAME_STARTBYTE )
@@ -105,6 +129,7 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
    {
       DEBUG_L( FSTR( ":" ) );
    }
+
    DEBUG_L( data );
 
    if ( data == HmwMessageBase::ESCAPE_BYTE )
@@ -114,6 +139,7 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
          // TODO: Wenn frameEscape gesetzt ist, dann sind das zwei Escapes hintereinander
          // Das ist eigentlich ein Fehler -> Fehlerbehandlung
       }
+
       statusReceiving.pendingEscape = true;
    }
    else
@@ -134,6 +160,7 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
             data |= 0x80;
             statusReceiving.pendingEscape = false;
          }
+
          HmwMessageBase::crc16Shift( data, statusReceiving.crc16checksum );
          inMessage.setRawByte( statusReceiving.dataIdx, data );
 
@@ -172,15 +199,18 @@ HmwMessageBase* HmwStreamBase::nextByteReceived( uint8_t data )
             {
                TRACE_PORT_TOGGLE( RX_ERROR_TRACE_PIN );
                LOG_ERROR( FSTR( "CRC " ) );
+
                for ( uint8_t i = 0; i < statusReceiving.dataIdx; i++ )
                {
                   LOG_DATA( inMessage.getRawByte( i ) << ' ' )
                }
             }
          }
+
          statusReceiving.dataIdx++;
       }
    }
+
    TRACE_PORT_CLEAR( RX_TRACE_PIN );
    return NULL;
 }
@@ -218,7 +248,6 @@ bool HmwStreamBase::getNextByteToSend( uint8_t& data )
          data = msg->getRawByte( statusSending.dataIdx );
       }
 
-
       if ( statusSending.dataIdx == HmwMessageBase::ADDRESS_SIZE )
       {
          // controlByte was sent
@@ -242,6 +271,7 @@ bool HmwStreamBase::getNextByteToSend( uint8_t& data )
       {
          DEBUG_L( data << '|' );
          HmwMessageBase::crc16Shift( data, statusSending.crc16checksum );
+
          if ( statusSending.dataIdx == ( HmwMessageBase::FRAME_HEADER_SIZE + msg->getFrameDataLength() ) )
          {
             // last data byte will be sent, calculate crc
@@ -250,6 +280,7 @@ bool HmwStreamBase::getNextByteToSend( uint8_t& data )
             msg->setRawByte( statusSending.dataIdx + 1, HBYTE( statusSending.crc16checksum ) );
             msg->setRawByte( statusSending.dataIdx + 2, LBYTE( statusSending.crc16checksum ) );
          }
+
          if ( ( data == HmwMessageBase::FRAME_STARTBYTE ) || ( data == HmwMessageBase::FRAME_STARTBYTE_SHORT ) || ( data == HmwMessageBase::ESCAPE_BYTE ) )
          {
             statusSending.pendingEscape = true;
@@ -266,8 +297,10 @@ bool HmwStreamBase::getNextByteToSend( uint8_t& data )
          statusSending.pendingEscape = false;
          statusSending.dataIdx++;
       }
+
       return true;
    }
+
    msg->convertToLittleEndian();
    return false;
 }

@@ -14,7 +14,7 @@
 
 class HmwStreamBase
 {
-// variables
+      // variables
    public:
       static const uint8_t MIN_IDLE_TIME = 8;
 
@@ -36,7 +36,7 @@ class HmwStreamBase
 
    private:
 
-// functions
+      // functions
    public:
 
       static inline void setHardware( HmwStreamHw* _hardware )
@@ -47,21 +47,23 @@ class HmwStreamBase
 
       static IStream::Status sendMessage( HmwMessageBase& msg );
 
+      static IStream::Status sendDiscoveryReply();
+
       static HmwMessageBase* pollMessageReceived();
 
       static inline bool isIdle()
       {
          uint8_t minIdleTime = MIN_IDLE_TIME;
-      #ifndef _BOOTER_
+#ifndef _BOOTER_
          minIdleTime += additionalMinIdleTime;
          CriticalSection doNotInterrupt;
-      #endif
+#endif
          return lastReceivedTime.since() > minIdleTime;
       }
 
       static inline void notifyRxStartFromISR()
       {
-         lastReceivedTime = Timestamp();
+         lastReceivedTime.setNow();
       }
 
       static inline void sync( uint8_t _receiverNum )
@@ -92,6 +94,11 @@ class HmwStreamBase
       static HmwMessageBase* nextByteReceived( uint8_t data );
 
       static bool getNextByteToSend( uint8_t& data );
+
+      inline static const uint8_t getDebugLevel()
+      {
+         return debugLevel;
+      }
 
    private:
 

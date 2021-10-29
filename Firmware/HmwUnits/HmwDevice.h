@@ -59,7 +59,7 @@ class HmwDevice
 
       static const uint32_t DEFAULT_ADDRESS = MIN_ADDRESS;
 
-      static const uint32_t FIRST_ANNOUNCEMENT_TIME = 1500;
+      static const SystemTime::time_t FIRST_ANNOUNCEMENT_TIME = 1500;
 
 
 // functions
@@ -134,7 +134,11 @@ class HmwDevice
 
       static inline uint8_t getLoggingTime()
       {
-         return basicConfig->loggingTime;
+         if ( basicConfig != NULL )
+         {
+            return basicConfig->loggingTime;
+         }
+         return 0;
       }
 
       static void loop();
@@ -160,8 +164,9 @@ class HmwDevice
          if ( status == IStream::SUCCESS )
          {
             HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );
-            //if ( !keyPressed )
-            if ( !keyPressed && keyPressNum == 0 )
+
+            if ( !keyPressed && ( basicConfig->centralAddress == 0xFFFFFFFFF ) )
+            //if ( !keyPressed && keyPressNum == 0 )
             {
                pendingActions.announce = true;   // send announcement at first press/released key state (repeated every 64 key presses, when counter rolls over)
             }
@@ -209,6 +214,11 @@ class HmwDevice
 #endif
 
    protected:
+
+      inline static const uint8_t getDebugLevel()
+      {
+         return debugLevel;
+      }
 
    private:
 
