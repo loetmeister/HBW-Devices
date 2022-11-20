@@ -3,7 +3,7 @@
  *
  *  Created on: 26.04.2017
  *      Author: Viktor Pankraz
- *  Changed on: 07.06.2018
+ *  Changed on: 01.05.2022
  *      Author: loetmeister.de
  */
 
@@ -56,12 +56,6 @@ class HmwAnalogIn : public HmwChannel
 
    public:
 	
-	//uint16_t getCurrentValue();
-	
-	inline void disable()
-	{
-		nextActionDelay = 0;
-	}
 
    private:
 
@@ -70,7 +64,7 @@ class HmwAnalogIn : public HmwChannel
 
    public:
    
-      uint16_t currentValue;
+      uint16_t currentValue;   // accessed by HmwBrightnessSwitch
 
    private:
 
@@ -81,13 +75,9 @@ class HmwAnalogIn : public HmwChannel
 
       Config* config;
 
-      uint16_t nextActionDelay;
-
-      //uint16_t currentValue;
-
       uint16_t lastSentValue;
 
-      uint16_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0 };//, 0, 0 };
+      uint16_t buffer[MAX_SAMPLES] = { 0, 0, 0, 0 };
       uint8_t nextIndex;
 
 };

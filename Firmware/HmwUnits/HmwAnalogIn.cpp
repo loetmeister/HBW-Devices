@@ -3,7 +3,7 @@
  *
  *  Created on: 26.04.2017
  *      Author: Viktor Pankraz
- *  Changed on: 07.06.2018
+ *  Changed on: 01.05.2022
  *      Author: loetmeister.de
  */
 
@@ -31,7 +31,7 @@ HmwAnalogIn::HmwAnalogIn( uint8_t _adcInputPort, uint8_t _adcInputPin, Config* _
    lastSentValue ( 0 ),
    nextIndex ( 0 )
 {
-	SET_STATE_L1( INIT_ADC );
+   SET_STATE_L1( INIT_ADC );
    enable ( MEASUREMET_CYCLE /2 );	// some start delay
    currentValue = 0;
 }
@@ -65,7 +65,7 @@ void HmwAnalogIn::loop()
    {
 	   // based on example from http://wa4bvy.com/xmega_doxy/adc_quickstart.html
 
-	   adc.setConversionParameter<false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INT1V_gc>();	// unsigned, 12bit result, use internal 1 Volt ref.
+	   adc.setConversionParameter<false, ADC_RESOLUTION_12BIT_gc, ADC_REFSEL_INTVCC_gc>();	// unsigned, 12bit result, use "VCC / 1.6" ref. voltage
 	   adc.setConversionTrigger<ADC_SWEEP_01_gc, ADC_EVSEL_0123_gc, ADC_EVACT_NONE_gc>();
 	   adc.setClockRate<200000UL>();
 
@@ -118,7 +118,7 @@ void HmwAnalogIn::loop()
 	  
       // start next measurement
       SET_STATE_L1( START_MEASUREMENT );
-	  nextActionDelay = MEASUREMET_CYCLE;
+	  enable( MEASUREMET_CYCLE );
    }
 }
 
