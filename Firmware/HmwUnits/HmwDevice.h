@@ -166,9 +166,8 @@ class HmwDevice
             HmwLinkSender::notifyKeyEvent( srcChan, keyPressNum, longPress );
 
             if ( !keyPressed && ( basicConfig->centralAddress == 0xFFFFFFFFF ) )
-            //if ( !keyPressed && keyPressNum == 0 )
             {
-               pendingActions.announce = true;   // send announcement at first press/released key state (repeated every 64 key presses, when counter rolls over)
+               pendingActions.announce = true;   // send announcement message only when not paired with central device (CCU, FHEM, etc.)
             }
          }
          return status;
