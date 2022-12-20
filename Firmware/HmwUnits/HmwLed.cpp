@@ -41,7 +41,7 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
    {
       currentLevel = *data;
       disable();
-      if ( *data )
+      if ( currentLevel )
       {
          SET_STATE_L1( ON );
       }
@@ -107,14 +107,7 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
    }
    else  // toggle
    {
-      if ( currentLevel )
-      {
-         currentLevel = 0;
-      }
-      else
-      {
-         currentLevel = MAX_LEVEL;
-      }
+      currentLevel = currentLevel ? 0 : MAX_LEVEL;
       disable();
    }
 
@@ -126,8 +119,8 @@ uint8_t HmwLed::get( uint8_t* data )
 {
    StateFlags stateFlags;
    stateFlags.byte = 0;
-   stateFlags.flags.working = isWorkingState();
    stateFlags.flags.state = getCurrentState() - ON;
+   stateFlags.flags.working = isWorkingState();
 
    // map 0-100% to 0-200
    *data++ = currentLevel;

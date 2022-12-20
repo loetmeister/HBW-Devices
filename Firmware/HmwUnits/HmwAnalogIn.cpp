@@ -142,4 +142,10 @@ void HmwAnalogIn::checkConfig()
 	}
 
 	nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
+	
+	if ( !config->minDelta && !config->minInterval && !config->maxInterval)  // disable channel if all config parameters are "not_used"
+	{
+		currentValue = 0;
+		disable();
+	}
 }
