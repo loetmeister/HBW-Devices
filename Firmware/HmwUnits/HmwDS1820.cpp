@@ -24,7 +24,6 @@ bool HmwDS1820::selfPowered( true );
 HmwDS1820::HmwDS1820( OneWire& _hardware, Config* _config ) :
    hardware( &_hardware ),
    errorCounter( 0 ),
-   sendPeer( true ),
    currentCentiCelsius( INVALID_VALUE ),
    lastSentCentiCelsius( 0 )
 {
@@ -107,7 +106,6 @@ void HmwDS1820::loop()
                {
                   SET_STATE_L1( START_MEASUREMENT );
                   enable( channelId * 100 );
-                  errorCounter = 0;
                   return;
                }
             }
@@ -121,73 +119,69 @@ void HmwDS1820::loop()
       // no sensor found, stop channel
       DEBUG_H1( FSTR( " No sensor for this channel" ) );
 
-      if ( errorCounter >= MAX_ERROR_COUNT ) {
+      if ( errorCounter >= 2 )   // search only two times
+      {
+         currentCentiCelsius = INVALID_VALUE;
          disable();
-      } else {
-         setupNextRetry( 5000 );
+      }
+      else
+      {
+         setupNextRetry( 10000 );   // search again after 10 seconds
       }
 
-	  return;	// don't continue (don't send any messages for disabled channels or channels with no sensor)
+      return;  // don't continue (don't send any messages for disabled channels or channels with no sensor)
+	  //TODO: send error value for known, but disconnected sensors?
+
    }
    else if ( getCurrentState() == START_MEASUREMENT )
    {
-	   startMeasurement();	// allSensors = true, so we can only detect error on the entire bus, not the current sensor
-	   SET_STATE_L1( READ_MEASUREMENT );
-	   enable( 1000 ); // needs about one second to do the measurement
-	   
-	  // TODO: change to allSensors = false to keep below logic?
-	  /*
       if ( startMeasurement() == OK )
       {
          SET_STATE_L1( READ_MEASUREMENT );
          enable( 1000 ); // needs at least one second to do the measurement
-         errorCounter = 0;
       }
       else
       {
-         setupNextRetry( 1000 );
+         setupNextRetry( 2500 );
       }
-	  */
+	  
    }
    else if ( getCurrentState() == READ_MEASUREMENT )
    {
-      if ( readMeasurement() != OK ) {
-	     setupNextRetry( 1000 );  // increase errorCounter
-	  } else {
-		  errorCounter = 0;
-		  enable( 5000 );
-	  }
-      // start next measurement after 5s
-      SET_STATE_L1( START_MEASUREMENT );
-
-      if ( errorCounter == MAX_ERROR_COUNT )
+      if ( readMeasurement() != OK )
       {
-         currentCentiCelsius = ERROR_VALUE;
+         setupNextRetry( 2000 );
       }
+      else
+      {
+         errorCounter = 0;
+         enable( 5000 );   // start next measurement after 5s
+      }
+
+      SET_STATE_L1( START_MEASUREMENT );   // always restart measurement, in case the sensor came back
    }
-//TODO: as channel loop is only activated when next action is due (isNextActionPending) - the send interval (max-/minInterval) is not accurate - some seconds off... no need to fix?
+
+   if ( errorCounter >= MAX_ERROR_COUNT )
+   {
+      currentCentiCelsius = ERROR_VALUE;
+      /* will send error value every maxInterval, unless disabled - to make sure error state is pushed to all targets (CCU, etc.). Fix or delete sensor to resolve */
+   }
 
    bool doSend = ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= config->maxInterval ) )
                    || ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
 
-   if ( doSend ) //&& handleFeedback( SystemTime::S* config->minInterval ) )
+   if ( doSend && nextFeedbackTime.isValid() && nextFeedbackTime.since() )
    {
-  #if defined(_Support_HBWLink_InfoEvent_)
-   if ( sendPeer )
-      {
+         if ( handleFeedback( SystemTime::S* config->minInterval ) ) {
+            lastSentCentiCelsius = currentCentiCelsius;
+         }
+       #if defined(_Support_HBWLink_InfoEvent_)
          uint8_t data[2];
          get( data );
-         sendPeer = false;
-		 HmwDevice::sendInfoEvent( channelId, data, 2 );
-      }
-	#endif
-      if ( handleFeedback( SystemTime::S* config->minInterval ) )  // sendInfoMessage
-      {
-  #if defined(_Support_HBWLink_InfoEvent_)
-         sendPeer = true;	// feedback (InfoMessage) was send successfully, start with sendInfoEvent again next time "doSend"
-	#endif
-         lastSentCentiCelsius = currentCentiCelsius;
-      }
+         if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS ) {
+            nextFeedbackTime += 250;   // at least one peer exists. Add small delay, in case we come back to feedback function too quick
+         }
+       #endif
    }
 }
 
@@ -198,7 +192,7 @@ void HmwDS1820::setupNextRetry( uint16_t delay )
       errorCounter++;
    }
 
-   enable( delay * errorCounter ); // each retry makes the wait time longer
+   enable( delay );
 }
 
 void HmwDS1820::checkConfig()
@@ -224,7 +218,7 @@ void HmwDS1820::checkConfig()
    if ( config->id != 0 )	// 0 == manually disabled
    {
       SET_STATE_L1( SEARCH_SENSOR );
-      nextFeedbackTime = SystemTime::now();
+      nextFeedbackTime.setNow();
       errorCounter = 0;
       enable( 500 );
    }

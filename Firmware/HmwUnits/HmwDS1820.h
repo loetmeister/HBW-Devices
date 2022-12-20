@@ -150,8 +150,6 @@ class HmwDS1820 : public HmwChannel
 
       Config* config;
 
-      bool sendPeer;
-
       OneWire::RomCode romCode;
 
       int16_t currentCentiCelsius;
