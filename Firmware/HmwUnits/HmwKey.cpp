@@ -142,8 +142,8 @@ void HmwKey::handlePushButtonSignal()
 
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
-   // consider motion sensor continuously active since startup only active after this time (4...50 sec) -> LongPressTime 0.4 == 4 seconds
-   if ( SystemTime::now() < (unsigned long)config->getLongPressTime() * 1000 && isStartUp && isPressed() ) {
+   // ignore active motion sensor at startup/poweron, wait until it become inactive. Can be disabled by channel config "repeat_on_long_press" = no
+   if ( isStartUp && isPressed() && config->repeatOnLongPress() ) {
       return;
    } else {
       isStartUp = false;
@@ -169,7 +169,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
       {
          keyPressedTimestamp.setNow();
 
-         // if return value is 1, bus is not idle, retry next time
+         // if bus is not idle, retry next time
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
          {
             keyPressNum++;   // increment only on success
