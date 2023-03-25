@@ -12,7 +12,7 @@ class HmwKey : public HmwChannel
 {
    public:
 
-      static const uint8_t DEBOUNCE_TIME = 100;
+      static const uint16_t DEBOUNCE_TIME = 100;
 
       class Config
       {
@@ -36,6 +36,7 @@ class HmwKey : public HmwChannel
                SWITCH = 0,
                PUSHBUTTON,
                MOTIONSENSOR,
+			   DOORSENSOR,
                MAX_INPUTTYPE
             };
 
@@ -57,6 +58,11 @@ class HmwKey : public HmwChannel
                }
             }
 
+            inline void setIsPullUp( bool pullup )
+            {
+               options.update( ( options & ~PULLUP_MASK ) | ( pullup ? PULLUP_MASK : 0 ) );
+            }
+
             inline bool isPushButton() const
             {
                return getInputType() == PUSHBUTTON;
@@ -70,6 +76,11 @@ class HmwKey : public HmwChannel
             inline bool isMotionSensor() const
             {
                return getInputType() == MOTIONSENSOR;
+            }
+
+            inline bool isDoorSensor() const
+            {
+               return getInputType() == DOORSENSOR;
             }
 
             inline bool isUnlocked() const
@@ -178,6 +189,8 @@ class HmwKey : public HmwChannel
 
       void handleMotionSensorSignal();
 
+      void handleDoorSensorSignal();
+
    private:
 
       bool unlocked;
@@ -185,6 +198,8 @@ class HmwKey : public HmwChannel
       bool pulldownSupported;
 	  
 	  bool isStartUp;
+	  
+	  bool oldInputState;
 
       uint8_t keyPressNum;
 

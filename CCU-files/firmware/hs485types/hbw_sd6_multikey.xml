@@ -128,6 +128,7 @@
 					<option id="SWITCH"/>
 					<option id="PUSHBUTTON" default="true"/>
 					<option id="MOTIONSENSOR"/>
+					<option id="DOORSENSOR"/>
 				</logical>
 				<physical size="0.3" type="integer" interface="eeprom">
 					<address index="+0.0"/>
@@ -158,13 +159,13 @@
 					<address index="+0.5"/>
 				</physical>
 			</parameter>
-			<parameter id="REPEAT_ON_LONG_PRESS">
+			<parameter id="REPEAT_ON_LONG_PRESS | MOTIONSENSOR IGNORE_STARTUP_SIGNAL | DOORSENSOR NOTIFY"> <!-- if enabled, block high sensor signal for INPUT_TYPE is MOTIONSENSOR at startup or for INPUT_TYPE DOORSENSOR, send send info/notify message -->
 				<logical type="boolean" default="true"/>
 				<physical size="0.1" type="integer" interface="eeprom">
 					<address index="+0.6"/>
 				</physical>
 				<conversion type="boolean_integer"/>
-			</parameter>			
+			</parameter>
 			<parameter id="LED_FEEDBACK">
 				<logical type="option">
 					<option id="OFF"/>
@@ -174,7 +175,7 @@
 					<address index="+0.7"/>
 				</physical>
 			</parameter>
-			<parameter id="LONG_PRESS_TIME"> <!--used as blocking time when INPUT_TYPE is MOTIONSENSOR, LongPressTime 0.4 == 4 seconds, (4...50 sec) -->
+			<parameter id="LONG_PRESS_TIME">
 				<logical type="float" unit="s" default="0.4" max="5.0" min="0.4"/>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+1"/>
@@ -384,28 +385,28 @@
 				</physical>
 				<conversion type="boolean_integer"/>
 				<conversion type="integer_integer_map">
-					<value_map device_value="0x00" parameter_value="0" />
-					<value_map device_value="0x01" parameter_value="0" />
-					<value_map device_value="0x02" parameter_value="0" />
-					<value_map device_value="0x03" parameter_value="0" />
-					<value_map device_value="0x04" parameter_value="0" />
-					<value_map device_value="0x05" parameter_value="0" />
-					<value_map device_value="0x06" parameter_value="0" />
-					<value_map device_value="0x07" parameter_value="0" />	
-					<value_map device_value="0x08" parameter_value="1" />
-					<value_map device_value="0x09" parameter_value="1" />
-					<value_map device_value="0x0A" parameter_value="1" />
-					<value_map device_value="0x0B" parameter_value="1" />
-					<value_map device_value="0x0C" parameter_value="1" />
-					<value_map device_value="0x0D" parameter_value="1" />
-					<value_map device_value="0x0E" parameter_value="1" />
-					<value_map device_value="0x0F" parameter_value="1" />	
-				</conversion>				
+					<value_map device_value="0x00" parameter_value="0" mask="0x01"/>
+					<value_map device_value="0x01" parameter_value="0"/>
+					<value_map device_value="0x02" parameter_value="0"/>
+					<value_map device_value="0x03" parameter_value="1"/>
+					<value_map device_value="0x04" parameter_value="1"/>
+					<value_map device_value="0x05" parameter_value="0"/>
+					<value_map device_value="0x06" parameter_value="0"/>
+					<value_map device_value="0x07" parameter_value="0"/>
+					<value_map device_value="0x08" parameter_value="1" mask="0x08"/>
+					<value_map device_value="0x09" parameter_value="0"/>
+					<value_map device_value="0x0A" parameter_value="0"/>
+					<value_map device_value="0x0B" parameter_value="1"/>
+					<value_map device_value="0x0C" parameter_value="1"/>
+					<value_map device_value="0x0D" parameter_value="0"/>
+					<value_map device_value="0x0E" parameter_value="0"/>
+					<value_map device_value="0x0F" parameter_value="0" mask="0x01"/>
+				</conversion>
 			</parameter>	
 			<parameter id="STATE" operations="read,event" ui_flags="internal">
 				<logical type="option">
-					<option id="ON" default="true"/>
-					<option id="OFF"/>
+					<option id="ON"/>
+					<option id="OFF" default="true"/>
 					<option id="TOGGLE"/>
 					<option id="BLINK_ON"/>
 					<option id="BLINK_OFF"/>
@@ -417,22 +418,22 @@
 					<event frame="ACK_STATUS"/>
 				</physical>
 				<conversion type="option_integer">
-					<value_map device_value="0x00" parameter_value="0" />
-					<value_map device_value="0x01" parameter_value="1" />
-					<value_map device_value="0x02" parameter_value="2" />
-					<value_map device_value="0x03" parameter_value="3" />
-					<value_map device_value="0x04" parameter_value="4" />
-					<value_map device_value="0x05" parameter_value="5" />
-					<value_map device_value="0x06" parameter_value="5" />
-					<value_map device_value="0x07" parameter_value="5" />	
-					<value_map device_value="0x08" parameter_value="0" />
-					<value_map device_value="0x09" parameter_value="1" />
-					<value_map device_value="0x0A" parameter_value="2" />
-					<value_map device_value="0x0B" parameter_value="3" />
-					<value_map device_value="0x0C" parameter_value="4" />
-					<value_map device_value="0x0D" parameter_value="5" />
-					<value_map device_value="0x0E" parameter_value="5" />
-					<value_map device_value="0x0F" parameter_value="5" />	
+					<value_map device_value="0x00" parameter_value="0"/>
+					<value_map device_value="0x01" parameter_value="1"/>
+					<value_map device_value="0x02" parameter_value="2"/>
+					<value_map device_value="0x03" parameter_value="3"/>
+					<value_map device_value="0x04" parameter_value="4"/>
+					<value_map device_value="0x05" parameter_value="5"/>
+					<value_map device_value="0x06" parameter_value="5"/>
+					<value_map device_value="0x07" parameter_value="5"/>
+					<value_map device_value="0x08" parameter_value="0"/>
+					<value_map device_value="0x09" parameter_value="1"/>
+					<value_map device_value="0x0A" parameter_value="2"/>
+					<value_map device_value="0x0B" parameter_value="3"/>
+					<value_map device_value="0x0C" parameter_value="4"/>
+					<value_map device_value="0x0D" parameter_value="5"/>
+					<value_map device_value="0x0E" parameter_value="5"/>
+					<value_map device_value="0x0F" parameter_value="5"/>
 				</conversion>
 			</parameter>
 			<parameter id="INHIBIT" operations="read,write,event" loopback="true" control="NONE">
@@ -516,7 +517,7 @@
 		<paramset type="MASTER" id="hmw_sht3x_ch_master" address_step="6" address_start="0x70">
 			<parameter id="SEND_DELTA_HUMIDITY" operations="read,write">
 				<logical type="integer" min="2" max="100" unit="%" default="0.0">
-					<special_value id="NOT_USED" value="0.0"/>
+					<special_value id="NOT_USED" value="0"/>
 				</logical>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+0.0"/>
@@ -707,6 +708,17 @@
 			<target name="SWITCH"/>
 		</link_roles>
 	    <paramset type="MASTER" id="hmw_brightness_ch_master" address_step="2" address_start="0x3EC">
+			<parameter id="CALCULATION">
+				<logical type="option">
+					<option id="MANUAL_VALUE"/>
+					<option id="LAST_SAMPLE"/>
+					<option id="AVERAGE"/>
+					<option id="LOWEST_SAMPLE" default="true"/>
+				</logical>
+				<physical size="0.2" type="integer" interface="eeprom">
+					<address index="+0.0"/>
+				</physical>
+			</parameter>
 			<parameter id="SAMPLE_INTERVAL">
 				<logical type="float" default="140" min="10" max="450" unit="s *8 samples">
 					<special_value id="DISABLED" value="0"/>
@@ -894,13 +906,22 @@
 		</paramset>
 		
 		<paramset type="VALUES" id="hmw_analog_brightness_values">
-			<parameter id="LEVEL" operations="read" control="BRIGHTNESS.LEVEL">
+			<parameter id="LEVEL" operations="read,write,event">
+				<logical type="float" unit="100%" default="0.0" max="100.0" min="0.0"/>
+				<physical type="integer" interface="command" value_id="LEVEL">
+					<set request="LEVEL_SET"/>
+					<get request="LEVEL_GET" response="INFO_LEVEL"/>
+					<event frame="INFO_LEVEL"/>
+				</physical>
+				<conversion type="float_integer_scale" factor="2"/>
+			</parameter>
+			<!--<parameter id="LEVEL" operations="read" control="BRIGHTNESS.LEVEL">
 				<logical type="float" unit="100%" default="0.0" max="1.0" min="0.0"/>
 				<physical type="integer" interface="command" value_id="LEVEL">
 					<get request="LEVEL_GET" response="INFO_LEVEL"/>
 				</physical>
 				<conversion type="float_integer_scale" factor="2"/>
-			</parameter>
+			</parameter>-->
 			
 			<parameter id="LAST_ACTION" operations="read,event" ui_flags="internal">
 				<logical type="option">

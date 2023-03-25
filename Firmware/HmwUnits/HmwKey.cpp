@@ -18,7 +18,6 @@ HmwKey::HmwKey( PortPin _pin, Config* _config, HmwChannel* _feedbackChannel ) :
 uint8_t HmwKey::get( uint8_t* data )
 {
    *data = ( isPressed() ? MAX_LEVEL : 0 );
-   //*data++ = 0; // state flags not used
    return 1;
 }
 
@@ -38,17 +37,24 @@ void HmwKey::loop()
       {
          handleMotionSensorSignal();
       }
+      else if ( config->isDoorSensor() )
+      {
+         handleDoorSensorSignal();
+      }
    }
 }
 
 void HmwKey::handleSwitchSignal()
 {
+   // sends a short KeyEvent, each time the input (e.g. wall switch) changes the polarity
    if ( !isPressed() )
    {
       if ( lastSentLong.isValid() )
       {
-         //uint8_t data[8];
-         //HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         //if ( config->repeatOnLongPress() ) {
+            //uint8_t data[1];
+            //HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         //}
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
@@ -67,8 +73,10 @@ void HmwKey::handleSwitchSignal()
       }
       else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
-         //uint8_t data[8];
-         //HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         //if ( config->repeatOnLongPress() ) {
+	         //uint8_t data[1];
+	         //HmwDevice::sendInfoMessage( channelId, get( data ), data );
+         //}
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )
          {
             keyPressNum++;
@@ -142,8 +150,9 @@ void HmwKey::handlePushButtonSignal()
 
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
-   // ignore active motion sensor at startup/poweron, wait until it become inactive. Can be disabled by channel config "repeat_on_long_press" = no
-   if ( isStartUp && isPressed() && config->repeatOnLongPress() ) {
+   // ignore active motion sensor at startup/power on,
+   // wait until it becomes inactive, but min. three seconds. Can be disabled by channel config "repeat_on_long_press" = no
+   if ( isStartUp && ( SystemTime::now() < 3000 || ( isPressed() && config->repeatOnLongPress() ) ) ) {
       return;
    } else {
       isStartUp = false;
@@ -170,7 +179,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
          keyPressedTimestamp.setNow();
 
          // if bus is not idle, retry next time
-         if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send KeyEvent for raising or falling edge - not both
+         if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send short KeyEvent for raising or falling edge - not both
          {
             keyPressNum++;   // increment only on success
             lastSentLong.setNow();
@@ -180,21 +189,45 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
    }
 }
 
+void HmwKey::handleDoorSensorSignal()
+{
+	// sends a short KeyEvent on HIGH and long KeyEvent on LOW input level changes
+	// sends also notify/info message, if channel config "repeat_on_long_press" = yes (default)
+	bool currentInputState = isPressed();
+	
+	if ( currentInputState != oldInputState )
+	{
+	   setFeedbackChannel( currentInputState ? KEY_FEEDBACK_ON : KEY_FEEDBACK_OFF);
+  
+		if ( !keyPressedTimestamp.isValid() )
+		{
+			keyPressedTimestamp.setNow();
+		}
+		else if ( keyPressedTimestamp.since() >= DEBOUNCE_TIME *3 )  // longer delay for this input type
+		{
+			keyPressedTimestamp.setNow();
+			
+			if ( config->repeatOnLongPress() ) {
+				uint8_t data[1];
+				HmwDevice::sendInfoMessage( channelId, get( data ), data );
+			}
+			
+			// if bus is not idle, retry next time
+			if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, !currentInputState ) == IStream::SUCCESS )
+			{
+				keyPressNum++;   // increment only on success
+				oldInputState = currentInputState;
+			}
+		}
+	}
+	else
+	{
+		keyPressedTimestamp.reset();
+	}
+}
+
 void HmwKey::resetChannel()
 {
-   // check if pulldown is supported and enabled
-   if ( pulldownSupported )
-   {
-      config->isPullUp() ? digitalIn.enablePullup() : digitalIn.enablePulldown();
-   }
-   else
-   {
-      digitalIn.enablePullup();
-	  //TODO: sync this setting to EEPROM? (forcing pullup when pulldown is not supported)
-   }
-   
-   digitalIn.setInverted( config->isInverted() );
-
    keyPressedTimestamp.reset();
    lastSentLong.reset();
    setFeedbackChannel( isPressed() ? KEY_FEEDBACK_ON : KEY_FEEDBACK_OFF );
@@ -210,5 +243,15 @@ void HmwKey::checkConfig()
    {
       config->setInputType( Config::PUSHBUTTON );
    }
+   
+   // check if pulldown is supported and enabled
+   if ( !pulldownSupported )
+   {
+	   config->setIsPullUp(true);
+   }
+   config->isPullUp() ? digitalIn.enablePullup() : digitalIn.enablePulldown();
+   
+   digitalIn.setInverted( config->isInverted() );
+
    resetChannel();
 }
