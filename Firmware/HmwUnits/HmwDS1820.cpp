@@ -25,7 +25,7 @@ HmwDS1820::HmwDS1820( OneWire& _hardware, Config* _config ) :
    hardware( &_hardware ),
    errorCounter( 0 ),
    currentCentiCelsius( INVALID_VALUE ),
-   lastSentCentiCelsius( 0 )
+   lastSentCentiCelsius( INVALID_VALUE )
 {
    type = HmwChannel::HMW_DS18X20;
    config = _config;
@@ -130,7 +130,6 @@ void HmwDS1820::loop()
       }
 
       return;  // don't continue (don't send any messages for disabled channels or channels with no sensor)
-	  //TODO: send error value for known, but disconnected sensors?
 
    }
    else if ( getCurrentState() == START_MEASUREMENT )
@@ -144,7 +143,6 @@ void HmwDS1820::loop()
       {
          setupNextRetry( 2500 );
       }
-	  
    }
    else if ( getCurrentState() == READ_MEASUREMENT )
    {
@@ -167,20 +165,17 @@ void HmwDS1820::loop()
       /* will send error value every maxInterval, unless disabled - to make sure error state is pushed to all targets (CCU, etc.). Fix or delete sensor to resolve */
    }
 
+
    bool doSend = ( ( config->maxInterval && ( ( nextFeedbackTime.since() / SystemTime::S ) >= config->maxInterval ) )
                    || ( config->minDelta && ( (uint16_t)labs( currentCentiCelsius - lastSentCentiCelsius ) >= ( (uint16_t)config->minDelta * 10 ) ) ) );
 
-   if ( doSend && nextFeedbackTime.isValid() && nextFeedbackTime.since() )
+   if ( doSend && handleFeedback( SystemTime::S* config->minInterval ) )
    {
-         if ( handleFeedback( SystemTime::S* config->minInterval ) ) {
-            lastSentCentiCelsius = currentCentiCelsius;
-         }
+      lastSentCentiCelsius = currentCentiCelsius;
        #if defined(_Support_HBWLink_InfoEvent_)
          uint8_t data[2];
          get( data );
-         if ( HmwDevice::sendInfoEvent( channelId, data, 2 ) == IStream::SUCCESS ) {
-            nextFeedbackTime += 250;   // at least one peer exists. Add small delay, in case we come back to feedback function too quick
-         }
+         HmwDevice::sendInfoEvent( channelId, data, 2 );
        #endif
    }
 }
@@ -214,11 +209,10 @@ void HmwDS1820::checkConfig()
       config->maxInterval = 0;
    }
 
-   // maybe someone has changed the Ids, search the desired sensor now
    if ( config->id != 0 )	// 0 == manually disabled
    {
-      SET_STATE_L1( SEARCH_SENSOR );
-      nextFeedbackTime.setNow();
+      SET_STATE_L1( SEARCH_SENSOR );  // maybe someone has changed the Ids, search the desired sensor now
+      nextFeedbackTime = SystemTime::now() + SystemTime::S* config->minInterval;
       errorCounter = 0;
       enable( 500 );
    }
