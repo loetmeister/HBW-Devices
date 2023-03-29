@@ -159,8 +159,8 @@
 					<address index="+0.5"/>
 				</physical>
 			</parameter>
-			<parameter id="REPEAT_ON_LONG_PRESS | MOTIONSENSOR IGNORE_STARTUP_SIGNAL | DOORSENSOR NOTIFY"> <!-- if enabled, block high sensor signal for INPUT_TYPE is MOTIONSENSOR at startup or for INPUT_TYPE DOORSENSOR, send send info/notify message -->
-				<logical type="boolean" default="true"/>
+			<parameter id="REPEAT_ON_LONG_PRESS"> <!-- long press for PUSHBUTTON. n/a for SWITCH. For MOTIONSENSOR, blocks high sensor signal at startup. For INPUT_TYPE DOORSENSOR, send info/notify message, if enabled -->
+				<logical type="boolean" default="true" unit="PUSHBUTTON=long press | SWITCH=n/a | MOTIONSENSOR=block at startup | DOORSENSOR=notify"/>
 				<physical size="0.1" type="integer" interface="eeprom">
 					<address index="+0.6"/>
 				</physical>
