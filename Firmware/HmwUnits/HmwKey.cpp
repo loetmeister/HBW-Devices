@@ -152,7 +152,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
 {
    // ignore active motion sensor at startup/power on,
    // wait until it becomes inactive, but min. three seconds. Can be disabled by channel config "repeat_on_long_press" = no
-   if ( isStartUp && ( SystemTime::now() < 3000 || ( isPressed() && config->repeatOnLongPress() ) ) ) {
+   if ( isStartUp && config->repeatOnLongPress() && ( SystemTime::now() < 3000 || isPressed() ) ) {
       return;
    } else {
       isStartUp = false;
@@ -244,7 +244,7 @@ void HmwKey::checkConfig()
       config->setInputType( Config::PUSHBUTTON );
    }
    
-   // check if pulldown is supported and enabled
+   // check if pulldown is supported
    if ( !pulldownSupported )
    {
 	   config->setIsPullUp(true);
