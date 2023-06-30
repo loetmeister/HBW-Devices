@@ -66,7 +66,7 @@ class HmwDS1820 : public HmwChannel
       static const uint8_t DS18B20_12_BIT_UNDF = 0;
 
       // family ids
-      static const uint8_t DS18S20_ID = 0x10;
+      static const uint8_t DS18S20_ID = 0x10;  // DS18S20 or old DS1820
       static const uint8_t DS18B20_ID = 0x28;
 
       static const uint8_t MAX_ERROR_COUNT = 10;

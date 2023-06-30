@@ -203,7 +203,7 @@ void HmwKey::handleDoorSensorSignal()
 		{
 			keyPressedTimestamp.setNow();
 		}
-		else if ( keyPressedTimestamp.since() >= DEBOUNCE_TIME *3 )  // longer delay for this input type
+		else if ( keyPressedTimestamp.since() >= (unsigned long)config->getLongPressTime() * 100 )  // use long_press_time for debounce (400 ms default)
 		{
 			keyPressedTimestamp.setNow();
 			
@@ -235,7 +235,7 @@ void HmwKey::resetChannel()
 
 void HmwKey::checkConfig()
 {
-   if ( ( config->getLongPressTime() < 4 ) || ( config->getLongPressTime() > 50 ) )
+   if ( ( config->getLongPressTime() < 3 ) || ( config->getLongPressTime() > 50 ) )
    {
       config->setLongPressTime( Config::DEFAULT_LONG_PRESS_TIME );
    }

@@ -273,7 +273,7 @@ int16_t HmwDS1820::convertToCentiCelsius( uint8_t* scratchPad )
    measurement |= ( (uint16_t) scratchPad[1] ) << 8; // MSB
 
    // only work on 12bit-base
-   if ( romCode.family == DS18S20_ID ) // 9 -> 12 bit if 18S20
+   if ( romCode.family == DS18S20_ID ) // 9 -> 12 bit if 18S20 or old DS1820
    {
       // Extended measurements for DS18S20
       measurement &= (uint16_t) 0xfffe; // Discard LSB , needed for later extended precision calculation
