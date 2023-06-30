@@ -176,7 +176,7 @@
 				</physical>
 			</parameter>
 			<parameter id="LONG_PRESS_TIME"> <!-- long press time for PUSHBUTTON and debounce time for DOORSENSOR -->
-				<logical type="float" unit="s" default="0.4" max="5.0" min="0.4"/>
+				<logical type="float" unit="s" default="0.4" max="5.0" min="0.3"/>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+1"/>
 				</physical>
