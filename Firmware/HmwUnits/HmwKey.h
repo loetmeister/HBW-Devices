@@ -36,7 +36,8 @@ class HmwKey : public HmwChannel
                SWITCH = 0,
                PUSHBUTTON,
                MOTIONSENSOR,
-			   DOORSENSOR,
+               DOORSENSOR,
+               MOTIONSENSOR_RETRIGGER,
                MAX_INPUTTYPE
             };
 
@@ -76,6 +77,11 @@ class HmwKey : public HmwChannel
             inline bool isMotionSensor() const
             {
                return getInputType() == MOTIONSENSOR;
+            }
+
+            inline bool isMotionSensorReTrigger() const
+            {
+               return getInputType() == MOTIONSENSOR_RETRIGGER;
             }
 
             inline bool isDoorSensor() const

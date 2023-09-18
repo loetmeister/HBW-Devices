@@ -129,6 +129,7 @@
 					<option id="PUSHBUTTON" default="true"/>
 					<option id="MOTIONSENSOR"/>
 					<option id="DOORSENSOR"/>
+					<option id="MOTIONSENSOR_RETRIGGER"/>
 				</logical>
 				<physical size="0.3" type="integer" interface="eeprom">
 					<address index="+0.0"/>

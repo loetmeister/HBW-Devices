@@ -33,7 +33,7 @@ void HmwKey::loop()
       {
          handleSwitchSignal();
       }
-      else if ( config->isMotionSensor() )
+      else if ( config->isMotionSensor() || config->isMotionSensorReTrigger() )
       {
          handleMotionSensorSignal();
       }
@@ -151,18 +151,29 @@ void HmwKey::handlePushButtonSignal()
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
    // ignore active motion sensor at startup/power on,
-   // wait until it becomes inactive, but min. three seconds. Can be disabled by channel config "repeat_on_long_press" = no
-   if ( isStartUp && config->repeatOnLongPress() && ( SystemTime::now() < 3000 || isPressed() ) ) {
+   // wait until it becomes inactive, but min. 10 seconds. Can be disabled by channel config "repeat_on_long_press" = no
+   if ( isStartUp && config->repeatOnLongPress() && ( SystemTime::now() < 10000 || isPressed() ) ) {
       return;
    } else {
       isStartUp = false;
    }
    
+   /* special "MotionSensorReTrigger": use this input type for sensors that are set to re-trigger mode, which will stay active as long as they sense motion.
+    * This config would repeat keyEvents every LongPressTime (4...50 seconds), but also block it for the same duration if the sensor would become inactive quicker. */
+   if (config->isMotionSensorReTrigger() && lastSentLong.isValid() && lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000 )  // "MotionSensorReTrigger": repeat keyEvent after LongPressTime
+   {
+	   lastSentLong.reset();
+   }
+
+   
    if ( !isPressed() )
    {
       if ( lastSentLong.isValid() )
       {
-         lastSentLong.reset();
+         if (config->isMotionSensorReTrigger() && lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000 )  // "MotionSensorReTrigger": don't send keyEvent before LongPressTime
+         {
+           lastSentLong.reset();
+         }
       }
       keyPressedTimestamp.reset();
 	  setFeedbackChannel( KEY_FEEDBACK_OFF );
