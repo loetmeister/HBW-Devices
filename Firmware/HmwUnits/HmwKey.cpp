@@ -170,10 +170,17 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
    {
       if ( lastSentLong.isValid() )
       {
-         if (config->isMotionSensorReTrigger() && lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000 )  // "MotionSensorReTrigger": don't send keyEvent before LongPressTime
+         if ( config->isMotionSensorReTrigger() )
          {
-           lastSentLong.reset();
+           if ( lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000 )  // "MotionSensorReTrigger": don't send keyEvent before LongPressTime
+		   {
+			   lastSentLong.reset();
+		   }
          }
+		 else
+		 {
+			 lastSentLong.reset();
+		 }
       }
       keyPressedTimestamp.reset();
 	  setFeedbackChannel( KEY_FEEDBACK_OFF );
