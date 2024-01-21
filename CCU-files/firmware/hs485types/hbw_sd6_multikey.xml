@@ -386,7 +386,7 @@
 				</physical>
 				<conversion type="boolean_integer"/>
 				<conversion type="integer_integer_map">
-					<value_map device_value="0x00" parameter_value="0" mask="0x01"/>
+					<value_map device_value="0x00" parameter_value="0" mask="0x08"/>
 					<value_map device_value="0x01" parameter_value="0"/>
 					<value_map device_value="0x02" parameter_value="0"/>
 					<value_map device_value="0x03" parameter_value="1"/>
@@ -394,23 +394,23 @@
 					<value_map device_value="0x05" parameter_value="0"/>
 					<value_map device_value="0x06" parameter_value="0"/>
 					<value_map device_value="0x07" parameter_value="0"/>
-					<value_map device_value="0x08" parameter_value="1" mask="0x08"/>
+					<value_map device_value="0x08" parameter_value="1"/>
 					<value_map device_value="0x09" parameter_value="0"/>
 					<value_map device_value="0x0A" parameter_value="0"/>
 					<value_map device_value="0x0B" parameter_value="1"/>
 					<value_map device_value="0x0C" parameter_value="1"/>
 					<value_map device_value="0x0D" parameter_value="0"/>
 					<value_map device_value="0x0E" parameter_value="0"/>
-					<value_map device_value="0x0F" parameter_value="0" mask="0x01"/>
+					<value_map device_value="0x0F" parameter_value="0" mask="0x08"/>
 				</conversion>
 			</parameter>	
 			<parameter id="STATE" operations="read,event" ui_flags="internal">
 				<logical type="option">
-					<option id="ON"/>
 					<option id="OFF" default="true"/>
-					<option id="TOGGLE"/>
+					<option id="ON"/>
+					<option id="TOGGLE"/><!-- actually not send as state, just ON/OFF -->
 					<option id="BLINK_ON"/>
-					<option id="BLINK_OFF"/>
+					<option id="BLINK_TOGGLE"/>
 					<option id="UNDEFINED"/>
 				</logical>
 				<physical type="integer" interface="command" value_id="STATE_FLAGS">

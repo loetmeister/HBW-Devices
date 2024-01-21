@@ -41,14 +41,7 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
    {
       currentLevel = *data;
       disable();
-      if ( currentLevel )
-      {
-         SET_STATE_L1( ON );
-      }
-      else
-      {
-         SET_STATE_L1( OFF );
-      }
+      SET_STATE_L1( currentLevel ? ON : OFF );
    }
    else if ( isKeyFeedbackOnCmd( *data ) )
    {
@@ -86,7 +79,7 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
          else
          {
             disable();
-            SET_STATE_L1( OFF );
+            SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
          }
       }
       else if ( isToggleCmd( *data ) )
@@ -119,7 +112,7 @@ uint8_t HmwLed::get( uint8_t* data )
 {
    StateFlags stateFlags;
    stateFlags.byte = 0;
-   stateFlags.flags.state = getCurrentState() - ON;
+   stateFlags.flags.state = getCurrentState() - OFF;
    stateFlags.flags.working = isWorkingState();
 
    // map 0-100% to 0-200
@@ -155,14 +148,9 @@ void HmwLed::loop()
          else
          {
             disable();
-            if ( currentLevel == onLevel )
-            {
-               SET_STATE_L1( ON );
-            }
-            else
-            {
-               SET_STATE_L1( OFF );
-            }
+            SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
+            
+            checkLogging( config->isLogging() );  // notify once blinking stopped (blinkQuantity == 0)
          }
       }
    }

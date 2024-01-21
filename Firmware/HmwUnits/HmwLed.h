@@ -49,11 +49,11 @@ class HmwLed : public HmwChannel
 
       enum States
       {
-         ON = 201,
-         OFF,
+         OFF = 201,
+         ON,
          TOGGLE,
          BLINK_ON,
-         BLINK_TOGGLE,
+         BLINK_TOGGLE
       };
 
       union StateFlags
