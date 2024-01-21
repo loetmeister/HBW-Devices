@@ -30,7 +30,7 @@ IStream::Status HmwStream::sendMessage( HmwMessageBase& msg )
    msg.notifySending();
 
    // for INFO messages that are not sent broadcast we expect an ACK
-   // if ACK is not received, message should be sent again after approx. 100ms
+   // if ACK is not received, message should be sent again after approx. 150ms (RETRY_DELAY_TIME + rand?)
    if ( msg.isInfo() && !msg.isBroadcast() )
    {
       if ( msg.getSendingTries() == 1 )
