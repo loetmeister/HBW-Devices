@@ -8,11 +8,12 @@
 	<type priority="2" id="HBW-SD6-Multikey-v1" name="Haus-Bus.de 6-Fach Taster mit 1-Wire (version 1)">
 		<parameter const_value="0xB1" size="1" index="0"/>
 		<parameter const_value="1" size="1" index="1"/>
-		<parameter const_value="0x0246" size="2" cond_op="GE" index="2"/><!--Min. FIRMWARE_VERSION-->
+		<parameter const_value="0x025A" size="2" cond_op="GE" index="2"/><!--Min. FIRMWARE_VERSION 2.90-->
 	</type>
 	<type priority="2" id="HBW-IO-12-1W-UP" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AL)">
 		<parameter const_value="0xB2" size="1" index="0"/>
 		<parameter const_value="0" size="1" index="1"/>
+		<parameter const_value="0x025A" size="2" cond_op="GE" index="2"/><!--Min. FIRMWARE_VERSION 2.90-->
 	</type>
 	<!--<type priority="2" id="HBW-IO-12-1W-UP-v1" name="Haus-Bus.de 12-Fach IO Expander mit 1-Wire (AH)">
 		<parameter const_value="0xB2" size="1" index="0"/>
@@ -55,7 +56,7 @@
 	</frame>
 	<frame id="LEVEL_GET" type="#S" channel_field="10" direction="to_device"/>
 	<frame id="INFO_LEVEL" type="#i" channel_field="10" direction="from_device" event="true">
-		<parameter size="1.0" index="11.0" type="integer" param="LEVEL"/>
+		<parameter type="integer" index="11.0" size="1.0" param="LEVEL"/>
 		<parameter type="integer" index="12.4" size="0.4" param="STATE_FLAGS"/>
 	</frame>
 	<frame id="INFO_STATE" direction="from_device" event="true" type="#i" channel_field="10">
@@ -177,7 +178,7 @@
 				</physical>
 			</parameter>
 			<parameter id="LONG_PRESS_TIME"> <!-- long press time for PUSHBUTTON and debounce time for DOORSENSOR -->
-				<logical type="float" unit="s" default="0.4" max="5.0" min="0.3"/>
+				<logical type="float" unit="s (DOORSENSOR=debounce | MOTIONSENSOR_RETRIGGER=block/repeat time*10)" default="0.4" max="5.0" min="0.3"/>
 				<physical size="1.0" type="integer" interface="eeprom">
 					<address index="+1"/>
 				</physical>
@@ -259,6 +260,17 @@
 					<address index="+0.7"/>
 				</physical>
 			</parameter>
+			<parameter id="PWM_RANGE">
+				<logical type="integer" default="100" min="0" max="100" unit="%">
+					<special_value id="PWM_DISABLED" value="0"/>
+				</logical>
+				<physical size="0.7" type="integer" interface="eeprom">
+					<address index="+0.0"/>
+				</physical>
+				<conversion type="integer_integer_map">
+					<value_map to_device="false" from_device="true" parameter_value="100" device_value="0x7f"/>
+				</conversion>
+			</parameter>
 		</paramset>
 		
 		<paramset id="hmw_switch_ch_link" type="LINK" count="40" address_start="0x16C" address_step="16" peer_param="SENSOR" channel_param="CHANNEL">
@@ -291,6 +303,7 @@
                     <option id="TOGGLE" default="true"/>
 					<option id="BLINK_ON"/>
 					<option id="BLINK_TOGGLE"/>
+					<option id="ON_TIMER"/>
                 </logical>
                 <physical size="0.3" type="integer" interface="eeprom">
                     <address index="+6"/>
@@ -304,6 +317,7 @@
                     <option id="TOGGLE" default="true"/>
 					<option id="BLINK_ON"/>
 					<option id="BLINK_TOGGLE"/>
+					<option id="ON_TIMER"/>
 				</logical>
                 <physical size="0.3" type="integer" interface="eeprom">
                     <address index="+6.3"/>
@@ -358,8 +372,10 @@
 				</conversion>
 			</parameter>
 			<parameter id="BLINK_QUANTITY">
-			   <logical type="integer" default="0" min="1" max="255">
+			<!-- works as multiplier for ON_TIMER action type  -->
+			   <logical type="integer" default="0" min="1" max="255" unit="255=endless blink | ON_TIMER=multiplier">
 			     <special_value id="NOT_USED" value="0"/>
+			     <!-- <special_value id="ENDLESS" value="255"/> -->
 			   </logical>	   
                <physical size="1.0" type="integer" interface="eeprom">
                   <address index="+13.0"/>
@@ -386,31 +402,34 @@
 				</physical>
 				<conversion type="boolean_integer"/>
 				<conversion type="integer_integer_map">
-					<value_map device_value="0x00" parameter_value="0" mask="0x08"/>
+					<!-- <value_map device_value="0x00" parameter_value="0" mask="0x08"/> -->
+					<!-- <value_map device_value="0x08" parameter_value="1" mask="0x08"/> -->
+					<value_map device_value="0x00" parameter_value="0"/>
 					<value_map device_value="0x01" parameter_value="0"/>
 					<value_map device_value="0x02" parameter_value="0"/>
-					<value_map device_value="0x03" parameter_value="1"/>
-					<value_map device_value="0x04" parameter_value="1"/>
+					<value_map device_value="0x03" parameter_value="1"/><!-- BLINK_ON state also shows working true -->
+					<value_map device_value="0x04" parameter_value="0"/>
 					<value_map device_value="0x05" parameter_value="0"/>
 					<value_map device_value="0x06" parameter_value="0"/>
 					<value_map device_value="0x07" parameter_value="0"/>
 					<value_map device_value="0x08" parameter_value="1"/>
-					<value_map device_value="0x09" parameter_value="0"/>
-					<value_map device_value="0x0A" parameter_value="0"/>
+					<value_map device_value="0x09" parameter_value="1"/>
+					<value_map device_value="0x0A" parameter_value="1"/>
 					<value_map device_value="0x0B" parameter_value="1"/>
 					<value_map device_value="0x0C" parameter_value="1"/>
-					<value_map device_value="0x0D" parameter_value="0"/>
-					<value_map device_value="0x0E" parameter_value="0"/>
-					<value_map device_value="0x0F" parameter_value="0" mask="0x08"/>
+					<value_map device_value="0x0D" parameter_value="1"/>
+					<value_map device_value="0x0E" parameter_value="1"/>
+					<value_map device_value="0x0F" parameter_value="1"/>
 				</conversion>
-			</parameter>	
+			</parameter>
 			<parameter id="STATE" operations="read,event" ui_flags="internal">
 				<logical type="option">
 					<option id="OFF" default="true"/>
 					<option id="ON"/>
 					<option id="TOGGLE"/><!-- actually not send as state, just ON/OFF -->
 					<option id="BLINK_ON"/>
-					<option id="BLINK_TOGGLE"/>
+					<option id="BLINK_TOGGLE"/><!-- actually not send as state, sets BLINK_ON or ON/OFF -->
+					<option id="ON_TIMER"/>
 					<option id="UNDEFINED"/>
 				</logical>
 				<physical type="integer" interface="command" value_id="STATE_FLAGS">
@@ -418,23 +437,25 @@
 					<event frame="INFO_LEVEL"/>
 					<event frame="ACK_STATUS"/>
 				</physical>
-				<conversion type="option_integer">
+				<conversion type="option_integer"><!-- option_integer ignores "mask"? -->
 					<value_map device_value="0x00" parameter_value="0"/>
 					<value_map device_value="0x01" parameter_value="1"/>
 					<value_map device_value="0x02" parameter_value="2"/>
 					<value_map device_value="0x03" parameter_value="3"/>
 					<value_map device_value="0x04" parameter_value="4"/>
 					<value_map device_value="0x05" parameter_value="5"/>
-					<value_map device_value="0x06" parameter_value="5"/>
-					<value_map device_value="0x07" parameter_value="5"/>
-					<value_map device_value="0x08" parameter_value="0"/>
+					<value_map device_value="0x06" parameter_value="6"/>
+					<value_map device_value="0x07" parameter_value="6"/>
+					<value_map device_value="0x06" parameter_value="6"/>
+					<value_map device_value="0x07" parameter_value="6"/>
+					<value_map device_value="0x08" parameter_value="5"/><!-- should be undefined, only valid with BLINK on -->
 					<value_map device_value="0x09" parameter_value="1"/>
 					<value_map device_value="0x0A" parameter_value="2"/>
 					<value_map device_value="0x0B" parameter_value="3"/>
 					<value_map device_value="0x0C" parameter_value="4"/>
 					<value_map device_value="0x0D" parameter_value="5"/>
-					<value_map device_value="0x0E" parameter_value="5"/>
-					<value_map device_value="0x0F" parameter_value="5"/>
+					<value_map device_value="0x0E" parameter_value="6"/>
+					<value_map device_value="0x0F" parameter_value="6"/>
 				</conversion>
 			</parameter>
 			<parameter id="INHIBIT" operations="read,write,event" loopback="true" control="NONE">
@@ -765,6 +786,7 @@
                     <option id="X LE COND_VALUE" default="true"/>
 					<option id="X GE COND_VALUE"/>
 					<option id="BLINK_TOGGLE"/>
+					<option id="ON_TIMER"/>
                 </logical>
                 <physical size="0.3" type="integer" interface="eeprom">
                     <address index="+6"/>
@@ -778,6 +800,7 @@
                     <option id="TOGGLE" default="true"/>
 					<option id="BLINK_ON"/>
 					<option id="BLINK_TOGGLE"/>
+					<option id="ON_TIMER"/>
 				</logical>
                 <physical size="0.3" type="integer" interface="eeprom">
                     <address index="+6.3"/>
@@ -828,6 +851,7 @@
                     <option id="TOGGLE" default="true"/><!--X LE COND_VALUE-->
 					<option id="BLINK_ON"/><!--X GE COND_VALUE-->
 					<option id="BLINK_TOGGLE"/>
+					<option id="ON_TIMER"/>
                 </logical>
                 <physical size="0.3" type="integer" interface="eeprom">
                     <address index="+6"/>
@@ -837,10 +861,11 @@
                 <logical type="option">
                     <option id="ON"/>
                     <option id="OFF"/>
-                    <option id="INACTIVE"/>
-                    <option id="TOGGLE" default="true"/>
+                    <option id="INACTIVE" default="true"/><!--not sending long press. brightness key will send only short, even when long is recevied-->
+                    <option id="TOGGLE"/>
 					<option id="BLINK_ON"/>
 					<option id="BLINK_TOGGLE"/>
+					<option id="ON_TIMER"/>
 				</logical>
                 <physical size="0.3" type="integer" interface="eeprom">
                     <address index="+6.3"/>
@@ -897,8 +922,9 @@
 			</parameter>
 			<parameter id="BLINK_QUANTITY">
 			<!-- BLOCKING_TIME 1 == 10 seconds -->
-			   <logical type="integer" default="0" min="1" max="255">
+			   <logical type="integer" default="0" min="1" max="255" unit="255=endless blink | ON_TIMER=multiplier">
 			     <special_value id="NOT_USED" value="0"/>
+			     <!-- <special_value id="ENDLESS" value="255"/> -->
 			   </logical>	   
                <physical size="1.0" type="integer" interface="eeprom">
                   <address index="+13.0"/>

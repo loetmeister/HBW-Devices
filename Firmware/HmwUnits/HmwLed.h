@@ -53,7 +53,8 @@ class HmwLed : public HmwChannel
          ON,
          TOGGLE,
          BLINK_ON,
-         BLINK_TOGGLE
+         BLINK_TOGGLE,
+		 ON_TIMER
       };
 
       union StateFlags
@@ -120,6 +121,10 @@ class HmwLed : public HmwChannel
          return cmd == BLINK_TOGGLE;
       }
 
+      inline bool isOnTimerCmd( uint8_t cmd )
+      {
+         return cmd == ON_TIMER;
+      }
       inline bool isKeyFeedbackOnCmd( uint8_t cmd )
       {
          return cmd == KEY_FEEDBACK_ON;

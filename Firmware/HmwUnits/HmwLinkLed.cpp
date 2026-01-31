@@ -72,6 +72,7 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
                length = 1;
                break;
             }
+            case 2: continue;   // -> INACTIVE
             case 3:   // -> TOGGLE
             {
                cmdData[0] = HmwLed::TOGGLE;
@@ -87,9 +88,6 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
                cmdData[0] = HmwLed::BLINK_TOGGLE;
                break;
             }
-
-
-            case 2:   // -> INACTIVE
             default:
             {
                continue;
@@ -112,6 +110,7 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
                length = 1;
                break;
             }
+            case 2: continue;   // -> INACTIVE
             case 3:   // -> TOGGLE
             {
                cmdData[0] = HmwLed::TOGGLE;
@@ -127,7 +126,11 @@ void HmwLinkLed::receiveKeyEvent( const uint32_t&  senderAddress, uint8_t sender
                cmdData[0] = HmwLed::BLINK_TOGGLE;
                break;
             }
-            case 2:   // -> INACTIVE
+            case 6:   // -> ON_TIMER
+            {
+	            cmdData[0] = HmwLed::ON_TIMER;
+	            break;
+            }
             default:
             {
                continue;

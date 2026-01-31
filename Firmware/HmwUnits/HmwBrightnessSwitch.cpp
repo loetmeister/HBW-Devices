@@ -27,6 +27,8 @@ HmwBrightnessSwitch::HmwBrightnessSwitch( HmwAnalogIn& _linkedAnalogChannel, Con
 // allow to read the calculated level (brightness value 0...100%)
 uint8_t HmwBrightnessSwitch::get( uint8_t* data )
 {
+   stateFlags.element.active = triggered;
+   
    *data++ = currentValue;
    *data = stateFlags.byte;
    return 2;
@@ -37,7 +39,7 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
     if ( count && length >= 6 )    // will be called by peered key channel (motion sensor)
     {
         triggered = false;
-        stateFlags.element.active = false;
+        // get short / long press?? not contained in data comming from HBWLinkLed....
         
         switch ( data[0] )
         {
@@ -61,8 +63,6 @@ void HmwBrightnessSwitch::set( uint8_t length, uint8_t const* const data )
         
         if ( triggered )
         {
-            stateFlags.element.active = true;
-            
             if ( data[5] )  //blinkQuantity //actionParameter->blockingTime )
             {
             // pause brightness calculation. A trigger received during this time would restart the blocking time and send a key event (by HmwBrightnessKey)

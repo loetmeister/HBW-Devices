@@ -56,46 +56,53 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
    }
    else if ( length >= 6 )
    {
-      if ( lastKeyNum != data[6] ) {
-	  lastKeyNum = data[6];
-      offLevel = data[1];
-      onLevel = data[2];
-      blinkOnTime = data[3];
-      blinkOffTime = data[4];
-      blinkQuantity = data[5];
-
-      if ( isBlinkOnCmd( *data ) )
+      if ( lastKeyNum != data[6] )
       {
-         enable();
-         SET_STATE_L1( BLINK_ON );
-      }
-      else if ( isBlinkToggleCmd( *data ) )
-      {
-         if ( currentState != BLINK_ON )
+	     lastKeyNum = data[6];
+         offLevel = data[1];
+         onLevel = data[2]; // TODO add: onLevel = (data[2] > 200) ? currentLevel : data[2];  // special value 202 for current level
+         blinkOnTime = data[3];
+         blinkOffTime = data[4];
+         blinkQuantity = data[5];
+	     
+         if ( isBlinkOnCmd( *data ) )
          {
             enable();
             SET_STATE_L1( BLINK_ON );
          }
-         else
+         else if ( isBlinkToggleCmd( *data ) )
+         {
+            if ( currentState != BLINK_ON )
+            {
+               enable();
+               SET_STATE_L1( BLINK_ON );
+            }
+            else
+            {
+               disable();
+               SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
+            }
+         }
+		 else if ( isOnTimerCmd( *data ) )
+		 {
+			 if (blinkQuantity < 255) blinkQuantity += 1; // force blinkQuantity to step in to timer loop at least once
+			 enable();
+			 SET_STATE_L1( ON_TIMER );
+		 }
+         else if ( isToggleCmd( *data ) )
          {
             disable();
-            SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
+            if ( isLogicalOn() )
+            {
+               currentLevel = offLevel;
+               SET_STATE_L1( OFF );
+            }
+            else
+            {
+               currentLevel = onLevel;
+               SET_STATE_L1( ON );
+            }
          }
-      }
-      else if ( isToggleCmd( *data ) )
-      {
-         if ( isLogicalOn() )
-         {
-            currentLevel = offLevel;
-            SET_STATE_L1( OFF );
-         }
-         else
-         {
-            currentLevel = onLevel;
-            SET_STATE_L1( ON );
-         }
-         disable();
-      }
 	  }
    }
    else  // toggle
@@ -125,6 +132,23 @@ void HmwLed::loop()
 {
    if ( isNextActionPending() )
    {
+	if ( getCurrentState() == ON_TIMER )  // stay on for blinkOnTime. If blinkQuantity is set, repeat onTime as many as blinkQuantity
+	{
+		if ( blinkQuantity )
+		{
+			nextActionTime += ( blinkOnTime * 100 );
+			setLevel( onLevel );
+			blinkQuantity--;
+		}
+		else
+		{
+			disable();
+			SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
+			checkLogging( config->isLogging() );  // notify once blinking stopped (blinkQuantity == 0)
+		}
+	}
+	else
+	{
       // handle blinking
       if ( getLevel() == onLevel )
       {
@@ -149,15 +173,22 @@ void HmwLed::loop()
          {
             disable();
             SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
-            
             checkLogging( config->isLogging() );  // notify once blinking stopped (blinkQuantity == 0)
          }
       }
+	}
    }
-   if ( !feedbackCmdActive && !isWorkingState() )
+
+   if ( !feedbackCmdActive )//&& !isWorkingState() )
    {
-      // the default range is 0-200, this must be mapped to 0-100% duty cycle
-      setLevel( currentLevel );
+      if ( !isWorkingState() ) {
+         // the default range is 0-200, this must be mapped to 0-100% duty cycle
+         setLevel( currentLevel );
+      }
+	  else
+	  {
+		  if ( getCurrentState() == ON_TIMER )   setLevel( onLevel );   // go back to onLevel, when key press feedback is off
+	  }
    }
 
    handleFeedback();
