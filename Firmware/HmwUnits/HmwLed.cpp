@@ -85,7 +85,8 @@ void HmwLed::set( uint8_t length, uint8_t const* const data )
          }
 		 else if ( isOnTimerCmd( *data ) )
 		 {
-			 if (blinkQuantity < 255) blinkQuantity += 1; // force blinkQuantity to step in to timer loop at least once
+			 if (blinkQuantity < 255)  blinkQuantity += 1; // force blinkQuantity to step into timer loop at least once
+			 currentLevel = onLevel;
 			 enable();
 			 SET_STATE_L1( ON_TIMER );
 		 }
@@ -137,14 +138,14 @@ void HmwLed::loop()
 		if ( blinkQuantity )
 		{
 			nextActionTime += ( blinkOnTime * 100 );
-			setLevel( onLevel );
 			blinkQuantity--;
 		}
 		else
 		{
 			disable();
-			SET_STATE_L1( currentLevel > offLevel ? ON : OFF );
-			checkLogging( config->isLogging() );  // notify once blinking stopped (blinkQuantity == 0)
+			currentLevel = offLevel;
+			SET_STATE_L1( OFF );
+			checkLogging( config->isLogging() );  // notify once time is up (blinkQuantity == 0)
 		}
 	}
 	else
@@ -179,16 +180,17 @@ void HmwLed::loop()
 	}
    }
 
-   if ( !feedbackCmdActive )//&& !isWorkingState() )
+   if ( !feedbackCmdActive )
    {
-      if ( !isWorkingState() ) {
-         // the default range is 0-200, this must be mapped to 0-100% duty cycle
-         setLevel( currentLevel );
-      }
-	  else
+      if ( !isWorkingState() )
 	  {
-		  if ( getCurrentState() == ON_TIMER )   setLevel( onLevel );   // go back to onLevel, when key press feedback is off
-	  }
+         // the default range is 0-200, this must be mapped to 0-100% duty cycle
+         setLevel( currentLevel );   // go back to previous level (LED feedback had set MAX_LEVEL)
+      }
+      else
+      {
+		  if ( getCurrentState() == ON_TIMER )   setLevel( currentLevel );   // go back to onLevel, when key press feedback is off
+      }
    }
 
    handleFeedback();

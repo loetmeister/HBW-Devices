@@ -150,17 +150,17 @@ void HmwKey::handlePushButtonSignal()
 
 void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event message? (message id=0x41) - no HMW device will understand
 {
-   // ignore active motion sensor at startup/power on,
-   // wait until it becomes inactive, but min. 10 seconds. Can be disabled by channel config "repeat_on_long_press" = no
-   if ( isStartUp && config->repeatOnLongPress() && ( SystemTime::now() < 10000 || isPressed() ) ) {
+   // ignore active motion sensor at startup/power on. Wait until it becomes inactive, or LongPressTime*10 is over.
+   // Can be disabled by channel config "repeat_on_long_press" = no
+   if ( isStartUp && config->repeatOnLongPress() && ( (SystemTime::now() < (unsigned long)config->getLongPressTime() * 1000) || isPressed() ) ) {
       return;
    } else {
       isStartUp = false;
    }
    
-   /* special "MotionSensorReTrigger": use this input type for sensors that are set to re-trigger mode, which will stay active as long as they sense motion.
+   /* special "MotionSensorReTrigger": use this input type for sensors that are set to re-trigger mode, which will keep their output active as long as they sense motion.
     * This config would repeat keyEvents every LongPressTime (4...50 seconds), but also block it for the same duration if the sensor would become inactive quicker. */
-   if (config->isMotionSensorReTrigger() && lastSentLong.isValid() && lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000 )  // "MotionSensorReTrigger": repeat keyEvent after LongPressTime
+   if (config->isMotionSensorReTrigger() && lastSentLong.isValid() && (lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000) )  // "MotionSensorReTrigger": repeat keyEvent after LongPressTime
    {
 	   lastSentLong.reset();
    }
