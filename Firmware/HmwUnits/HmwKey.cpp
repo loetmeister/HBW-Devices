@@ -51,6 +51,7 @@ void HmwKey::handleSwitchSignal()
    {
       if ( lastSentLong.isValid() )
       {
+		  /* use DoorSensor input type for sending InfoMessage */
          //if ( config->repeatOnLongPress() ) {
             //uint8_t data[1];
             //HmwDevice::sendInfoMessage( channelId, get( data ), data );
@@ -73,6 +74,7 @@ void HmwKey::handleSwitchSignal()
       }
       else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
+		  /* use DoorSensor input type for sending InfoMessage */
          //if ( config->repeatOnLongPress() ) {
 	         //uint8_t data[1];
 	         //HmwDevice::sendInfoMessage( channelId, get( data ), data );
@@ -154,7 +156,8 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
    // Can be disabled by channel config "repeat_on_long_press" = no
    if ( isStartUp && config->repeatOnLongPress() && ( (SystemTime::now() < (unsigned long)config->getLongPressTime() * 1000) || isPressed() ) ) {
       return;
-   } else {
+   }
+   else {
       isStartUp = false;
    }
    
@@ -170,14 +173,7 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
    {
       if ( lastSentLong.isValid() )
       {
-         if ( config->isMotionSensorReTrigger() )
-         {
-           if ( lastSentLong.since() >= (unsigned long)config->getLongPressTime() * 1000 )  // "MotionSensorReTrigger": don't send keyEvent before LongPressTime
-		   {
-			   lastSentLong.reset();
-		   }
-         }
-		 else
+         if ( !config->isMotionSensorReTrigger() )
 		 {
 			 lastSentLong.reset();
 		 }
@@ -194,13 +190,15 @@ void HmwKey::handleMotionSensorSignal()	// TODO: Add brightness value to event m
       }
       else if ( ( keyPressedTimestamp.since() >= DEBOUNCE_TIME ) && !lastSentLong.isValid() )
       {
-         keyPressedTimestamp.setNow();
-
          // if bus is not idle, retry next time
          if ( HmwDevice::sendKeyEvent( channelId, keyPressNum, false ) == IStream::SUCCESS )		// only send short KeyEvent for raising or falling edge - not both
          {
             keyPressNum++;   // increment only on success
             lastSentLong.setNow();
+         }
+         else
+         {
+            keyPressedTimestamp.setNow();   // delay next sendKeyEvent() by DEBOUNCE_TIME
          }
       }
 	  setFeedbackChannel( KEY_FEEDBACK_ON );
