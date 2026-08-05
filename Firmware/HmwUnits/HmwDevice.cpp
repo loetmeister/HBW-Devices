@@ -286,7 +286,7 @@ void HmwDevice::checkConfig()
 
 bool HmwDevice::processMessage( HmwMessageBase& msg )
 {
-   if ( !msg.isForMe() || !msg.isInfo() )
+   if ( !msg.isForMe() || !msg.isInfo() )  // "for me" is to device address or broadcast
    {
       return false;
    }
@@ -294,27 +294,27 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
    bool isValid = true;
    bool ackOnly = true;
 
-   if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
-   {
-      DEBUG_M1( FSTR( "C: START_BOOTER" ) );
-      pendingActions.startBooter = true;
-   }
-   else if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
-   {
-      DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
-      if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
-      {
-         ( (HmwMsgReadEeprom*)&msg )->setupResponse();
-         ackOnly = false;
-      }
-      else
-      {
-         DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
-         isValid = false;
-      }
-   }
-
 #ifdef _BOOTER_
+   if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
+   {
+	   DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
+	   if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
+	   {
+		   ( (HmwMsgReadEeprom*)&msg )->setupResponse();
+		   ackOnly = false;
+	   }
+	   else
+	   {
+		   DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+		   isValid = false;
+	   }
+   }
+   else if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
+   {
+	   DEBUG_M1( FSTR( "C: START_BOOTER" ) );
+	   // accept start booter, even when we are in booter already. zeroCommunicationActive not needed
+	   pendingActions.startBooter = true;
+   }
    else if ( msg.isCommand( HmwMessageBase::START_FW ) )
    {
       DEBUG_M1( FSTR( "C: START_FW" ) );
@@ -361,7 +361,42 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
          isValid = false;
       }
    }
+   else {   return false;   }  // no matching command
 #else
+
+   if ( msg.isCommand( HmwMessageBase::KEY_EVENT ) || msg.isCommand( HmwMessageBase::KEY_SIM ) )
+   {
+	   DEBUG_M1( FSTR( "C: KEY_EVENT" ) );
+	   HmwMsgKeyEvent* event = ( HmwMsgKeyEvent* )&msg;
+
+	   // forward all key events to LinkReceiver except the short pressed broadcasts
+	   if ( !( !event->isLongPress() && msg.isBroadcast() ) )
+	   {
+		   DEBUG_L1( FSTR( "->LinkReceiver" ) )
+		   receiveKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
+	   }
+   }
+   else if ( !msg.isBroadcast() )
+   {
+   if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
+   {
+	   DEBUG_M1( FSTR( "C: START_BOOTER" ) );
+	   if ( pendingActions.zeroCommunicationActive ) pendingActions.startBooter = true;
+   }
+   else if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
+   {
+	   DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
+	   if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
+	   {
+		   ( (HmwMsgReadEeprom*)&msg )->setupResponse();
+		   ackOnly = false;
+	   }
+	   else
+	   {
+		   DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+		   isValid = false;
+	   }
+   }
    else if ( msg.isCommand( HmwMessageBase::READ_CONFIG ) )
    {
       DEBUG_M1( FSTR( "C: READ_CONFIG" ) );
@@ -397,18 +432,6 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       DEBUG_M1( FSTR( "C: GET_EEPROM_MAP" ) );
       ( (HmwMsgEepromMap*)&msg )->setupResponse();
       ackOnly = false;
-   }
-   else if ( msg.isCommand( HmwMessageBase::KEY_EVENT ) || msg.isCommand( HmwMessageBase::KEY_SIM ) )
-   {
-      DEBUG_M1( FSTR( "C: KEY_EVENT" ) );
-      HmwMsgKeyEvent* event = ( HmwMsgKeyEvent* )&msg;
-
-      // forward all key events to LinkReceiver except the short pressed broadcasts
-      if ( !( !event->isLongPress() && msg.isBroadcast() ) )
-      {
-         DEBUG_L1( FSTR( "->LinkReceiver" ) )
-         receiveKeyEvent( event->getSenderAddress(), event->getSourceChannel(), event->getDestinationChannel(), event->isLongPress(), event->getKeyPressNum() );
-      }
    }
    else if ( msg.isCommand( HmwMessageBase::GET_LEVEL ) )
    {
@@ -460,10 +483,10 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       if ( msgReset->isReset() )
          pendingActions.resetSystem = true;
    }
-   else if ( msg.isCommand( HmwMessageBase::INFO_LEVEL ) )
-   {
-      DEBUG_M1( FSTR( "C: INFO_LEVEL" ) );
-   }
+   //else if ( msg.isCommand( HmwMessageBase::INFO_LEVEL ) )
+   //{
+      //DEBUG_M1( FSTR( "C: INFO_LEVEL" ) );
+   //}
    else if ( msg.isCommand( HmwMessageBase::SET_ACTOR ) || msg.isCommand( HmwMessageBase::SET_LEVEL ) )
    {
       DEBUG_M1( FSTR( "C: SET_LEVEL" ) );
@@ -476,7 +499,11 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       msgGetLevel->setupResponse( length );
       ackOnly = false;
    }
-   else if ( msg.isCommand( HmwMessageBase::START_ZERO_COMMUNICATION ) )
+   else {   return false;   }  // no matching command
+   }
+   else  // broadcast only commands
+   {
+   if ( msg.isCommand( HmwMessageBase::START_ZERO_COMMUNICATION ) )
    {
       DEBUG_M1( FSTR( "C: START_ZERO_COMMUNICATION" ) );
       pendingActions.zeroCommunicationActive = true;
@@ -486,12 +513,9 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
       DEBUG_M1( FSTR( "C: END_ZERO_COMMUNICATION" ) );
       pendingActions.zeroCommunicationActive = false;
    }
-#endif
-
-   else
-   {
-      return false;
+   else {   return false;   }  // no matching command
    }
+#endif
 
    if ( isValid
       && !msg.isBroadcast()
