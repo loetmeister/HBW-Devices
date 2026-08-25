@@ -20,10 +20,14 @@ class HmwMsgEepromMap : public HmwMessageBase
 
 // functions
    public:
-      inline void setupResponse()
+      inline bool setupResponse()
       {
          uint8_t blocksize = frameData[3];
          uint8_t blocknum = frameData[4];
+		 
+		 if (blocknum == 0) {
+			 return true;  // bei blocknum == 0 keine e-Antwort, nur ACK
+		 }
 
          // length of response
          frameDataLength = 4 + blocknum / 8;
@@ -42,7 +46,7 @@ class HmwMsgEepromMap : public HmwMessageBase
 
 
          // determine whether blocks are used
-         for ( int block = 0; block <= blocknum; block++ )
+         for ( int block = 0; block < blocknum; block++ )
          {
             // check this memory block
             uint8_t* blockAddr = (uint8_t*)( MAPPED_EEPROM_START + block * blocksize );
@@ -55,6 +59,7 @@ class HmwMsgEepromMap : public HmwMessageBase
                }
             }
          }
+		 return false;
       }
 
    protected:

@@ -49,7 +49,7 @@ class HmwMsgKeyEvent : public HmwMessageBase
 
       inline bool isLongPress() const
       {
-         return ( frameData[3] & PRESS_MASK ) == PRESS_LONG;
+         return ( frameData[3] & 0x01 );
       }
 
       inline uint8_t getKeyPressNum() const
