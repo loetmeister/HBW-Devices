@@ -295,76 +295,111 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
    bool ackOnly = true;
 
 #ifdef _BOOTER_
-   if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
-   {
-	   DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
-	   if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
+   if ( !msg.isBroadcast() )
+   { 
+	   if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
 	   {
-		   ( (HmwMsgReadEeprom*)&msg )->setupResponse();
-		   ackOnly = false;
+		   DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
+		   if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
+		   {
+			   ( (HmwMsgReadEeprom*)&msg )->setupResponse();
+			   ackOnly = false;
+		   }
+		   else
+		   {
+			   DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+			   isValid = false;
+		   }
 	   }
-	   else
+	   else if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
 	   {
-		   DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
-		   isValid = false;
+		   DEBUG_M1( FSTR( "C: START_BOOTER" ) );
+		   // accept start booter, even when we are in booter already. zeroCommunicationActive not needed
+		   pendingActions.startBooter = true;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::START_FW ) )
+	   {
+		  DEBUG_M1( FSTR( "C: START_FW" ) );
+		  pendingActions.startFirmware = true;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::GET_PACKET_SIZE ) )
+	   {
+		  DEBUG_M1( FSTR( "C: GET_PACKET_SIZE" ) );
+		  ( (HmwMsgGetPacketSize*)&msg )->setupResponse();
+		  ackOnly = false;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::WRITE_FLASH ) )
+	   {
+		  DEBUG_M1( FSTR( "C:WRITE_FLASH" ) );
+		  if ( msg.getFrameDataLength() >= 4 )
+		  {
+			 HmwMsgWriteFlash* msgWriteFlash = (HmwMsgWriteFlash*)&msg;
+			 Flash::address_t address = msgWriteFlash->getAddress();
+			 uint8_t length = msgWriteFlash->getLength();
+
+			 if ( Flash::write( address, msgWriteFlash->getData(), length ) != length )
+			 {
+				DEBUG_M2( FSTR( "E: Flash::write failed:" ), msg.getFrameDataLength() );
+				isValid = false;
+			 }
+		  }
+		  else
+		  {
+			 DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+			 isValid = false;
+		  }
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::READ_FLASH ) )
+	   {
+		  DEBUG_M1( FSTR( "C: READ_FLASH" ) );
+		  if ( msg.getFrameDataLength() == 4 )
+		  {
+			 ( (HmwMsgReadFlash*)&msg )->setupResponse();
+			 ackOnly = false;
+		  }
+		  else
+		  {
+			 DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+			 isValid = false;
+		  }
+	   }
+	   else {
+		  return false;  // no matching command (non-broadcast)
 	   }
    }
-   else if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
+   else  // broadcast only commands
    {
-	   DEBUG_M1( FSTR( "C: START_BOOTER" ) );
-	   // accept start booter, even when we are in booter already. zeroCommunicationActive not needed
-	   pendingActions.startBooter = true;
+	   if ( msg.isCommand( HmwMessageBase::START_ZERO_COMMUNICATION ) )
+	   {
+		   DEBUG_M1( FSTR( "C: START_ZERO_COMMUNICATION" ) );
+		   pendingActions.zeroCommunicationActive = true;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::END_ZERO_COMMUNICATION ) )
+	   {
+		   DEBUG_M1( FSTR( "C: END_ZERO_COMMUNICATION" ) );
+		   pendingActions.zeroCommunicationActive = false;
+	   }
+	   else {
+		   return false;  // no matching command  (broadcast)
+	   }
    }
-   else if ( msg.isCommand( HmwMessageBase::START_FW ) )
+#else  // end ifdef _BOOTER_
+   /* below commands are accepted as broadcast as well (tested on HMW_LC_SW2_DR v3.06)
+      GET_FW_VERSION & GET_HARDWARE_VERSION respond to centralAddress (randomly also to target addr 0 - maybe this is all a bug?) */
+   if ( msg.isCommand( HmwMessageBase::GET_FW_VERSION ) )
    {
-      DEBUG_M1( FSTR( "C: START_FW" ) );
-      pendingActions.startFirmware = true;
+	   DEBUG_M1( FSTR( "C: GET_FW_VERSION" ) );
+	   //msg.setTargetAddress( ownAddress );
+	   ( (HmwMsgGetFwVersion*)&msg )->setupResponse( ( Release::MAJOR << 8 ) | Release::MINOR );
+	   ackOnly = false;
    }
-   else if ( msg.isCommand( HmwMessageBase::GET_PACKET_SIZE ) )
+   else if ( msg.isCommand( HmwMessageBase::GET_HARDWARE_VERSION ) )
    {
-      DEBUG_M1( FSTR( "C: GET_PACKET_SIZE" ) );
-      ( (HmwMsgGetPacketSize*)&msg )->setupResponse();
-      ackOnly = false;
+	   DEBUG_M1( FSTR( "C: HWVer,Typ" ) );
+	   ( (HmwMsgGetHwVersion*)&msg )->setupResponse( HmwDevice::deviceType, basicConfig->hwVersion );
+	   ackOnly = false;
    }
-   else if ( msg.isCommand( HmwMessageBase::WRITE_FLASH ) )
-   {
-      DEBUG_M1( FSTR( "C:WRITE_FLASH" ) );
-      if ( msg.getFrameDataLength() >= 4 )
-      {
-         HmwMsgWriteFlash* msgWriteFlash = (HmwMsgWriteFlash*)&msg;
-         Flash::address_t address = msgWriteFlash->getAddress();
-         uint8_t length = msgWriteFlash->getLength();
-
-         if ( Flash::write( address, msgWriteFlash->getData(), length ) != length )
-         {
-            DEBUG_M2( FSTR( "E: Flash::write failed:" ), msg.getFrameDataLength() );
-            isValid = false;
-         }
-      }
-      else
-      {
-         DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
-         isValid = false;
-      }
-   }
-   else if ( msg.isCommand( HmwMessageBase::READ_FLASH ) )
-   {
-      DEBUG_M1( FSTR( "C: READ_FLASH" ) );
-      if ( msg.getFrameDataLength() == 4 )
-      {
-         ( (HmwMsgReadFlash*)&msg )->setupResponse();
-         ackOnly = false;
-      }
-      else
-      {
-         DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
-         isValid = false;
-      }
-   }
-   else {   return false;   }  // no matching command
-#else
-
-   if ( msg.isCommand( HmwMessageBase::KEY_EVENT ) || msg.isCommand( HmwMessageBase::KEY_SIM ) )
+   else if ( msg.isCommand( HmwMessageBase::KEY_EVENT ) || msg.isCommand( HmwMessageBase::KEY_SIM ) )
    {
 	   DEBUG_M1( FSTR( "C: KEY_EVENT" ) );
 	   HmwMsgKeyEvent* event = ( HmwMsgKeyEvent* )&msg;
@@ -378,151 +413,155 @@ bool HmwDevice::processMessage( HmwMessageBase& msg )
    }
    else if ( !msg.isBroadcast() )
    {
-   if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
-   {
-	   DEBUG_M1( FSTR( "C: START_BOOTER" ) );
-	   if ( pendingActions.zeroCommunicationActive ) pendingActions.startBooter = true;
-   }
-   else if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
-   {
-	   DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
-	   if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
+	   if ( msg.isCommand( HmwMessageBase::START_BOOTER ) )
 	   {
-		   ( (HmwMsgReadEeprom*)&msg )->setupResponse();
-		   ackOnly = false;
+		   DEBUG_M1( FSTR( "C: START_BOOTER" ) );
+		   if ( pendingActions.zeroCommunicationActive ) pendingActions.startBooter = true;
 	   }
-	   else
+	   else if ( msg.isCommand( HmwMessageBase::READ_EEPROM ) )
 	   {
-		   DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
-		   isValid = false;
+		   DEBUG_M1( FSTR( "C: READ_EEPROM" ) );
+		   if ( msg.getFrameDataLength() == 4 )        // Length of incoming data must be 4
+		   {
+			   ( (HmwMsgReadEeprom*)&msg )->setupResponse();
+			   ackOnly = false;
+		   }
+		   else
+		   {
+			   DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+			   isValid = false;
+		   }
 	   }
-   }
-   else if ( msg.isCommand( HmwMessageBase::READ_CONFIG ) )
-   {
-      DEBUG_M1( FSTR( "C: READ_CONFIG" ) );
-      pendingActions.readConfig = true;
-   }
-   else if ( msg.isCommand( HmwMessageBase::GET_FW_VERSION ) )
-   {
-      DEBUG_M1( FSTR( "C: GET_FW_VERSION" ) );
-      // this command is allowed to be broadcast and should be handled as a non broadcast
-      // This is needed by the Loxone bridge from HAUS-BUS.de
-      msg.setTargetAddress( ownAddress );
-      ( (HmwMsgGetFwVersion*)&msg )->setupResponse( ( Release::MAJOR << 8 ) | Release::MINOR );
-      ackOnly = false;
-   }
-   else if ( msg.isCommand( HmwMessageBase::GET_HARDWARE_VERSION ) )
-   {
-      DEBUG_M1( FSTR( "C: HWVer,Typ" ) );
-      ( (HmwMsgGetHwVersion*)&msg )->setupResponse( HmwDevice::deviceType, basicConfig->hwVersion );
-      ackOnly = false;
-   }
-   else if ( msg.isCommand( HmwMessageBase::SET_LOCK ) )
-   {
-      DEBUG_M1( FSTR( "C: SET_LOCK" ) );	// set lock, also known as "inhibit"
-      HmwMsgSetLock* msgSetLock = (HmwMsgSetLock*)&msg;
+	   else if ( msg.isCommand( HmwMessageBase::READ_CONFIG ) )
+	   {
+		  DEBUG_M1( FSTR( "C: READ_CONFIG" ) );
+		  pendingActions.readConfig = true;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::SET_LOCK ) )
+	   {
+		  DEBUG_M1( FSTR( "C: SET_LOCK" ) );	// set lock, also known as "inhibit"
+		  HmwMsgSetLock* msgSetLock = (HmwMsgSetLock*)&msg;
 
-      if ( msgSetLock->getChannel() < HmwChannel::getNumChannels() )
-      {
-         HmwChannel::getChannel( msgSetLock->getChannel() )->setLock( msgSetLock->getData() );
-      }
-   }
-   else if ( msg.isCommand( HmwMessageBase::GET_EEPROM_MAP ) )
-   {
-      DEBUG_M1( FSTR( "C: GET_EEPROM_MAP" ) );
-      ( (HmwMsgEepromMap*)&msg )->setupResponse();
-      ackOnly = false;
-   }
-   else if ( msg.isCommand( HmwMessageBase::GET_LEVEL ) )
-   {
-      DEBUG_M1( FSTR( "C: GET_LEVEL" ) );
-      HmwMsgGetLevel* msgGetLevel = ( HmwMsgGetLevel* )&msg;
-      msgGetLevel->setupResponse( get( msgGetLevel->getChannel(), msgGetLevel->getData() ) );
-      ackOnly = false;
-   }
-   else if ( msg.isCommand( HmwMessageBase::WRITE_EEPROM ) )
-   {
-      DEBUG_M1( FSTR( "C: WRITE_EEPROM" ) );
-      HmwMsgWriteEeprom* msgWriteEeprom = ( HmwMsgWriteEeprom* )&msg;
-      if ( msg.getFrameDataLength() == ( msgWriteEeprom->getLength() + 4 ) )
-      {
-         uint16_t offset = msgWriteEeprom->getOffset();
-         uint8_t length = msgWriteEeprom->getLength();
-         uint8_t* data = msgWriteEeprom->getData();
+		  if ( msgSetLock->getChannel() < HmwChannel::getNumChannels() )
+		  {
+			 HmwChannel::getChannel( msgSetLock->getChannel() )->setLock( msgSetLock->getData() );
+		  }
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::GET_EEPROM_MAP ) )
+	   {
+		  DEBUG_M1( FSTR( "C: GET_EEPROM_MAP" ) );
+		  ackOnly = ( (HmwMsgEepromMap*)&msg )->setupResponse();
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::GET_LEVEL ) )
+	   {
+		  DEBUG_M1( FSTR( "C: GET_LEVEL" ) );
+		  HmwMsgGetLevel* msgGetLevel = ( HmwMsgGetLevel* )&msg;
+		  msgGetLevel->setupResponse( get( msgGetLevel->getChannel(), msgGetLevel->getData() ) );
+		  ackOnly = false;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::WRITE_EEPROM ) )
+	   {
+		  DEBUG_M1( FSTR( "C: WRITE_EEPROM" ) );
+		  HmwMsgWriteEeprom* msgWriteEeprom = ( HmwMsgWriteEeprom* )&msg;
+		  if ( msg.getFrameDataLength() == ( msgWriteEeprom->getLength() + 4 ) )
+		  {
+			 uint16_t offset = msgWriteEeprom->getOffset();
+			 uint8_t length = msgWriteEeprom->getLength();
+			 uint8_t* data = msgWriteEeprom->getData();
 
-         if ( offset == 0 )
-         {
-            // at offset 0 the HW_REV is stored to share between BOOTER and FW
-            // it is not allowed to change it with external WRITE_EEPROM command
-            data[0] = basicConfig->hwVersion;
+			 if ( offset == 0 )
+			 {
+				// at offset 0 the HW_REV is stored to share between BOOTER and FW
+				// it is not allowed to change it with external WRITE_EEPROM command
+				data[0] = basicConfig->hwVersion;
 
-            // detect an erase on the ownAddress position and restore device address before writing to EEPROM
-            if ( ( length >= 6 + sizeof( basicConfig->ownAddress ) ) && ( data[6] == 0xFF ) )
-            {
-               memcpy( &data[6], &basicConfig->ownAddress, sizeof( basicConfig->ownAddress ) );
-            }
-         }
-         Eeprom::write( offset, data, length );
-      }
-      else
-      {
-         DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
-         isValid = false;
-      }
-   }
-   else if ( msg.isCommand( HmwMessageBase::GET_SERIAL ) )
-   {
-      DEBUG_M1( FSTR( "C: GET_SERIAL" ) );
-      ( (HmwMsgGetSerial*)&msg )->setupResponse( ownAddress );
-      ackOnly = false;
-   }
-   else if ( msg.isCommand( HmwMessageBase::RESET ) )
-   {
-      DEBUG_M1( FSTR( "C: RESET" ) );
-      HmwMsgReset* msgReset = (HmwMsgReset*)&msg;
-      if ( msgReset->isReset() )
-         pendingActions.resetSystem = true;
-   }
-   //else if ( msg.isCommand( HmwMessageBase::INFO_LEVEL ) )
-   //{
-      //DEBUG_M1( FSTR( "C: INFO_LEVEL" ) );
-   //}
-   else if ( msg.isCommand( HmwMessageBase::SET_ACTOR ) || msg.isCommand( HmwMessageBase::SET_LEVEL ) )
-   {
-      DEBUG_M1( FSTR( "C: SET_LEVEL" ) );
-      HmwMsgSetLevel* msgSetLevel = (HmwMsgSetLevel*)&msg;
-      set( msgSetLevel->getChannel(), msgSetLevel->getLength(), msgSetLevel->getData() );
+				// detect an erase on the ownAddress position and restore device address before writing to EEPROM
+				if ( ( length >= 6 + sizeof( basicConfig->ownAddress ) ) && ( data[6] == 0xFF ) )
+				{
+				   memcpy( &data[6], &basicConfig->ownAddress, sizeof( basicConfig->ownAddress ) );
+				}
+			 }
+			 Eeprom::write( offset, data, length );
+		  }
+		  else
+		  {
+			 DEBUG_M2( FSTR( "E: wrong data length :" ), msg.getFrameDataLength() );
+			 isValid = false;
+		  }
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::GET_SERIAL ) )
+	   {
+		  DEBUG_M1( FSTR( "C: GET_SERIAL" ) );
+		  ( (HmwMsgGetSerial*)&msg )->setupResponse( ownAddress );
+		  ackOnly = false;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::RESET ) )
+	   {
+		  DEBUG_M1( FSTR( "C: RESET" ) );
+		  HmwMsgReset* msgReset = (HmwMsgReset*)&msg;
+		  if ( msgReset->isReset() )
+			 pendingActions.resetSystem = true;
+	   }
+	   //else if ( msg.isCommand( HmwMessageBase::INFO_LEVEL ) )
+	   //{
+		  //DEBUG_M1( FSTR( "C: INFO_LEVEL" ) );
+	   //}
+	   else if ( msg.isCommand( HmwMessageBase::SET_ACTOR ) || msg.isCommand( HmwMessageBase::SET_LEVEL ) )
+	   {
+		  DEBUG_M1( FSTR( "C: SET_LEVEL" ) );
+		  HmwMsgSetLevel* msgSetLevel = (HmwMsgSetLevel*)&msg;
+		  set( msgSetLevel->getChannel(), msgSetLevel->getLength(), msgSetLevel->getData() );
 
-      // return immediately the current data for this channel as feedback
-      HmwMsgGetLevel* msgGetLevel = ( HmwMsgGetLevel* )&msg;
-      uint8_t length = get( msgGetLevel->getChannel(), msgGetLevel->getData() );
-      msgGetLevel->setupResponse( length );
-      ackOnly = false;
-   }
-   else {   return false;   }  // no matching command
+		  // return immediately the current data for this channel as feedback
+		  HmwMsgGetLevel* msgGetLevel = ( HmwMsgGetLevel* )&msg;
+		  uint8_t length = get( msgGetLevel->getChannel(), msgGetLevel->getData() );
+		  msgGetLevel->setupResponse( length );
+		  ackOnly = false;
+	   }
+	   else {
+		   return false;  // no matching command (non-broadcast)
+	   }
    }
    else  // broadcast only commands
    {
-   if ( msg.isCommand( HmwMessageBase::START_ZERO_COMMUNICATION ) )
-   {
-      DEBUG_M1( FSTR( "C: START_ZERO_COMMUNICATION" ) );
-      pendingActions.zeroCommunicationActive = true;
-   }
-   else if ( msg.isCommand( HmwMessageBase::END_ZERO_COMMUNICATION ) )
-   {
-      DEBUG_M1( FSTR( "C: END_ZERO_COMMUNICATION" ) );
-      pendingActions.zeroCommunicationActive = false;
-   }
-   else {   return false;   }  // no matching command
+	   if ( msg.isCommand( HmwMessageBase::START_ZERO_COMMUNICATION ) )
+	   {
+		  DEBUG_M1( FSTR( "C: START_ZERO_COMMUNICATION" ) );
+		  pendingActions.zeroCommunicationActive = true;
+	   }
+	   else if ( msg.isCommand( HmwMessageBase::END_ZERO_COMMUNICATION ) )
+	   {
+		  DEBUG_M1( FSTR( "C: END_ZERO_COMMUNICATION" ) );
+		  pendingActions.zeroCommunicationActive = false;
+	   }
+	   else {
+		   return false;  // no matching command (broadcast)
+	   }
    }
 #endif
 
-   if ( isValid
-      && !msg.isBroadcast()
-      && ( !pendingActions.zeroCommunicationActive || msg.isCommand( HmwMessageBase::START_BOOTER ) ) ) // START_BOOTER is the only command that allows a response during z-Mode
+   //if ( isValid
+      //&& !msg.isBroadcast()
+      //&& ( !pendingActions.zeroCommunicationActive || msg.isCommand( HmwMessageBase::START_BOOTER ) ) ) // START_BOOTER is the only command that allows a response during z-Mode
+   //{
+      //msg.convertToResponse( ownAddress, ackOnly );
+      //return true;
+   //}
+   if ( isValid && ( !pendingActions.zeroCommunicationActive || msg.isCommand( HmwMessageBase::START_BOOTER ) ) ) // START_BOOTER is the only command that allows a response during z-Mode
    {
-      msg.convertToResponse( ownAddress, ackOnly );
-      return true;
+	   if ( !msg.isBroadcast() )
+	   {
+		   // no ack to broadcasts! never!
+		   msg.convertToResponse( ownAddress, ackOnly );
+		   return true;
+	   }
+	   /*else if ( msg.isBroadcast() && !ackOnly )  // optional feature to reply to specific broadcast messages, like get HW or FW version. Original SW2 is doing it... for unknown reason
+	   {
+		 //  // response to broadcast is send to centralAddress - not to sender
+		   msg.convertToResponse( ownAddress, ackOnly );
+		   msg.setTargetAddress( changeEndianness( basicConfig->centralAddress ) );
+		   return true;
+	   }*/
    }
    return false;
 }
